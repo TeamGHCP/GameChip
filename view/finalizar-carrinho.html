@@ -156,7 +156,7 @@
         
         <!-- 🔥 BOTÃO PARA AVALIAR PRODUTOS (só aparece nesta página) -->
         {% if session.get('chegou_finalizar_carrinho') %}
-        <a href="{{ url_for('minhas_avaliacoes_pendentes') }}" class="btn-avaliar">
+        <a href="{{ url_for('avaliacao.minhas_avaliacoes_pendentes') }}" class="btn-avaliar">
             ⭐ Avaliar Produtos do Carrinho
         </a>
         {% endif %}

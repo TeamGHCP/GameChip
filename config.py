@@ -2,15 +2,16 @@ import os
 from datetime import timedelta
 
 class Config:
-    SECRET_KEY = 'GHCP-2o25'
+    # ⚠️ RECOMENDAÇÃO DE SEGURANÇA: Usar variáveis de ambiente para chaves sensíveis
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'GHCP-2o25')
     
-    # Database Configuration
+    # Database Configuration - Usar variáveis de ambiente em produção
     DB_CONFIG = {
-        'host': 'tini.click',
-        'port': '3306',
-        'user': 'loja_informatica',
-        'password': '7787a5c08b46a3ada35c3a1f7ca7dd9b',
-        'database': 'loja_informatica'
+        'host': os.environ.get('DB_HOST', 'tini.click'),
+        'port': os.environ.get('DB_PORT', '3306'),
+        'user': os.environ.get('DB_USER', 'loja_informatica'),
+        'password': os.environ.get('DB_PASSWORD', '7787a5c08b46a3ada35c3a1f7ca7dd9b'),
+        'database': os.environ.get('DB_NAME', 'loja_informatica')
     }
     
     # Upload Configuration
@@ -23,6 +24,6 @@ class Config:
     PERMANENT_SESSION_LIFETIME = timedelta(hours=1)
     
     # PIX Configuration
-    PIX_CHAVE = "14057629939"
-    PIX_NOME = "CAETANO GBUR PETRY"
-    PIX_CIDADE = "JOINVILLE"
+    PIX_CHAVE = os.environ.get('PIX_CHAVE', "14057629939")
+    PIX_NOME = os.environ.get('PIX_NOME', "CAETANO GBUR PETRY")
+    PIX_CIDADE = os.environ.get('PIX_CIDADE', "JOINVILLE")

@@ -3,6 +3,7 @@ from models.database import get_db_connection
 from utils.decorators import login_required
 import json
 import mysql.connector
+from datetime import datetime
 
 def configure_empresa_routes(app):
     
@@ -11,7 +12,6 @@ def configure_empresa_routes(app):
     def painel_empresa():
         if 'empresa_id' not in session:
             flash('⚠️ Acesso restrito para empresas.', 'warning')
-            # CORREÇÃO: Usar 'login' em vez de 'auth.login'
             return redirect(url_for('login'))
         
         try:
@@ -107,7 +107,101 @@ def configure_empresa_routes(app):
                 cursor.close()
                 conn.close()
 
-    # Adicione outras rotas de empresa conforme necessário...
+    @app.route('/empresa/<int:id_empresa>')
+    def detalhes_empresa_publica(id_empresa):
+        """Página pública de detalhes da empresa"""
+        try:
+            conn = get_db_connection()
+            if not conn:
+                flash('Erro ao conectar ao banco de dados.', 'error')
+                return redirect(url_for('inicio'))
+            
+            cursor = conn.cursor(dictionary=True)
+            
+            # Buscar dados da empresa
+            cursor.execute("""
+                SELECT * FROM empresas 
+                WHERE id_empresa = %s AND tipo_empresa IN ('vendedor', 'ambos')
+            """, (id_empresa,))
+            
+            empresa = cursor.fetchone()
+            
+            if not empresa:
+                flash('Empresa não encontrada.', 'error')
+                return redirect(url_for('inicio'))
+            
+            # Buscar produtos da empresa
+            cursor.execute("""
+                SELECT p.*, pe.preco_empresa, pe.estoque_empresa
+                FROM produtos_empresa pe
+                JOIN produto p ON pe.id_produto = p.id_produto
+                WHERE pe.id_empresa = %s AND pe.ativo = TRUE AND p.ativo = TRUE
+                ORDER BY p.nome
+            """, (id_empresa,))
+            
+            produtos = cursor.fetchall()
+            
+            # Processar imagens
+            for produto in produtos:
+                if produto.get('imagens'):
+                    try:
+                        produto['imagens'] = json.loads(produto['imagens'])
+                    except:
+                        produto['imagens'] = []
+            
+            # Buscar avaliações da empresa
+            cursor.execute("""
+                SELECT ae.*, COALESCE(c.nome, 'Usuário') as avaliador_nome
+                FROM avaliacoes_empresas ae
+                LEFT JOIN clientes c ON ae.id_cliente = c.id_cliente
+                WHERE ae.id_empresa_avaliada = %s AND ae.aprovado = TRUE
+                ORDER BY ae.data_avaliacao DESC
+                LIMIT 20
+            """, (id_empresa,))
+            
+            avaliacoes = cursor.fetchall()
+            
+            # Calcular média de avaliações
+            cursor.execute("""
+                SELECT AVG(nota) as media_notas, COUNT(*) as total_avaliacoes
+                FROM avaliacoes_empresas
+                WHERE id_empresa_avaliada = %s AND aprovado = TRUE
+            """, (id_empresa,))
+            
+            media_avaliacoes = cursor.fetchone()
+            
+            # Verificar se usuário pode avaliar (se comprou da empresa)
+            pode_avaliar = False
+            if session.get('usuario_id'):
+                # CORREÇÃO REALIZADA AQUI: Mudado de pedido_itens para itens_pedido
+                cursor.execute("""
+                    SELECT COUNT(*) as comprou 
+                    FROM pedidos p
+                    JOIN itens_pedido pi ON p.id_pedido = pi.id_pedido
+                    JOIN produtos_empresa pe ON pi.id_produto = pe.id_produto
+                    WHERE p.id_cliente = %s AND pe.id_empresa = %s
+                    LIMIT 1
+                """, (session['usuario_id'], id_empresa))
+                
+                comprou_result = cursor.fetchone()
+                pode_avaliar = comprou_result and comprou_result['comprou'] > 0
+            
+            return render_template('empresa_detalhes_publica.html',
+                             empresa=empresa,
+                             produtos=produtos,
+                             avaliacoes=avaliacoes,
+                             media_avaliacoes=media_avaliacoes,
+                             pode_avaliar=pode_avaliar)
+    
+        except mysql.connector.Error as err:
+            # Mostra o erro detalhado se houver
+            flash(f'Erro ao carregar dados da empresa: {err}', 'error')
+            return redirect(url_for('inicio'))
+        finally:
+            if conn and conn.is_connected():
+                cursor.close()
+                conn.close()
+   
     @app.route('/api/produtos-disponiveis')
     @login_required
     def api_produtos_disponiveis():
@@ -284,3 +378,74 @@ def configure_empresa_routes(app):
             if conn and conn.is_connected():
                 cursor.close()
                 conn.close()
+
+    # Adicione esta nova rota dentro da função configure_auth_routes(app):
+
+    @app.route('/seguir_loja/<int:id_empresa>', methods=['POST'])
+    @login_required
+    def seguir_loja(id_empresa):
+        """
+        Permite ao cliente seguir ou deixar de seguir uma empresa (loja).
+        
+        A URL deve ser acessada via POST (preferencialmente de um botão/formulário) 
+        para evitar que um simples clique em um link mude o estado.
+        """
+        # Verifica se o usuário logado é um cliente (não uma empresa)
+        if 'usuario_id' not in session:
+            flash('❌ Apenas clientes podem seguir lojas.', 'error')
+            return redirect(url_for('inicio'))
+
+        cliente_id = session['usuario_id']
+        
+        try:
+            conn = get_db_connection()
+            if not conn:
+                flash('Erro ao conectar ao banco de dados.', 'error')
+                return redirect(url_for('inicio'))
+            
+            cursor = conn.cursor()
+            
+            # 1. Verificar se a empresa existe
+            cursor.execute("SELECT id_empresa, nome_fantasia FROM empresas WHERE id_empresa = %s", (id_empresa,))
+            empresa = cursor.fetchone()
+            if not empresa:
+                flash('❌ Loja não encontrada.', 'error')
+                return redirect(url_for('inicio'))
+            
+            # 2. Verificar se o cliente JÁ está seguindo a loja
+            cursor.execute("""
+                SELECT id_seguidor FROM seguidores 
+                WHERE id_cliente = %s AND id_empresa = %s
+            """, (cliente_id, id_empresa))
+            
+            esta_seguindo = cursor.fetchone()
+            
+            if esta_seguindo:
+                # 3. Se estiver seguindo, DEIXA DE SEGUIR (DELETE)
+                cursor.execute("""
+                    DELETE FROM seguidores 
+                    WHERE id_seguidor = %s
+                """, (esta_seguindo[0],))
+                mensagem = f'💔 Você deixou de seguir a loja "{empresa[1]}".'
+                
+            else:
+                # 4. Se NÃO estiver seguindo, PASSA A SEGUIR (INSERT)
+                # O 'data_seguimento' pode ser a data atual (datetime.now())
+                cursor.execute("""
+                    INSERT INTO seguidores (id_cliente, id_empresa, data_seguimento)
+                    VALUES (%s, %s, %s)
+                """, (cliente_id, id_empresa, datetime.now()))
+                mensagem = f'✅ Você agora está seguindo a loja "{empresa[1]}"! Fique de olho nas novidades.'
+            
+            conn.commit()
+            flash(mensagem, 'success')
+            
+        except mysql.connector.Error as err:
+            flash(f'Erro ao processar seguimento da loja: {err}', 'error')
+        finally:
+            if conn and conn.is_connected():
+                cursor.close()
+                conn.close()
+        
+        # Redireciona para a página anterior, ou para a página da loja/início
+        return redirect(request.referrer or url_for('inicio'))

@@ -64,6 +64,7 @@
         margin-bottom: 20px;
         line-height: 1.2;
     }
+    .dark-theme .product-title { color: var(--text); }
     .product-price {
         font-size: 3rem;
         font-weight: 800;
@@ -215,6 +216,19 @@
         font-weight: 600;
         color: var(--text);
     }
+    
+    /* Estilos do Modal de Avaliação */
+    .rating-input span {
+        font-size: 32px;
+        cursor: pointer;
+        color: #ccc;
+        transition: color 0.2s;
+    }
+    .rating-input span:hover,
+    .rating-input span.active {
+        color: #ffb800;
+    }
+    
     @media (max-width: 968px) {
         .product-detail-container {
             grid-template-columns: 1fr;
@@ -318,265 +332,215 @@
     </div>
 </div>
 
-    <!-- Resumo das Avaliações -->
-    {% if media_avaliacoes and media_avaliacoes.total_avaliacoes > 0 %}
-    <div class="resumo-avaliacoes" 
-         style="background: var(--glass); padding: 25px; border-radius: var(--radius); 
-                box-shadow: var(--shadow-sm); border: 1px solid var(--border); margin-bottom: 30px;">
+<div class="card" style="margin-top: 40px; padding: 30px;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+        <h2 style="color: var(--text); margin: 0;">⭐ Avaliações dos Clientes</h2>
         
-        <div style="display: grid; grid-template-columns: auto 1fr; gap: 30px; align-items: center;">
-            <!-- Nota Média -->
+        <div class="user-action-area">
+            {% if session.get('usuario_id') %}
+                {% if minha_avaliacao %}
+                    <div style="text-align: right;">
+                        <span style="color: var(--success); font-weight: bold; font-size: 14px; display: block; margin-bottom: 5px;">
+                            ✓ Você já avaliou este produto
+                        </span>
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="abrirModalAvaliacao('editar')" class="btn btn-sm btn-outline">✏️ Editar</button>
+                            <form action="{{ url_for('excluir_avaliacao', id_avaliacao=minha_avaliacao.id_avaliacao) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir sua avaliação?');" style="display: inline;">
+                                <button type="submit" class="btn btn-sm btn-danger">🗑️ Excluir</button>
+                            </form>
+                        </div>
+                    </div>
+                {% elif comprou %}
+                    <button onclick="abrirModalAvaliacao('nova')" class="btn" style="background: linear-gradient(135deg, #ffb800 0%, #ff9900 100%);">
+                        ⭐ Avaliar Produto
+                    </button>
+                {% else %}
+                    <span class="badge badge-warning" style="padding: 10px 15px;">🔒 Compre para avaliar</span>
+                {% endif %}
+            {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-sm btn-outline">Faça login para avaliar</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if media_avaliacoes and media_avaliacoes.total_avaliacoes > 0 %}
+        <div class="resumo-avaliacoes" style="background: var(--secondary); padding: 20px; border-radius: var(--radius); margin-bottom: 30px; display: flex; gap: 40px; align-items: center;">
             <div style="text-align: center;">
-                <div style="font-size: 3rem; font-weight: bold; color: var(--primary);">
+                <div style="font-size: 3.5rem; font-weight: bold; color: var(--text);">
                     {{ "%.1f"|format(media_avaliacoes.media) if media_avaliacoes.media else "0.0" }}
                 </div>
-                <div class="stars" style="font-size: 1.2rem; color: var(--warning); margin: 5px 0;">
+                <div style="color: #ffb800; font-size: 1.2rem;">
                     {% for i in range(5) %}
-                        {% if i < (media_avaliacoes.media|round if media_avaliacoes.media else 0) %}
-                            ★
-                        {% else %}
-                            ☆
-                        {% endif %}
+                        {{ '★' if i < (media_avaliacoes.media|round) else '☆' }}
                     {% endfor %}
                 </div>
-                <div style="color: var(--text-light); font-size: 0.9rem;">
+                <div style="color: var(--text-light); font-size: 0.9rem; margin-top: 5px;">
                     {{ media_avaliacoes.total_avaliacoes }} avaliação(ões)
                 </div>
             </div>
-
-<!-- Distribuição de Estrelas -->
-<div style="flex: 1;">
-    {% for stars in range(5, 0, -1) %}
-        {% if stars == 5 %}
-            {% set count = media_avaliacoes.cinco_estrelas %}
-        {% elif stars == 4 %}
-            {% set count = media_avaliacoes.quatro_estrelas %}
-        {% elif stars == 3 %}
-            {% set count = media_avaliacoes.tres_estrelas %}
-        {% elif stars == 2 %}
-            {% set count = media_avaliacoes.duas_estrelas %}
-        {% else %}
-            {% set count = media_avaliacoes.uma_estrela %}
-        {% endif %}
-        
-        {% set percentage = (count / media_avaliacoes.total_avaliacoes * 100) if media_avaliacoes.total_avaliacoes > 0 else 0 %}
-        
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-            <span style="color: var(--text-light); width: 80px; font-size: 0.9rem;">
-                {{ stars }} estrela(s)
-            </span>
-            <div style="flex: 1; background: var(--border); height: 8px; border-radius: 4px; overflow: hidden;">
-                <div style="background: var(--warning); height: 100%; width: {{ percentage }}%; 
-                          transition: width 0.5s ease;"></div>
-            </div>
-            <span style="color: var(--text-light); width: 40px; font-size: 0.8rem; text-align: right;">
-                {{ count }}
-            </span>
-        </div>
-    {% endfor %}
-</div>
-        </div>
-    </div>
-    {% else %}
-    <div class="sem-avaliacoes" 
-         style="background: var(--glass); padding: 40px; border-radius: var(--radius); 
-                box-shadow: var(--shadow-sm); border: 1px solid var(--border); text-align: center;">
-        <div style="font-size: 3rem; margin-bottom: 15px;">⭐</div>
-        <h3 style="color: var(--text-light); margin-bottom: 10px;">Nenhuma avaliação ainda</h3>
-        <p style="color: var(--text-light); margin: 0;">Seja o primeiro a avaliar este produto!</p>
-    </div>
-    {% endif %}
-
-    <!-- Lista de Avaliações -->
-    {% if avaliacoes %}
-    <div class="lista-avaliacoes">
-        {% for avaliacao in avaliacoes %}
-        <div class="avaliacao-item" 
-             style="background: var(--glass); padding: 25px; border-radius: var(--radius); 
-                    box-shadow: var(--shadow-sm); border: 1px solid var(--border); margin-bottom: 20px;">
             
-            <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 15px;">
-                <div style="flex: 1;">
-                    <div style="font-weight: 600; color: var(--text); margin-bottom: 5px;">
-                        {{ avaliacao.cliente_nome }}
+            <div style="flex: 1;">
+                {% for i in range(5, 0, -1) %}
+                    {% if i == 5 %}{% set count = media_avaliacoes.cinco_estrelas %}{% endif %}
+                    {% if i == 4 %}{% set count = media_avaliacoes.quatro_estrelas %}{% endif %}
+                    {% if i == 3 %}{% set count = media_avaliacoes.tres_estrelas %}{% endif %}
+                    {% if i == 2 %}{% set count = media_avaliacoes.duas_estrelas %}{% endif %}
+                    {% if i == 1 %}{% set count = media_avaliacoes.uma_estrela %}{% endif %}
+                    
+                    {% set pct = (count / media_avaliacoes.total_avaliacoes * 100) if media_avaliacoes.total_avaliacoes > 0 else 0 %}
+                    
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                        <span style="font-size: 12px; width: 10px;">{{ i }}</span>
+                        <span style="color: #ffb800; font-size: 12px;">★</span>
+                        <div style="flex: 1; background: var(--border); height: 6px; border-radius: 3px; overflow: hidden;">
+                            <div style="width: {{ pct }}%; background: #ffb800; height: 100%"></div>
+                        </div>
+                        <span style="font-size: 12px; width: 30px; text-align: right;">{{ count }}</span>
                     </div>
-                    <div class="stars" style="color: var(--warning); font-size: 1.1rem;">
-                        {% for i in range(5) %}
-                            {% if i < avaliacao.nota %}
-                                ★
-                            {% else %}
-                                ☆
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-                </div>
-                <div style="color: var(--text-light); font-size: 0.8rem;">
-                    {{ avaliacao.data_avaliacao.strftime('%d/%m/%Y') }}
-                </div>
+                {% endfor %}
             </div>
-
-            {% if avaliacao.titulo %}
-            <h4 style="color: var(--text); margin-bottom: 10px; font-size: 1.1rem;">
-                {{ avaliacao.titulo }}
-            </h4>
-            {% endif %}
-
-            <p style="color: var(--text); line-height: 1.6; margin: 0;">
-                {{ avaliacao.comentario }}
-            </p>
         </div>
-        {% endfor %}
-    </div>
+    {% else %}
+        <div class="sem-avaliacoes" style="text-align: center; padding: 30px; color: var(--text-light);">
+            <p>Este produto ainda não tem avaliações. Seja o primeiro!</p>
+        </div>
     {% endif %}
-</section>
 
-<style>
-    .reviews-section {
-        animation: fadeInUp 0.6s ease;
-    }
+    <div class="lista-avaliacoes">
+        {% if avaliacoes %}
+            {% for av in avaliacoes %}
+            <div class="avaliacao-item" style="border-bottom: 1px solid var(--border); padding: 20px 0;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <strong style="color: var(--text);">{{ av.cliente_nome }}</strong>
+                    <span style="color: var(--text-light); font-size: 12px;">{{ av.data_avaliacao.strftime('%d/%m/%Y') }}</span>
+                </div>
+                <div style="color: #ffb800; margin-bottom: 8px;">
+                    {% for i in range(5) %}
+                        {{ '★' if i < av.nota else '☆' }}
+                    {% endfor %}
+                </div>
+                {% if av.titulo %}
+                    <h4 style="margin: 0 0 5px; color: var(--text); font-size: 16px;">{{ av.titulo }}</h4>
+                {% endif %}
+                <p style="margin: 0; color: var(--text-light); line-height: 1.5;">{{ av.comentario }}</p>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
 
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-lg);
-    }
-
-    .review-card {
-        transition: var(--transition);
-    }
-
-    .review-card:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-lg);
-    }
-
-    .dark-theme .review-card {
-        background: var(--dark);
-    }
-
-    .dark-theme .login-prompt {
-        background: rgba(255, 255, 255, 0.05);
-    }
-
-    .dark-theme .rating-breakdown {
-        background: rgba(255, 255, 255, 0.05);
-    }
-
-    /* Responsividade */
-    @media (max-width: 768px) {
-        .section-header {
-            flex-direction: column;
-            gap: 16px;
-            text-align: center;
-        }
-
-        .rating-summary {
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .review-header {
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .review-rating {
-            align-self: flex-start;
-        }
-
-        .rating-bar {
-            flex-direction: column;
-            gap: 8px;
-            text-align: center;
-        }
-
-        .star-label,
-        .star-count {
-            width: auto !important;
-            text-align: center !important;
-        }
-
-        .bar-container {
-            width: 100%;
-        }
-    }
-
-    /* Animações para as barras de estatísticas */
-    .bar-fill {
-        animation: growBar 1s ease-out;
-    }
-
-    @keyframes growBar {
-        from {
-            width: 0%;
-        }
-        to {
-            width: var(--final-width);
-        }
-    }
-</style>
+<div id="modalAvaliacao" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">Avaliar Produto</h2>
+            <button class="modal-close" onclick="fecharModalAvaliacao()">✕</button>
+        </div>
+        <form action="{{ url_for('avaliar_produto', id_produto=produto.id_produto) }}" method="POST">
+            <div class="form-group">
+                <label>Sua Nota:</label>
+                <div class="rating-input" style="font-size: 32px; display: flex; gap: 5px;">
+                    <span onclick="setRating(1)">★</span>
+                    <span onclick="setRating(2)">★</span>
+                    <span onclick="setRating(3)">★</span>
+                    <span onclick="setRating(4)">★</span>
+                    <span onclick="setRating(5)">★</span>
+                </div>
+                <input type="hidden" name="nota" id="inputNota" required value="{{ minha_avaliacao.nota if minha_avaliacao else '' }}">
+                <p id="textoNota" style="font-size: 14px; margin-top: 5px; color: var(--primary);">Selecione uma nota</p>
+            </div>
+            
+            <div class="form-group">
+                <label>Título (Opcional)</label>
+                <input type="text" name="titulo" class="form-control" placeholder="Resumo da sua opinião" value="{{ minha_avaliacao.titulo if minha_avaliacao else '' }}">
+            </div>
+            
+            <div class="form-group">
+                <label>Seu Comentário *</label>
+                <textarea name="comentario" class="form-control" rows="4" required placeholder="O que você achou do produto?">{{ minha_avaliacao.comentario if minha_avaliacao else '' }}</textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-outline" onclick="fecharModalAvaliacao()">Cancelar</button>
+                <button type="submit" class="btn btn-success">Salvar Avaliação</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <script>
-    // Animar as barras de estatísticas quando a seção entrar em vista
-    document.addEventListener('DOMContentLoaded', function() {
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const bars = entry.target.querySelectorAll('.bar-fill');
-                    bars.forEach(bar => {
-                        const finalWidth = bar.style.width;
-                        bar.style.width = '0%';
-                        setTimeout(() => {
-                            bar.style.width = finalWidth;
-                        }, 100);
-                    });
-                }
-            });
-        });
-
-        const ratingBreakdown = document.querySelector('.rating-breakdown');
-        if (ratingBreakdown) {
-            observer.observe(ratingBreakdown);
-        }
-    });
-
-    // Adicionar tooltip para as estrelas na distribuição
-    document.querySelectorAll('.rating-bar').forEach(bar => {
-        bar.addEventListener('mouseenter', function() {
-            const starCount = this.querySelector('.star-count').textContent;
-            const tooltip = document.createElement('div');
-            tooltip.className = 'tooltip';
-            tooltip.textContent = starCount + ' avaliações';
-            tooltip.style.cssText = `
-                position: absolute;
-                background: var(--dark);
-                color: white;
-                padding: 8px 12px;
-                border-radius: 6px;
-                font-size: 12px;
-                z-index: 1000;
-                transform: translateY(-100%);
-                margin-top: -8px;
-            `;
-            this.appendChild(tooltip);
-        });
-
-        bar.addEventListener('mouseleave', function() {
-            const tooltip = this.querySelector('.tooltip');
-            if (tooltip) {
-                tooltip.remove();
+    // Lógica das Estrelas
+    function setRating(n) {
+        document.getElementById('inputNota').value = n;
+        const stars = document.querySelectorAll('#modalAvaliacao .rating-input span');
+        const textos = ["Péssimo", "Ruim", "Regular", "Bom", "Excelente"];
+        
+        document.getElementById('textoNota').textContent = textos[n-1];
+        
+        stars.forEach((star, index) => {
+            if (index < n) {
+                star.style.color = '#ffb800';
+                star.classList.add('active');
+            } else {
+                star.style.color = '#ccc';
+                star.classList.remove('active');
             }
         });
+    }
+
+    // Controle do Modal
+    function abrirModalAvaliacao(modo) {
+        const modal = document.getElementById('modalAvaliacao');
+        const titulo = document.getElementById('modalTitle');
+        const inputNota = document.getElementById('inputNota');
+        const tituloInput = modal.querySelector('input[name="titulo"]');
+        const comentarioInput = modal.querySelector('textarea[name="comentario"]');
+
+        // Reseta o formulário
+        modal.querySelector('form').reset();
+        setRating(0); 
+
+        if (modo === 'editar') {
+            titulo.textContent = "✏️ Editar Avaliação";
+            
+            // Preenche dados do backend (minha_avaliacao)
+            const notaSalva = inputNota.value;
+            const tituloSalvo = '{{ minha_avaliacao.titulo if minha_avaliacao.titulo else "" }}';
+            const comentarioSalvo = '{{ minha_avaliacao.comentario if minha_avaliacao.comentario else "" }}';
+            
+            // Preenche os campos
+            if (notaSalva) setRating(parseInt(notaSalva));
+            tituloInput.value = tituloSalvo;
+            comentarioInput.value = comentarioSalvo;
+
+        } else {
+            titulo.textContent = "⭐ Avaliar Produto";
+            document.getElementById('textoNota').textContent = "Selecione uma nota";
+        }
+        
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function fecharModalAvaliacao() {
+        document.getElementById('modalAvaliacao').classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+
+    // Fecha o modal ao clicar fora dele
+    window.onclick = function(event) {
+        const modal = document.getElementById('modalAvaliacao');
+        if (event.target == modal) {
+            fecharModalAvaliacao();
+        }
+    }
+    
+    // Inicializa as estrelas se houver nota salva no GET
+    document.addEventListener('DOMContentLoaded', function() {
+        const notaInicial = document.getElementById('inputNota').value;
+        if (notaInicial) {
+            setRating(parseInt(notaInicial));
+        }
     });
 </script>
 

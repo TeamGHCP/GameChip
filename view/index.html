@@ -1,356 +1,235 @@
-{% extends 'base.html' %} 
+{% extends "base.html" %}
 
-{% set titulo = "Loja GameChip - Ofertas Imperdíveis de Tecnologia" %}
+{% block title %}Início{% endblock %}
 
 {% block conteudo %}
-<section class="hero">
-    <div class="hero-background">
-        <img src="{{ url_for('static', filename='img/card-games.jpg') }}" alt="Card Games" class="hero-image">
-    </div>
+
+<div class="carousel-container">
     
-    <div class="hero-content">
-        <h1>OFERTA EXCLUSIVA GAME CHIP!</h1>
-        <h2>Toda a linha de Periféricos com até 35% de Desconto!</h2>
-        <p>Jogos, Gift Cards, Contas Premium e Extras!</p>
-        <a href="{{ url_for('listar_produtos') }}" class="btn hero-btn">
-            🔥 Ver Periféricos em Oferta
+    <div class="carousel-slide active">
+        <a href="{{ url_for('listar_produtos') }}">
+            <img src="{{ url_for('static', filename='banners/natal.jpeg') }}" alt="Natal">
         </a>
     </div>
-</section>
+
+    <div class="carousel-slide">
+        <a href="{{ url_for('listar_produtos') }}">
+            <img src="{{ url_for('static', filename='banners/crunchyroll.jpeg') }}" alt="Crunchyroll">
+        </a>
+    </div>
+
+    <div class="carousel-slide">
+        <a href="{{ url_for('empresas_vendedoras') }}">
+            <img src="{{ url_for('static', filename='banners/google.jpeg') }}" alt="Google">
+        </a>
+    </div>
+
+    <div class="carousel-slide">
+        <a href="{{ url_for('listar_produtos') }}">
+            <img src="{{ url_for('static', filename='banners/apple.jpeg') }}" alt="Apple">
+        </a>
+    </div>
+
+    <div class="carousel-slide">
+        <a href="{{ url_for('listar_produtos') }}">
+            <img src="{{ url_for('static', filename='banners/netflix.jpeg') }}" alt="Netflix">
+        </a>
+    </div>
+
+    <div class="carousel-slide">
+        <a href="{{ url_for('listar_produtos') }}">
+            <img src="{{ url_for('static', filename='banners/nintendo.jpeg') }}" alt="Nintendo">
+        </a>
+    </div>
+
+    <div class="carousel-slide">
+        <a href="{{ url_for('listar_produtos') }}">
+            <img src="{{ url_for('static', filename='banners/playstation.jpeg') }}" alt="PlayStation">
+        </a>
+    </div>
+
+    <div class="carousel-slide">
+        <a href="{{ url_for('listar_produtos') }}">
+            <img src="{{ url_for('static', filename='banners/spotify.jpeg') }}" alt="Spotify">
+        </a>
+    </div>
+
+    <div class="carousel-slide">
+        <a href="{{ url_for('listar_produtos') }}">
+            <img src="{{ url_for('static', filename='banners/steam.jpeg') }}" alt="Steam">
+        </a>
+    </div>
+
+    <div class="carousel-slide">
+        <a href="{{ url_for('listar_produtos') }}">
+            <img src="{{ url_for('static', filename='banners/xbox.jpeg') }}" alt="Xbox">
+        </a>
+    </div>
+
+    <button class="carousel-btn prev-btn" onclick="moveSlide(-1)">&#10094;</button>
+    <button class="carousel-btn next-btn" onclick="moveSlide(1)">&#10095;</button>
+
+</div>
 
 <style>
-    .hero {
+    /* ================= CARROSSEL (SLIDER) SIMPLES ================= */
+
+    .carousel-container {
         position: relative;
-        height: 70vh;
-        min-height: 500px;
+        width: 100%;
+        height: 500px; /* Altura do Banner */
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: var(--shadow-lg);
+        margin-bottom: 40px;
+        background: var(--dark);
+    }
+
+    .carousel-slide {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
         display: flex;
         align-items: center;
         justify-content: center;
-        text-align: center;
-        overflow: hidden;
-
-        /* 🔥 AS DUAS ÚNICAS COISAS QUE EU ALTEREI */
-        border-radius: var(--radius);
-        box-shadow: var(--shadow-lg);
-
-        margin-bottom: 60px;
     }
 
-    .hero-background {
-        position: absolute;
-        inset: 0;
-        overflow: hidden;
-        z-index: -1;
+    .carousel-slide.active {
+        opacity: 1;
+        z-index: 1;
     }
 
-    .hero-image {
+    /* Imagem Padrão (Sem frescura de tema) */
+    .carousel-slide img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        object-position: center;
         display: block;
+        cursor: pointer;
     }
 
-    .hero-content {
-        max-width: 800px;
-        padding: 20px;
-        z-index: 2;
+    .carousel-slide a {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+    .carousel-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0, 0, 0, 0.4);
         color: white;
-        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-    }
-    
-    .hero-content h1 {
-        font-size: 3.5rem;
-        margin-bottom: 10px;
-        font-weight: 900;
-        letter-spacing: -1px;
-    }
-    
-    .hero-content h2 {
-        font-size: 1.8rem;
-        margin-bottom: 25px;
-        font-weight: 500;
-    }
-    
-    .hero-content p {
-        font-size: 1.1rem;
-        margin-bottom: 40px;
-        opacity: 0.9;
-    }
-    
-    .hero-btn {
-        padding: 15px 40px;
-        font-size: 1.1rem;
-        background: linear-gradient(135deg, var(--accent) 0%, #7e2497ff 100%);
-        box-shadow: 0 4px 15px rgba(255, 107, 53, 0.5);
         border: none;
-        color: white;
-        text-decoration: none;
-        border-radius: 8px;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .hero-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(255, 107, 53, 0.7);
-        color: white;
-    }
-
-    .highlight-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 30px;
-        margin-bottom: 60px;
-    }
-    
-    .highlight-card {
-        background: var(--glass);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 30px;
-        text-align: center;
+        padding: 16px;
+        cursor: pointer;
+        font-size: 24px;
+        border-radius: 50%;
         transition: var(--transition);
-        box-shadow: var(--shadow-sm);
-        backdrop-filter: blur(10px);
-    }
-    
-    .highlight-card:hover {
-        transform: translateY(-8px) scale(1.01);
-        box-shadow: var(--shadow);
-    }
-    
-    .highlight-card h3 {
-        font-size: 1.5rem;
-        margin-bottom: 10px;
-        color: var(--primary-dark);
-        font-weight: 800;
-    }
-    
-    .highlight-card p {
-        color: var(--text-light);
-        margin-bottom: 20px;
-    }
-    
-    .highlight-icon {
-        font-size: 3rem;
-        margin-bottom: 15px;
-    }
-
-    .product-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 30px;
-    }
-    
-    .product-card {
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        overflow: hidden;
-        transition: var(--transition);
-        box-shadow: var(--shadow-sm);
-        background: white;
-        position: relative;
-    }
-    
-    .dark-theme .product-card {
-        background: var(--dark);
-    }
-    
-    .product-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--shadow);
-    }
-    
-    .product-image {
-        height: 200px;
-        background-color: #e0e0e0; 
+        z-index: 10;
+        width: 50px;
+        height: 50px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 50px;
-        border-bottom: 1px solid var(--border);
-        color: var(--primary-dark);
-        font-weight: bold;
-        text-align: center;
-        padding: 10px;
-        position: relative;
+        backdrop-filter: blur(4px);
     }
-    
-    .product-image img {
-        object-fit: contain; 
-    }
-    
-    .product-info {
-        padding: 20px;
-    }
-    
-    .product-info h4 {
-        font-size: 1.2rem;
-        font-weight: 700;
-        margin-bottom: 8px;
-        color: var(--text);
-    }
-    
-    .price-old {
-        color: var(--text-light);
-        text-decoration: line-through;
-        font-size: 0.9rem;
-        margin-right: 10px;
-    }
-    
-    .price-new {
-        color: var(--danger);
-        font-size: 1.5rem;
-        font-weight: 800;
-    }
-    
-    .price-normal {
-        color: var(--primary-dark);
-        font-size: 1.5rem;
-        font-weight: 800;
-    }
-    
-    .product-actions {
-        margin-top: 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .ofertas-badge {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: linear-gradient(135deg, var(--danger) 0%, #e62958 100%);
-        color: white;
-        padding: 8px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 700;
-        z-index: 2;
-        box-shadow: var(--shadow-sm);
-    }
-    
-    .novo-badge {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-        color: white;
-        padding: 8px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 700;
-        z-index: 2;
-        box-shadow: var(--shadow-sm);
-    }
-    
-    .btn-carrinho {
-        background: linear-gradient(135deg, var(--success) 0%, #00b36e 100%);
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-        transition: var(--transition);
-        flex: 1;
-    }
-    
-    .btn-carrinho:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow);
-    }
-    
-    .btn-detalhes {
+
+    .carousel-btn:hover {
         background: var(--primary);
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-        transition: var(--transition);
-        flex: 1;
-        text-decoration: none;
-        text-align: center;
-        display: inline-block;
+        transform: translateY(-50%) scale(1.1);
     }
-    
-    .btn-detalhes:hover {
-        background: var(--primary-dark);
-        transform: translateY(-2px);
-        box-shadow: var(--shadow);
+
+    .prev-btn { left: 20px; }
+    .next-btn { right: 20px; }
+
+    .carousel-caption {
+        position: absolute;
+        bottom: 40px;
+        left: 40px;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(10px);
+        padding: 20px;
+        border-radius: var(--radius);
         color: white;
+        max-width: 400px;
+        border-left: 4px solid var(--primary);
+        pointer-events: none;
+        z-index: 2;
     }
+
+    /* Esconde legenda no celular */
+    @media (max-width: 768px) {
+        .carousel-container { height: 250px; }
+        .carousel-caption { display: none; }
+        .carousel-btn { padding: 10px; width: 35px; height: 35px; font-size: 18px; }
+}
 </style>
 
-<h2 class="card-header" style="border: none; margin-bottom: 20px;">
-    <span>🚀</span>
-    Por que comprar na GAME CHIP?
-</h2>
-
-<div class="highlight-grid">
-    <div class="highlight-card">
-        <span class="highlight-icon" style="color: var(--success);">📦</span>
-        <h3>Entrega Rápida</h3>
-        <p>Receba seu pedido em até 48h em capitais selecionadas.</p>
-        <a href="{{ url_for('prazos') }}" class="btn btn-outline btn-sm">Ver Prazos</a>
-    </div>
-    
-    <div class="highlight-card">
-        <span class="highlight-icon" style="color: var(--primary);">⭐</span>
-        <h3>Marcas de Confiança</h3>
-        <p>Apenas as melhores marcas e com garantia de 1 ano GAME CHIP.</p>
-        <a href="{{ url_for('marcas') }}" class="btn btn-outline btn-sm">Nossas Marcas</a>
-    </div>
-    
-    <div class="highlight-card">
-        <span class="highlight-icon" style="color: var(--accent);">🔒</span>
-        <h3>Pagamento Facilitado</h3>
-        <p>Parcele em até 12x sem juros ou pague com Pix com 10% de desconto.</p>
-        <a href="{{ url_for('condicoes') }}" class="btn btn-outline btn-sm">Ver Condições</a>
-    </div>
-</div>
-
-
-
-
-<div id="cookie-banner">
-    <span>🍪 Usamos cookies para melhorar sua experiência. Você pode aceitar ou recusar.</span>
-    
-    <div style="display: flex; gap: 10px;">
-        <button id="accept-cookies">Aceitar</button>
-        <button id="decline-cookies">Recusar</button>
-    </div>
-</div>
-
 <script>
-    const cookieBanner = document.getElementById('cookie-banner');
-    const acceptBtn = document.getElementById('accept-cookies');
-    const declineBtn = document.getElementById('decline-cookies');
+    let slideIndex = 0;
+    const slides = document.querySelectorAll('.carousel-slide');
+    
+    // Configurado para 3 segundos para dar tempo de ver (mude para 1000 se quiser 1 seg)
+    const intervalTime = 3000; 
+    
+    let slideInterval;
 
-    // Se já tomou decisão, não mostra
-    if(localStorage.getItem('cookies_decision')){
-        cookieBanner.style.display = 'none';
+    function showSlides(n) {
+        if (n >= slides.length) slideIndex = 0;
+        if (n < 0) slideIndex = slides.length - 1;
+
+        slides.forEach(slide => slide.classList.remove('active'));
+        slides[slideIndex].classList.add('active');
     }
 
-    function fecharBanner(){
-        cookieBanner.style.transform = 'translateY(100%)';
-        cookieBanner.style.opacity = '0';
-        setTimeout(() => cookieBanner.style.display = 'none', 400);
+    function moveSlide(n) {
+        slideIndex += n;
+        showSlides(slideIndex);
+        resetTimer();
     }
 
-    acceptBtn.addEventListener('click', () => {
-        localStorage.setItem('cookies_decision', 'aceito');
-        fecharBanner();
-    });
+    function startCarousel() {
+        slideInterval = setInterval(() => {
+            slideIndex++;
+            showSlides(slideIndex);
+        }, intervalTime);
+    }
 
-    declineBtn.addEventListener('click', () => {
-        localStorage.setItem('cookies_decision', 'recusado');
-        fecharBanner();
-    });
+    function resetTimer() {
+        clearInterval(slideInterval);
+        startCarousel();
+    }
+
+    startCarousel();
 </script>
+
+<div style="margin-top: 40px;">
+    <h3 style="margin-bottom: 20px; color: var(--text);">🚀 Por que comprar na GAME CHIP?</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+        <div class="card" style="text-align: center; padding: 40px;">
+            <div style="font-size: 40px; margin-bottom: 15px;">📦</div>
+            <h3 style="margin-bottom: 10px;">Entrega Rápida</h3>
+            <p style="color: var(--text-light); margin-bottom: 20px;">Receba seu pedido em tempo recorde.</p>
+            <a href="prazos" class="btn btn-outline">Ver Prazos</a>
+        </div>
+        <div class="card" style="text-align: center; padding: 40px;">
+            <div style="font-size: 40px; margin-bottom: 15px;">⭐</div>
+            <h3 style="margin-bottom: 10px;">Marcas de Confiança</h3>
+            <p style="color: var(--text-light); margin-bottom: 20px;">Apenas as melhores marcas com garantia.</p>
+            <a href="marcas" class="btn btn-outline">Nossas Marcas</a>
+        </div>
+        <div class="card" style="text-align: center; padding: 40px;">
+            <div style="font-size: 40px; margin-bottom: 15px;">🔒</div>
+            <h3 style="margin-bottom: 10px;">Pagamento Facilitado</h3>
+            <p style="color: var(--text-light); margin-bottom: 20px;">Parcele sem juros ou pague com Pix.</p>
+            <a href="condicoes" class="btn btn-outline">Ver Condições</a>
+        </div>
+    </div>
+</div>
 
 {% endblock %}

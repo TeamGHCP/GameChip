@@ -1,4 +1,4 @@
-from flask import render_template, request, flash, redirect, url_for, session
+from flask import render_template, request, flash, redirect, url_for, session, jsonify
 from models.database import get_db_connection
 from utils.decorators import login_required
 from utils.qrcode_generator import gerar_qrcode_pix
@@ -33,15 +33,12 @@ def configure_carrinho_routes(app):
             produto_no_carrinho = next((item for item in carrinho if item['id_produto'] == id_produto), None)
             quantidade = int(request.form.get('quantidade', 1))
             
-            # 🔥 CORREÇÃO: Processar imagens corretamente
             imagens_produto = []
             if produto.get('imagens'):
                 try:
                     imagens_produto = json.loads(produto['imagens'])
                 except:
-                    # Se não for JSON, usa como array vazio
                     imagens_produto = []
-            # Se não tiver imagens mas tiver imagem singular, usa ela
             elif produto.get('imagem'):
                 imagens_produto = [produto['imagem']]
             
@@ -53,7 +50,7 @@ def configure_carrinho_routes(app):
                     'nome': produto['nome'],
                     'preco': float(produto['preco']),
                     'quantidade': quantidade,
-                    'imagens': imagens_produto,  # ← MUDOU para 'imagens' (plural)
+                    'imagens': imagens_produto,
                     'categoria': produto['categoria']
                 })
             session['carrinho'] = carrinho
@@ -119,18 +116,16 @@ def configure_carrinho_routes(app):
 
         produtos_carrinho = session.get('carrinho', [])
         
-        # 🔥 CORREÇÃO: Garantir que todos os produtos tenham 'imagens' como array
+        if not produtos_carrinho and request.method == 'GET':
+             return render_template('carrinho.html', produtos_carrinho=[], total_itens=0, total_preco=0)
+
         for produto in produtos_carrinho:
-            # Se o produto tiver 'imagem' mas não 'imagens', migrar
             if 'imagem' in produto and ('imagens' not in produto or not produto['imagens']):
                 produto['imagens'] = [produto['imagem']]
-            # Garantir que 'imagens' sempre seja um array
             if 'imagens' not in produto:
                 produto['imagens'] = []
         
         total_geral = sum(item['preco'] * item['quantidade'] for item in produtos_carrinho)
-
-        # 🔥 ADICIONAR: Marcar que o usuário chegou na página finalizar carrinho
         session['chegou_finalizar_carrinho'] = True
 
         if request.method == 'POST':
@@ -140,14 +135,13 @@ def configure_carrinho_routes(app):
             pagamento = request.form.get('pagamento')
 
             if not produtos_carrinho:
-                flash('⚠️ Seu carrinho está vazio.', 'warning')
+                flash('⚠️ Seu carrinho está vazio ou já foi processado.', 'warning')
                 return redirect(url_for('carrinho'))
 
             try:
                 conn = get_db_connection()
                 cursor = conn.cursor(dictionary=True)
 
-                # Verificar estoque
                 for item in produtos_carrinho:
                     cursor.execute("SELECT nome, estoque FROM produto WHERE id_produto = %s", (item['id_produto'],))
                     produto_db = cursor.fetchone()
@@ -158,14 +152,12 @@ def configure_carrinho_routes(app):
                         flash(f"⚠️ Estoque insuficiente de '{produto_db['nome']}'.", 'warning')
                         return redirect(url_for('carrinho'))
 
-                # Criar pedido
                 cursor.execute("""
                     INSERT INTO pedidos (id_cliente, total, forma_pagamento, status, data_pedido)
                     VALUES (%s, %s, %s, %s, NOW())
                 """, (session['usuario_id'], total_geral, pagamento, 'pendente'))
                 pedido_id = cursor.lastrowid
 
-                # Adicionar itens e atualizar estoque
                 for item in produtos_carrinho:
                     cursor.execute("""
                         INSERT INTO itens_pedido (id_pedido, id_produto, quantidade, preco_unitario)
@@ -175,7 +167,6 @@ def configure_carrinho_routes(app):
                         UPDATE produto SET estoque = estoque - %s WHERE id_produto = %s
                     """, (item['quantidade'], item['id_produto']))
 
-                # Registrar pagamento
                 cursor.execute("""
                     INSERT INTO pagamentos (nome, email, endereco, metodo, valor)
                     VALUES (%s, %s, %s, %s, %s)
@@ -183,11 +174,13 @@ def configure_carrinho_routes(app):
 
                 conn.commit()
 
-                # Gera PIX se for o método escolhido
+                # Limpa carrinho após criar pedido
+                session.pop('carrinho', None)
+                session.modified = True
+
                 if pagamento == 'pix':
                     qr_base64, copia_cola = gerar_qrcode_pix(total_geral)
-                    session.pop('carrinho', None)
-                    flash('🎉 Compra finalizada com sucesso! Escaneie o QR Code para pagar via PIX.', 'success')
+                    flash('🎉 Compra realizada! Escaneie o QR Code para pagar.', 'success')
                     return render_template(
                         'compra-sucedida.html',
                         valor=total_geral,
@@ -216,35 +209,43 @@ def configure_carrinho_routes(app):
     @app.route('/confirmar-pagamento', methods=['POST'])
     @login_required
     def confirmar_pagamento():
-        """Marca o pagamento como confirmado - VERSÃO CORRIGIDA"""
+        """Atualiza o status para CONCLUÍDO (Corrigido erro SQL 1093)"""
         try:
             conn = get_db_connection()
-            cursor = conn.cursor()
+            # Usar dictionary=True para facilitar
+            cursor = conn.cursor(dictionary=True)
             
-            # ✅ ATUALIZA PARA 'concluido' (SEU ENUM CORRETO)
+            # 1. Busca o ID do último pedido do cliente
             cursor.execute("""
-                UPDATE pedidos 
-                SET status = 'concluido' 
+                SELECT id_pedido 
+                FROM pedidos 
                 WHERE id_cliente = %s 
-                AND id_pedido = (
-                    SELECT MAX(id_pedido) FROM pedidos WHERE id_cliente = %s
-                )
-            """, (session['usuario_id'], session['usuario_id']))
+                ORDER BY id_pedido DESC 
+                LIMIT 1
+            """, (session['usuario_id'],))
             
-            conn.commit()
+            pedido = cursor.fetchone()
             
-            # ✅ MARCA NA SESSION TAMBÉM
-            session['pagamento_confirmado'] = True
-            session['chegou_finalizar_carrinho'] = True
-            session.modified = True
-            
-            print(f"✅ Pagamento CONCLUÍDO para usuário {session['usuario_id']}")
-            
-            return {'status': 'success', 'message': 'Pagamento confirmado com sucesso!'}
+            if pedido:
+                id_pedido = pedido['id_pedido']
+                
+                # 2. Atualiza esse pedido específico usando o ID encontrado
+                cursor.execute("""
+                    UPDATE pedidos 
+                    SET status = 'concluido' 
+                    WHERE id_pedido = %s
+                """, (id_pedido,))
+                
+                conn.commit()
+                
+                session['pagamento_confirmado'] = True
+                return jsonify({'status': 'success', 'message': 'Pagamento confirmado!'})
+            else:
+                return jsonify({'status': 'error', 'message': 'Nenhum pedido encontrado para confirmar.'})
             
         except Exception as err:
-            print(f"❌ Erro ao confirmar pagamento: {err}")
-            return {'status': 'error', 'message': f'Erro ao confirmar pagamento: {err}'}
+            print(f"Erro ao confirmar pagamento: {err}")
+            return jsonify({'status': 'error', 'message': str(err)})
         finally:
             if conn and conn.is_connected():
                 cursor.close()
@@ -253,3 +254,85 @@ def configure_carrinho_routes(app):
     @app.route('/compra-sucedida')
     def compra_sucedida():
         return render_template('compra-sucedida.html')
+    @app.route('/meus-pedidos')
+    @login_required
+    def meus_pedidos():
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            
+            # Busca TODOS os pedidos do cliente (não só os 5 últimos)
+            cursor.execute("""
+                SELECT * FROM pedidos 
+                WHERE id_cliente = %s 
+                ORDER BY data_pedido DESC
+            """, (session['usuario_id'],))
+            
+            pedidos = cursor.fetchall()
+            
+            # Conta itens para exibir na tabela
+            for pedido in pedidos:
+                cursor.execute("SELECT COUNT(*) as qtd FROM itens_pedido WHERE id_pedido = %s", (pedido['id_pedido'],))
+                pedido['qtd_itens'] = cursor.fetchone()['qtd']
+            
+            return render_template('meus_pedidos.html', pedidos=pedidos)
+            
+        except mysql.connector.Error as err:
+            flash(f'Erro ao carregar pedidos: {err}', 'error')
+            return redirect(url_for('minha_conta'))
+        finally:
+            if conn and conn.is_connected():
+                cursor.close()
+                conn.close()
+
+    @app.route('/meus-pedidos/<int:id_pedido>')
+    @login_required
+    def detalhes_pedido(id_pedido):
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            
+            # Busca detalhes do pedido específico
+            cursor.execute("""
+                SELECT p.*, e.rua, e.numero, e.bairro, e.cidade, e.estado, e.cep, e.destinatario
+                FROM pedidos p
+                LEFT JOIN enderecos e ON p.id_endereco = e.id_endereco
+                WHERE p.id_pedido = %s AND p.id_cliente = %s
+            """, (id_pedido, session['usuario_id']))
+            
+            pedido = cursor.fetchone()
+            
+            if not pedido:
+                flash('Pedido não encontrado.', 'error')
+                return redirect(url_for('meus_pedidos'))
+            
+            # Busca os produtos desse pedido
+            cursor.execute("""
+                SELECT ip.*, p.nome, p.imagem, p.imagens, p.marca
+                FROM itens_pedido ip
+                JOIN produto p ON ip.id_produto = p.id_produto
+                WHERE ip.id_pedido = %s
+            """, (id_pedido,))
+            
+            itens = cursor.fetchall()
+            
+            # Corrige imagens JSON
+            for item in itens:
+                if item.get('imagens'):
+                    try:
+                        imgs = json.loads(item['imagens'])
+                        item['imagem_principal'] = imgs[0] if imgs else item['imagem']
+                    except:
+                        item['imagem_principal'] = item['imagem']
+                else:
+                    item['imagem_principal'] = item['imagem']
+
+            return render_template('detalhes_pedido.html', pedido=pedido, itens=itens)
+            
+        except mysql.connector.Error as err:
+            flash(f'Erro ao carregar detalhes: {err}', 'error')
+            return redirect(url_for('meus_pedidos'))
+        finally:
+            if conn and conn.is_connected():
+                cursor.close()
+                conn.close()

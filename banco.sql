@@ -159,6 +159,20 @@ CREATE TABLE itens_pedido (
     INDEX idx_produto (id_produto)
 );
 
+CREATE TABLE seguidores (
+    id_seguidor INT AUTO_INCREMENT PRIMARY KEY,
+    id_cliente INT NOT NULL,
+    id_empresa INT NOT NULL,
+    data_seguimento DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    -- Garante que um cliente siga uma empresa apenas uma vez
+    UNIQUE KEY uk_cliente_empresa (id_cliente, id_empresa),
+
+    -- Chaves Estrangeiras para integridade
+    FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente) ON DELETE CASCADE,
+    FOREIGN KEY (id_empresa) REFERENCES empresas(id_empresa) ON DELETE CASCADE
+);
+
 -- Tabela preferencias
 CREATE TABLE preferencias (
     id_preferencia INT PRIMARY KEY AUTO_INCREMENT,

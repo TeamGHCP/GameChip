@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Pedido #{{ pedido.id_pedido }}{% endblock %}
+
+{% block conteudo %}
+<div class="container" style="max-width: 900px; margin: 40px auto; padding: 20px;">
+    
+    <div style="margin-bottom: 20px;">
+        <a href="{{ url_for('meus_pedidos') }}" style="color: var(--text-light); text-decoration: none;">&larr; Voltar para Lista</a>
+    </div>
+
+    <div class="card">
+        <div style="border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <div>
+                <h2 style="color: var(--primary); margin: 0;">Pedido #{{ pedido.id_pedido }}</h2>
+                <p style="color: var(--text-light); margin: 5px 0 0;">Realizado em: {{ pedido.data_pedido.strftime('%d/%m/%Y às %H:%M') }}</p>
+            </div>
+            
+            <span class="badge {{ 'badge-success' if pedido.status in ['concluido', 'entregue'] else ('badge-danger' if pedido.status == 'cancelado' else 'badge-warning') }}" style="font-size: 14px; padding: 10px 20px;">
+                {{ pedido.status|upper }}
+            </span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin-bottom: 40px;">
+            <div style="background: rgba(0,0,0,0.02); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                <h4 style="margin-top: 0;">📍 Endereço de Entrega</h4>
+                {% if pedido.rua %}
+                    <p style="margin: 10px 0 5px; font-weight: bold;">{{ pedido.destinatario }}</p>
+                    <p style="margin: 0; color: var(--text-light);">{{ pedido.rua }}, {{ pedido.numero }}</p>
+                    <p style="margin: 0; color: var(--text-light);">{{ pedido.bairro }}</p>
+                    <p style="margin: 0; color: var(--text-light);">{{ pedido.cidade }} - {{ pedido.estado }}</p>
+                    <p style="margin: 5px 0 0; font-size: 13px;">CEP: {{ pedido.cep }}</p>
+                {% else %}
+                    <p style="color: var(--text-light);">Endereço não registrado ou retirada.</p>
+                {% endif %}
+            </div>
+
+            <div style="background: rgba(0,0,0,0.02); padding: 20px; border-radius: 10px; border: 1px solid var(--border);">
+                <h4 style="margin-top: 0;">💳 Pagamento</h4>
+                <p style="margin: 10px 0;">Método: <strong>{{ pedido.forma_pagamento|upper }}</strong></p>
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border);">
+                    <p style="margin: 0; font-size: 14px;">Total Pago:</p>
+                    <p style="margin: 0; font-size: 24px; font-weight: 800; color: var(--success);">R$ {{ "%.2f"|format(pedido.total)|replace('.', ',') }}</p>
+                </div>
+            </div>
+        </div>
+
+        <h3 style="margin-bottom: 20px;">Itens do Pedido</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th width="80">Img</th>
+                        <th>Produto</th>
+                        <th>Qtd</th>
+                        <th>Unitário</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in itens %}
+                    <tr>
+                        <td>
+                            <img src="{{ url_for('static', filename='uploads/' + item.imagem_principal) if item.imagem_principal else url_for('static', filename='img/sem-imagem.jpg') }}" 
+                                 alt="Foto" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border);">
+                        </td>
+                        <td>
+                            <strong style="display: block;">{{ item.nome }}</strong>
+                            <span style="font-size: 12px; color: var(--text-light);">Marca: {{ item.marca }}</span>
+                        </td>
+                        <td style="font-weight: bold;">{{ item.quantidade }}x</td>
+                        <td>R$ {{ "%.2f"|format(item.preco_unitario)|replace('.', ',') }}</td>
+                        <td style="color: var(--primary); font-weight: bold;">R$ {{ "%.2f"|format(item.preco_unitario * item.quantidade)|replace('.', ',') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if pedido.status in ['concluido', 'entregue'] %}
+        <div style="margin-top: 30px; text-align: center;">
+            <a href="{{ url_for('avaliacao.minhas_avaliacoes_pendentes') }}" class="btn" style="background: linear-gradient(135deg, #ffb800 0%, #ff9900 100%); padding: 15px 30px;">
+                ⭐ Avaliar Produtos Comprados
+            </a>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

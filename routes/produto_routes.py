@@ -7,22 +7,20 @@ import mysql.connector
 def configure_produto_routes(app):
     
     def usuario_comprou_produto(usuario_id, produto_id):
-        """Verifica se o usuário comprou o produto"""
+        """Verifica se o usuário comprou o produto (Aceita Aprovado/Enviado/Entregue/Concluido)"""
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
-            
             cursor.execute("""
                 SELECT 1 FROM itens_pedido ip
                 JOIN pedidos p ON ip.id_pedido = p.id_pedido
-                WHERE p.id_cliente = %s AND ip.id_produto = %s AND p.status = 'entregue'
+                WHERE p.id_cliente = %s 
+                AND ip.id_produto = %s 
+                AND p.status IN ('aprovado', 'enviado', 'concluido', 'entregue')
             """, (usuario_id, produto_id))
-            
             resultado = cursor.fetchone()
             return resultado is not None
-            
-        except mysql.connector.Error as err:
-            print(f"Erro ao verificar compra: {err}")
+        except mysql.connector.Error:
             return False
         finally:
             if conn and conn.is_connected():
@@ -48,11 +46,9 @@ def configure_produto_routes(app):
             if categoria:
                 query += " AND categoria = %s"
                 params.append(categoria)
-            
             if marca:
                 query += " AND marca = %s"
                 params.append(marca)
-            
             if busca:
                 query += " AND (nome LIKE %s OR descricao LIKE %s)"
                 params.extend([f"%{busca}%", f"%{busca}%"])
@@ -62,7 +58,6 @@ def configure_produto_routes(app):
             cursor.execute(query, params)
             produtos = cursor.fetchall()
             
-            # PROCESSAR IMAGENS JSON
             for produto in produtos:
                 if produto.get('imagens'):
                     try:
@@ -92,10 +87,11 @@ def configure_produto_routes(app):
         try:
             conn = get_db_connection()
             if not conn:
-                flash('Erro ao conectar ao banco de dados.', 'error')
                 return redirect(url_for('listar_produtos'))
             
             cursor = conn.cursor(dictionary=True)
+            
+            # 1. Busca o Produto
             cursor.execute("SELECT * FROM produto WHERE id_produto = %s AND ativo = TRUE", (id_produto,))
             produto = cursor.fetchone()
             
@@ -103,15 +99,13 @@ def configure_produto_routes(app):
                 flash('❌ Produto não encontrado.', 'error')
                 return redirect(url_for('listar_produtos'))
             
-            # PROCESSAR IMAGENS JSON
             if produto.get('imagens'):
                 try:
                     produto['imagens'] = json.loads(produto['imagens'])
-                except Exception as e:
-                    print(f"DEBUG - Erro ao processar: {e}")
+                except:
                     produto['imagens'] = []
             
-            # BUSCAR AVALIAÇÕES E ESTATÍSTICAS
+            # 2. Busca todas as avaliações
             cursor.execute("""
                 SELECT a.*, c.nome as cliente_nome FROM avaliacoes a
                 JOIN clientes c ON a.id_cliente = c.id_cliente
@@ -119,7 +113,7 @@ def configure_produto_routes(app):
             """, (id_produto,))
             avaliacoes = cursor.fetchall()
             
-            # BUSCAR ESTATÍSTICAS DAS AVALIAÇÕES
+            # 3. Estatísticas
             cursor.execute("""
                 SELECT 
                     AVG(nota) as media,
@@ -134,23 +128,30 @@ def configure_produto_routes(app):
             """, (id_produto,))
             
             media_avaliacoes = cursor.fetchone()
-            
-            # GARANTIR QUE media_avaliacoes NÃO SEJA None
             if not media_avaliacoes:
-                media_avaliacoes = {
-                    'media': 0,
-                    'total_avaliacoes': 0,
-                    'cinco_estrelas': 0,
-                    'quatro_estrelas': 0,
-                    'tres_estrelas': 0,
-                    'duas_estrelas': 0,
-                    'uma_estrela': 0
-                }
+                media_avaliacoes = {'media': 0, 'total_avaliacoes': 0, 'cinco_estrelas': 0, 'quatro_estrelas': 0, 'tres_estrelas': 0, 'duas_estrelas': 0, 'uma_estrela': 0}
             
+            # 4. 🔥 VERIFICAÇÃO DO USUÁRIO LOGADO (NOVO)
+            comprou = False
+            minha_avaliacao = None
+            
+            if 'usuario_id' in session:
+                # Verifica se comprou
+                comprou = usuario_comprou_produto(session['usuario_id'], id_produto)
+                
+                # Verifica se já avaliou
+                cursor.execute("""
+                    SELECT * FROM avaliacoes 
+                    WHERE id_cliente = %s AND id_produto = %s
+                """, (session['usuario_id'], id_produto))
+                minha_avaliacao = cursor.fetchone()
+
             return render_template('produto_detalhes.html', 
                                 produto=produto, 
                                 avaliacoes=avaliacoes,
-                                media_avaliacoes=media_avaliacoes)
+                                media_avaliacoes=media_avaliacoes,
+                                comprou=comprou,
+                                minha_avaliacao=minha_avaliacao)
         
         except mysql.connector.Error as err:
             flash(f'Erro ao carregar produto: {err}', 'error')
@@ -164,227 +165,110 @@ def configure_produto_routes(app):
     @app.route('/avaliar-produto/<int:id_produto>', methods=['POST'])
     @login_required
     def avaliar_produto(id_produto):
-        # VERIFICAR SE O USUÁRIO COMPROU O PRODUTO
-        if 'usuario_id' in session and not usuario_comprou_produto(session['usuario_id'], id_produto):
-            flash('❌ Você precisa ter comprado este produto para avaliá-lo.', 'error')
+        # 1. Verifica se está logado e se comprou
+        if 'usuario_id' not in session:
+            return redirect(url_for('login'))
+
+        if not usuario_comprou_produto(session['usuario_id'], id_produto):
+            flash('❌ Você precisa comprar este produto para avaliar.', 'error')
             return redirect(url_for('detalhes_produto', id_produto=id_produto))
         
+        # 2. Pega dados do form
         nota = request.form.get('nota', type=int)
         titulo = request.form.get('titulo', '').strip()
         comentario = request.form.get('comentario', '').strip()
         
-        if not nota or nota < 1 or nota > 5:
-            flash('❌ Nota inválida. Deve ser entre 1 e 5.', 'error')
-            return redirect(url_for('detalhes_produto', id_produto=id_produto))
-        
-        if not comentario:
-            flash('❌ Por favor, escreva um comentário.', 'error')
+        if not nota or not comentario:
+            flash('❌ Preencha a nota e o comentário.', 'error')
             return redirect(url_for('detalhes_produto', id_produto=id_produto))
         
         try:
             conn = get_db_connection()
-            if not conn:
-                flash('Erro ao conectar ao banco de dados.', 'error')
-                return redirect(url_for('detalhes_produto', id_produto=id_produto))
-            
             cursor = conn.cursor()
             
-            if 'usuario_id' in session:
-                # Verificar se já avaliou
-                cursor.execute("SELECT id_avaliacao FROM avaliacoes WHERE id_cliente = %s AND id_produto = %s", 
-                             (session['usuario_id'], id_produto))
-                if cursor.fetchone():
-                    flash('⚠️ Você já avaliou este produto.', 'warning')
-                    return redirect(url_for('detalhes_produto', id_produto=id_produto))
-                
-                cursor.execute("""
-                    INSERT INTO avaliacoes (id_cliente, id_produto, nota, titulo, comentario, tipo_avaliador)
-                    VALUES (%s, %s, %s, %s, %s, 'cliente')
-                """, (session['usuario_id'], id_produto, nota, titulo, comentario))
+            # 3. 🔥 VERIFICA SE É INSERT OU UPDATE (NOVO)
+            cursor.execute("SELECT id_avaliacao FROM avaliacoes WHERE id_cliente = %s AND id_produto = %s", 
+                         (session['usuario_id'], id_produto))
+            existente = cursor.fetchone()
             
-            elif 'empresa_id' in session:
-                cursor.execute("SELECT id_avaliacao FROM avaliacoes WHERE id_empresa = %s AND id_produto = %s", 
-                             (session['empresa_id'], id_produto))
-                if cursor.fetchone():
-                    flash('⚠️ Sua empresa já avaliou este produto.', 'warning')
-                    return redirect(url_for('detalhes_produto', id_produto=id_produto))
-                
+            if existente:
+                # ATUALIZAR
                 cursor.execute("""
-                    INSERT INTO avaliacoes (id_empresa, id_produto, nota, titulo, comentario, tipo_avaliador)
-                    VALUES (%s, %s, %s, %s, %s, 'empresa')
-                """, (session['empresa_id'], id_produto, nota, titulo, comentario))
+                    UPDATE avaliacoes 
+                    SET nota = %s, titulo = %s, comentario = %s, data_avaliacao = NOW()
+                    WHERE id_avaliacao = %s
+                """, (nota, titulo, comentario, existente[0]))
+                flash('✅ Avaliação atualizada com sucesso!', 'success')
+            else:
+                # INSERIR
+                cursor.execute("""
+                    INSERT INTO avaliacoes (id_cliente, id_produto, nota, titulo, comentario, tipo_avaliador, aprovado)
+                    VALUES (%s, %s, %s, %s, %s, 'cliente', TRUE)
+                """, (session['usuario_id'], id_produto, nota, titulo, comentario))
+                flash('✅ Avaliação enviada com sucesso!', 'success')
             
             conn.commit()
-            flash('✅ Avaliação enviada com sucesso! Será analisada pela nossa equipe.', 'success')
         
         except mysql.connector.Error as err:
-            flash(f'Erro ao enviar avaliação: {err}', 'error')
+            flash(f'Erro ao avaliar: {err}', 'error')
         finally:
-            if conn and conn.is_connected():
-                cursor.close()
-                conn.close()
+            if conn and conn.is_connected(): cursor.close(); conn.close()
         
         return redirect(url_for('detalhes_produto', id_produto=id_produto))
+
+    # 🔥 NOVA ROTA: EXCLUIR AVALIAÇÃO
+    @app.route('/excluir-avaliacao/<int:id_avaliacao>', methods=['POST'])
+    @login_required
+    def excluir_avaliacao(id_avaliacao):
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            # Garante que só o dono pode excluir
+            cursor.execute("DELETE FROM avaliacoes WHERE id_avaliacao = %s AND id_cliente = %s", 
+                         (id_avaliacao, session['usuario_id']))
+            conn.commit()
+            
+            if cursor.rowcount > 0:
+                flash('🗑️ Avaliação excluída com sucesso.', 'success')
+            else:
+                flash('❌ Erro ao excluir ou permissão negada.', 'error')
+                
+        except mysql.connector.Error:
+            flash('Erro ao excluir.', 'error')
+        finally:
+            if conn and conn.is_connected(): cursor.close(); conn.close()
+            
+        # Retorna para a página anterior (página do produto)
+        return redirect(request.referrer)
 
     @app.route('/minhas-avaliacoes-pendentes')
     @login_required
     def minhas_avaliacoes_pendentes():
-        """Lista produtos comprados que ainda não foram avaliados"""
-        
-        # 🔥 VERIFICAR SE O USUÁRIO VEIO DA PÁGINA FINALIZAR CARRINHO
-        if not session.get('chegou_finalizar_carrinho'):
-            flash('❌ Você precisa passar pela finalização de compra para acessar esta página.', 'error')
-            return redirect(url_for('listar_produtos'))
-        
-        # 🔥 VERIFICAR SE O PAGAMENTO FOI CONFIRMADO
-        if not session.get('pagamento_confirmado'):
-            flash('❌ Você precisa confirmar o pagamento antes de avaliar os produtos.', 'error')
-            return redirect(url_for('listar_produtos'))
-        
-        try:
-            conn = get_db_connection()
-            cursor = conn.cursor(dictionary=True)
-            
-            # 🔥 ATUALIZAR: Buscar produtos do carrinho atual (não precisa ser "entregue" ainda)
-            # Como o pagamento acabou de ser confirmado, vamos buscar os produtos do pedido mais recente
-            cursor.execute("""
-                SELECT p.*, ip.id_pedido, ip.quantidade 
-                FROM itens_pedido ip
-                JOIN pedidos pd ON ip.id_pedido = pd.id_pedido
-                JOIN produto p ON ip.id_produto = p.id_produto
-                LEFT JOIN avaliacoes a ON p.id_produto = a.id_produto AND a.id_cliente = %s
-                WHERE pd.id_cliente = %s 
-                AND pd.id_pedido = (
-                    SELECT MAX(id_pedido) FROM pedidos WHERE id_cliente = %s
-                )
-                AND a.id_avaliacao IS NULL
-            """, (session['usuario_id'], session['usuario_id'], session['usuario_id']))
-            
-            produtos_para_avaliar = cursor.fetchall()
-            
-            # Se não encontrou produtos no pedido recente, busca produtos do carrinho da session
-            if not produtos_para_avaliar and session.get('carrinho'):
-                produtos_ids = [str(item['id_produto']) for item in session['carrinho']]
-                if produtos_ids:
-                    placeholders = ','.join(['%s'] * len(produtos_ids))
-                    cursor.execute(f"""
-                        SELECT p.*, 0 as id_pedido, 1 as quantidade
-                        FROM produto p
-                        LEFT JOIN avaliacoes a ON p.id_produto = a.id_produto AND a.id_cliente = %s
-                        WHERE p.id_produto IN ({placeholders})
-                        AND a.id_avaliacao IS NULL
-                    """, [session['usuario_id']] + produtos_ids)
-                    
-                    produtos_para_avaliar = cursor.fetchall()
-            
-            # PROCESSAR IMAGENS JSON
-            for produto in produtos_para_avaliar:
-                if produto.get('imagens'):
-                    try:
-                        produto['imagens'] = json.loads(produto['imagens'])
-                    except:
-                        produto['imagens'] = []
-            
-            # 🔥 ADICIONAR: Se não há produtos para avaliar, mostrar mensagem
-            if not produtos_para_avaliar:
-                flash('ℹ️ Todos os produtos do seu pedido já foram avaliados!', 'info')
-                return redirect(url_for('listar_produtos'))
-            
-            return render_template('avaliacoes-pendentes.html', 
-                                produtos=produtos_para_avaliar)
-            
-        except mysql.connector.Error as err:
-            flash(f'Erro ao carregar produtos: {err}', 'error')
-            return redirect(url_for('listar_produtos'))
-        finally:
-            if conn and conn.is_connected():
-                cursor.close()
-                conn.close()
+        return redirect(url_for('avaliacao.minhas_avaliacoes_pendentes'))
 
     @app.route('/categorias')
     def categorias():
         try:
             conn = get_db_connection()
-            if not conn:
-                flash('Erro ao conectar ao banco de dados.', 'error')
-                return render_template('categorias.html', categorias=[])
+            if not conn: return render_template('categorias.html', categorias=[])
             cursor = conn.cursor(dictionary=True)
-            cursor.execute("""
-                SELECT categoria, COUNT(*) as total_produtos FROM produto 
-                WHERE ativo = TRUE GROUP BY categoria ORDER BY categoria
-            """)
+            cursor.execute("SELECT categoria, COUNT(*) as total_produtos FROM produto WHERE ativo = TRUE GROUP BY categoria ORDER BY categoria")
             categorias_lista = cursor.fetchall()
             return render_template('categorias.html', categorias=categorias_lista)
-        except mysql.connector.Error as err:
-            flash(f'Erro ao carregar categorias: {err}', 'error')
-            return render_template('categorias.html', categorias=[])
-        finally:
-            if conn and conn.is_connected():
-                cursor.close()
-                conn.close()
+        except: return render_template('categorias.html', categorias=[])
+        finally: 
+            if conn and conn.is_connected(): cursor.close(); conn.close()
 
     @app.route('/marcas')
     def marcas():
         try:
             conn = get_db_connection()
-            if not conn:
-                flash('Erro ao conectar ao banco de dados.', 'error')
-                return render_template('marcas.html', marcas=[])
+            if not conn: return render_template('marcas.html', marcas=[])
             cursor = conn.cursor(dictionary=True)
-            cursor.execute("""
-                SELECT marca, COUNT(*) as total_produtos, MIN(preco) as preco_minimo, MAX(preco) as preco_maximo
-                FROM produto WHERE ativo = TRUE GROUP BY marca ORDER BY marca
-            """)
+            cursor.execute("SELECT marca, COUNT(*) as total_produtos FROM produto WHERE ativo = TRUE GROUP BY marca ORDER BY marca")
             marcas_lista = cursor.fetchall()
             return render_template('marcas.html', marcas=marcas_lista)
-        except mysql.connector.Error as err:
-            flash(f'Erro ao carregar marcas: {err}', 'error')
-            return render_template('marcas.html', marcas=[])
+        except: return render_template('marcas.html', marcas=[])
         finally:
-            if conn and conn.is_connected():
-                cursor.close()
-                conn.close()
-
-# FUNÇÕES PARA AVALIAÇÕES - ADICIONE ISSO NO FINAL DO ARQUIVO
-def buscar_avaliacoes_produto(id_produto):
-    """Busca todas as avaliações de um produto"""
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    
-    cursor.execute("""
-        SELECT a.*, c.nome as cliente_nome 
-        FROM avaliacoes a
-        JOIN clientes c ON a.id_cliente = c.id_cliente
-        WHERE a.id_produto = %s AND a.aprovado = TRUE 
-        ORDER BY a.data_avaliacao DESC
-    """, (id_produto,))
-    
-    avaliacoes = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    
-    return avaliacoes
-
-def calcular_media_avaliacoes(id_produto):
-    """Calcula a média das avaliações de um produto"""
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    
-    cursor.execute("""
-        SELECT 
-            AVG(nota) as media,
-            COUNT(*) as total_avaliacoes,
-            SUM(CASE WHEN nota = 5 THEN 1 ELSE 0 END) as cinco_estrelas,
-            SUM(CASE WHEN nota = 4 THEN 1 ELSE 0 END) as quatro_estrelas,
-            SUM(CASE WHEN nota = 3 THEN 1 ELSE 0 END) as tres_estrelas,
-            SUM(CASE WHEN nota = 2 THEN 1 ELSE 0 END) as duas_estrelas,
-            SUM(CASE WHEN nota = 1 THEN 1 ELSE 0 END) as uma_estrela
-        FROM avaliacoes 
-        WHERE id_produto = %s AND aprovado = TRUE
-    """, (id_produto,))
-    
-    resultado = cursor.fetchone()
-    cursor.close()
-    conn.close()
-    
-    return resultado
+            if conn and conn.is_connected(): cursor.close(); conn.close()

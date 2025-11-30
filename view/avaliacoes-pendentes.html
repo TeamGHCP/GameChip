@@ -1,195 +1,71 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
-{% block title %}Produtos para Avaliar - Loja GHCP{% endblock %}
+{% block title %}Avaliações Pendentes{% endblock %}
 
 {% block conteudo %}
-<style>
-    .avaliacoes-container {
-        max-width: 1000px;
-        margin: 0 auto;
-        padding: 20px;
-    }
+<div class="container" style="max-width: 1000px; margin: 40px auto; padding: 20px;">
     
-    .page-header {
-        text-align: center;
-        margin-bottom: 40px;
-    }
-    
-    .page-title {
-        font-size: 2.5rem;
-        font-weight: 800;
-        color: var(--dark);
-        margin-bottom: 10px;
-    }
-    
-    .page-subtitle {
-        color: var(--text-light);
-        font-size: 1.1rem;
-    }
-    
-    .produtos-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 25px;
-        margin-bottom: 40px;
-    }
-    
-    .produto-card {
-        background: var(--glass);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 25px;
-        box-shadow: var(--shadow);
-        transition: var(--transition);
-        text-align: center;
-    }
-    
-    .produto-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--shadow-lg);
-    }
-    
-    .produto-imagem {
-        width: 120px;
-        height: 120px;
-        object-fit: contain;
-        border-radius: 10px;
-        margin-bottom: 15px;
-    }
-    
-    .produto-nome {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: var(--text);
-        margin-bottom: 10px;
-        line-height: 1.4;
-    }
-    
-    .produto-marca {
-        color: var(--primary);
-        font-weight: 600;
-        margin-bottom: 5px;
-    }
-    
-    .produto-categoria {
-        color: var(--text-light);
-        font-size: 0.9rem;
-        margin-bottom: 20px;
-    }
-    
-    .btn-avaliar {
-        background: linear-gradient(135deg, var(--success) 0%, #00b36e 100%);
-        color: white;
-        padding: 12px 24px;
-        border-radius: 10px;
-        text-decoration: none;
-        font-weight: 600;
-        transition: var(--transition);
-        display: inline-block;
-        border: none;
-        cursor: pointer;
-        width: 100%;
-    }
-    
-    .btn-avaliar:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow);
-    }
-    
-    .sem-produtos {
-        text-align: center;
-        padding: 60px 20px;
-        background: var(--glass);
-        border-radius: var(--radius);
-        border: 1px solid var(--border);
-    }
-    
-    .sem-produtos-icon {
-        font-size: 4rem;
-        margin-bottom: 20px;
-    }
-    
-    .sem-produtos h3 {
-        color: var(--text-light);
-        margin-bottom: 10px;
-    }
-    
-    .btn-voltar {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 20px;
-        background: var(--secondary);
-        color: var(--text);
-        text-decoration: none;
-        border-radius: 10px;
-        font-weight: 600;
-        transition: var(--transition);
-        border: 2px solid var(--border);
-        margin-bottom: 20px;
-    }
-    
-    .btn-voltar:hover {
-        background: var(--primary);
-        color: white;
-        border-color: var(--primary);
-    }
-</style>
-
-<div class="avaliacoes-container">
-    <a href="{{ url_for('listar_produtos') }}" class="btn-voltar">
-        ← Voltar para Produtos
-    </a>
-
-    <div class="page-header">
-        <h1 class="page-title">⭐ Avaliar Produtos Comprados</h1>
-        <p class="page-subtitle">Compartilhe sua experiência com os produtos que você adquiriu</p>
+    <div class="header-avaliacoes" style="margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 20px;">
+        <h2 style="color: var(--primary);">⭐ Avaliações Pendentes</h2>
+        <p style="color: var(--text-light);">Dê sua opinião sobre os produtos que você comprou.</p>
     </div>
 
     {% if produtos %}
-        <div class="produtos-grid">
+        <div class="lista-avaliacoes" style="display: grid; gap: 20px;">
             {% for produto in produtos %}
-            <div class="produto-card">
-                {% if produto.imagens and produto.imagens|length > 0 %}
-                    <img src="{{ url_for('static', filename='uploads/produtos/' ~ produto.imagens[0]) }}" 
-                         alt="{{ produto.nome }}" class="produto-imagem">
-                {% else %}
-                    <div class="produto-imagem" style="background: var(--secondary); display: flex; align-items: center; justify-content: center; font-size: 2rem;">
-                        📷
-                    </div>
-                {% endif %}
+            <div class="card-avaliacao" style="display: flex; align-items: center; gap: 20px; background: var(--glass); padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
                 
-                <h3 class="produto-nome">{{ produto.nome }}</h3>
-                <div class="produto-marca">{{ produto.marca }}</div>
-                <div class="produto-categoria">{{ produto.categoria }}</div>
-                        
-                <a href="{{ url_for('avaliacao.criar_avaliacao', id_produto=produto.id_produto) }}" 
-                class="btn-avaliar">
-                    ⭐ Avaliar Produto
-                </a>
+                <div class="img-produto" style="width: 100px; height: 100px; flex-shrink: 0; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                    {% if produto.imagens and produto.imagens|length > 0 %}
+                        <img src="{{ url_for('static', filename='uploads/' + produto.imagens[0]) }}" alt="{{ produto.nome }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='img/sem-imagem.jpg') }}" alt="Sem imagem" style="max-width: 100%; max-height: 100%;">
+                    {% endif %}
+                </div>
+
+                <div class="info-produto" style="flex: 1;">
+                    <span class="badge badge-info" style="margin-bottom: 8px;">{{ produto.categoria }}</span>
+                    <h3 style="font-size: 18px; margin-bottom: 5px;">{{ produto.nome }}</h3>
+                    <p style="font-size: 14px; color: var(--text-light); margin-bottom: 10px;">Marca: {{ produto.marca }}</p>
+                    
+                    <div style="font-size: 13px; color: var(--success); font-weight: 600;">
+                        ✓ Compra confirmada
+                    </div>
+                </div>
+
+                <div class="acao-avaliar">
+                    <a href="{{ url_for('avaliacao.criar_avaliacao', id_produto=produto.id_produto) }}" class="btn" style="background: linear-gradient(135deg, #ffb800 0%, #ff9900 100%); color: white; padding: 12px 25px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 184, 0, 0.3);">
+                        ⭐ Avaliar Agora
+                    </a>
+                </div>
+
             </div>
             {% endfor %}
         </div>
     {% else %}
-        <div class="sem-produtos">
-            <div class="sem-produtos-icon">📦</div>
-            <h3>Nenhum produto para avaliar</h3>
-            <p>Você ainda não tem produtos comprados que precisam de avaliação.</p>
-            <p>Quando fizer uma compra, volte aqui para compartilhar sua experiência!</p>
-            <a href="{{ url_for('listar_produtos') }}" class="btn-avaliar" style="margin-top: 20px; width: auto;">
-                🛒 Fazer Compras
-            </a>
+        <div class="empty-state" style="text-align: center; padding: 60px 20px;">
+            <div style="font-size: 50px; margin-bottom: 20px;">🎉</div>
+            <h3>Tudo em dia!</h3>
+            <p style="color: var(--text-light); margin-bottom: 30px;">Você já avaliou todos os seus produtos comprados.</p>
+            <a href="{{ url_for('listar_produtos') }}" class="btn btn-outline">Voltar para a Loja</a>
         </div>
     {% endif %}
+
 </div>
 
-<script>
-    document.querySelectorAll('.btn-avaliar').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            if (!confirm('Você será redirecionado para a página do produto. Lá você poderá fazer a avaliação se ainda não avaliou. Continuar?')) {
-                e.preventDefault();
-            }
-        });
-    });
-</script>
+<style>
+    @media (max-width: 768px) {
+        .card-avaliacao {
+            flex-direction: column;
+            text-align: center;
+        }
+        .acao-avaliar {
+            width: 100%;
+        }
+        .acao-avaliar .btn {
+            display: block;
+            width: 100%;
+        }
+    }
+</style>
 {% endblock %}

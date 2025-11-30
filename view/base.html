@@ -5,431 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Gamechip - Recarga, Gift Cards e Conteúdo para o universo Gamer.">
     <title>{{ titulo if titulo else "Gamechip - Recarga, Gift Cards e Conteúdo Gamer" }}</title>
+    
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='logos/favicon.ico') }}">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Audiowide&family=Electrolize&display=swap');
-    
-        :root {
-            --primary: #0066ff;
-            --primary-dark: #0052cc;
-            --primary-light: #3385ff;
-            --secondary: #f5f7fa;
-            --accent: #ff6b35;
-            --success: #00d084;
-            --warning: #ffb800;
-            --danger: #ff3366;
-            --info: #00b8d4;
-            --dark: #1a1d29;
-            --text: #2d3748;
-            --text-light: #718096;
-            --border: #e2e8f0;
-            --glass: rgba(255, 255, 255, 0.9);
-            --shadow-sm: 0 2px 8px rgba(0, 102, 255, 0.08);
-            --shadow: 0 8px 30px rgba(0, 102, 255, 0.12);
-            --shadow-lg: 0 20px 60px rgba(0, 102, 255, 0.2);
-            --radius: 16px;
-            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-    
-        .dark-theme {
-            --primary: #ad33ff;
-            --primary-dark: #9900ff;
-            --primary-light: #cb5cff;
-            --secondary: #0f111a;
-            --accent: #ff7849;
-            --dark: #1a1d29;
-            --text: #e2e8f0;
-            --text-light: #a0aec0;
-            --border: #2d3748;
-            --glass: rgba(26, 29, 41, 0.9);
-            --shadow-sm: 0 2px 8px rgba(238, 51, 255, 0.15);
-            --shadow: 0 8px 30px rgba(197, 51, 255, 0.25);
-            --shadow-lg: 0 20px 60px rgba(214, 51, 255, 0.35);
-        }
-        
-        .font-gamer-main {
-            font-family: 'Audiowide', cursive;
-        }
-        .font-gamer-sub {
-            font-family: 'Electrolize', sans-serif;
-        }
-    
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--secondary);
-            color: var(--text);
-            transition: background 0.3s ease;
-            padding-top: 75px; /* Ajustado para acomodar a navbar compacta */
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background:
-                radial-gradient(circle at 20% 50%, rgba(0,102,255,0.05) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(255,107,53,0.05) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(0,208,132,0.03) 0%, transparent 50%);
-            z-index: -1;
-            pointer-events: none;
-        }
-        .dark-theme body::before {
-            background:
-                radial-gradient(circle at 20% 50%, rgba(51,133,255,0.08) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(255,120,73,0.08) 0%, transparent 50%);
-        }
-        .navbar {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%;
-            background: var(--glass);
-            backdrop-filter: blur(20px) saturate(180%);
-            box-shadow: 0 4px 30px rgba(0,0,0,0.08);
-            z-index: 1000;
-            border-bottom: 1px solid var(--border);
-        }
-        /* AJUSTES PARA LOGO DE IMAGEM + SUBTÍTULO SEPARADO */
-        .navbar-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 8px 40px; 
-            display: flex;
-            align-items: center; 
-            gap: 40px;
-        }
-        .logo {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-}
-
-        .logo-link-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center; /* Centraliza verticalmente a logo e o subtítulo */
-            text-decoration: none;
-            color: var(--text);
-            padding: 4px 0;
-            line-height: 1;
-        }
-
-        /* AUMENTA A LOGO E MANTÉM PROPORÇÃO */
-        .logo-navbar-img {
-            height: 70px; /* 🔥 aumente aqui o tamanho (antes era 45px) */
-            width: auto;
-            display: block;
-            margin-bottom: 4px;
-            transition: transform 0.3s ease;
-        }
-
-        .logo-link-container:hover .logo-navbar-img {
-            transform: scale(1.05);
-        }
-
-        /* SLOGAN AJUSTADO ABAIXO DA LOGO */
-        .logo-subtitle {
-            font-size: 12px; /* leve aumento pra acompanhar a nova logo */
-            color: var(--text-light);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-        /* FIM DOS AJUSTES DO LOGO */
-    
-        .nav-links {
-            list-style: none;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            justify-content: center;
-            flex: 1;
-            margin: 0 20px;
-        }
-    
-        .nav-links li a {
-            color: var(--text);
-            text-decoration: none;
-            padding: 10px 18px;
-            border-radius: 10px;
-            transition: var(--transition);
-            font-weight: 600;
-            font-size: 14px;
-            position: relative;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-    
-        .nav-links li a::before {
-            content: '';
-            position: absolute;
-            top:0; left:0;
-            width:100%; height:100%;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-            opacity:0;
-            transition: var(--transition);
-            border-radius:10px;
-            z-index:-1;
-        }
-    
-        .nav-links li a:hover::before,
-        .nav-links li a.active::before { opacity:1; }
-    
-        .nav-links li a:hover,
-        .nav-links li a.active {
-            color:white;
-            transform: translateY(-2px);
-        }
-        .icons {
-            display:flex;
-            align-items:center;
-            gap:12px;
-            flex-shrink:0;
-            margin-left:auto;
-        }
-    
-        .icon {
-            color: var(--text);
-            text-decoration:none;
-            font-size:14px;
-            font-weight:600;
-            transition: var(--transition);
-            padding:10px 16px;
-            border-radius:10px;
-            display:flex;
-            align-items:center;
-            gap:8px;
-            background: var(--secondary);
-            border:2px solid var(--border);
-            white-space:nowrap;
-        }
-    
-        .icon:hover {
-            background: var(--primary);
-            color:white;
-            transform:translateY(-2px);
-            box-shadow:var(--shadow);
-            border-color:var(--primary);
-        }
-    
-        .theme-toggle {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-            border:none;
-            cursor:pointer;
-            font-size:20px;
-            width:45px;
-            height:45px;
-            border-radius:50%;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            transition:var(--transition);
-            box-shadow:var(--shadow);
-        }
-    
-        .theme-toggle:hover {
-            transform: rotate(180deg) scale(1.1);
-            box-shadow: var(--shadow-lg);
-        }
-    
-        .menu-toggle {
-            display:none;
-            background: var(--primary);
-            border:none;
-            color:white;
-            font-size:24px;
-            cursor:pointer;
-            width:45px;
-            height:45px;
-            border-radius:10px;
-            box-shadow:var(--shadow);
-            flex-shrink:0;
-        }
-    
-        @media (max-width:968px){
-            .menu-toggle { display:flex; order:1; }
-            .nav-links {
-                display:none;
-                position:absolute;
-                top:70px; /* Ajustado para a nova altura da navbar */
-                left:0; right:0;
-                background:var(--glass);
-                backdrop-filter:blur(20px);
-                flex-direction:column;
-                padding:20px;
-                border-radius:0 0 var(--radius) var(--radius);
-                box-shadow:var(--shadow-lg);
-                border:1px solid var(--border);
-                border-top:none;
-                margin:0;
-                order:3;
-                width:100%;
-            }
-            .nav-links.active { display:flex; }
-            .nav-links li a {
-                width:100%;
-                display:block;
-                text-align:center;
-                padding:15px 20px;
-                font-size:16px;
-            }
-            .icons { margin-left:0; order:2; gap:8px; }
-            .icon span { display:none; }
-            .icon { padding:10px; width:45px; height:45px; justify-content:center; }
-        }
-    
-        main.conteudo {
-            max-width:1400px;
-            margin:0 auto;
-            padding:40px;
-            min-height:calc(100vh - 200px);
-            animation:fadeIn 0.6s ease;
-        }
-    
-        @keyframes fadeIn {
-            from{opacity:0; transform:translateY(30px);}
-            to{opacity:1; transform:translateY(0);}
-        }
-    
-        /* CORREÇÃO DE SINTAXE E ESTILOS DO FOOTER */
-        footer {
-            background:var(--dark);
-            color:white;
-            padding:60px 40px 30px;
-            margin-top:80px;
-            position:relative;
-            overflow:hidden;
-        }
-    
-        footer::before {
-            content:'';
-            position:absolute;
-            top:0; left:0;
-            width:100%; 
-            height:4px;
-            background:linear-gradient(90deg, var(--primary) 0%, var(--accent) 50%, var(--success) 100%);
-        }
-    
-        .footer-content { max-width:1400px; margin:0 auto; }
-    
-        .footer-grid {
-            display:grid;
-            grid-template-columns:repeat(auto-fit, minmax(200px,1fr));
-            gap:40px;
-            margin-bottom:40px;
-        }
-    
-        .footer-section h3 {
-            margin-bottom:20px;
-            font-size:16px;
-            font-weight:700;
-            color:var(--primary-light);
-        }
-    
-        .footer-links {
-            display:flex;
-            flex-direction:column;
-            gap:12px;
-        }
-    
-        .footer-links a {
-            color:rgba(255,255,255,0.8);
-            text-decoration:none;
-            font-size:14px;
-            display:flex;
-            align-items:center;
-            gap:8px;
-            transition:var(--transition);
-        }
-    
-        .footer-links a::before {
-            content:'→';
-            opacity:0;
-            transform:translateX(-10px);
-            transition:var(--transition);
-        }
-    
-        .footer-links a:hover {
-            color:var(--primary-light);
-            transform:translateX(5px);
-        }
-    
-        .footer-links a:hover::before {
-            opacity:1;
-            transform:translateX(0);
-        }
-    
-        .footer-bottom {
-            border-top:1px solid rgba(255,255,255,0.1);
-            padding-top:30px;
-            text-align:center;
-        }
-    
-        .footer-bottom p {
-            color:rgba(255,255,255,0.6);
-            font-size:14px;
-            margin-bottom:8px;
-        }
-        /* FIM DAS CORREÇÕES DO FOOTER */
-    
-        .flashes { list-style:none; padding:0; margin-bottom:24px; }
-        .flashes li {
-            padding:18px 24px;
-            margin-bottom:12px;
-            border-radius:12px;
-            display:flex;
-            align-items:center;
-            gap:14px;
-            animation:slideIn 0.4s ease;
-            font-weight:600;
-            border-left:4px solid;
-            box-shadow:var(--shadow-sm);
-        }
-    
-        @keyframes slideIn {
-            from{opacity:0; transform:translateX(-30px);}
-            to{opacity:1; transform:translateX(0);}
-        }
-    
-        .flashes li.error {
-            background:linear-gradient(135deg,var(--danger) 0%,#e62958 100%);
-            color:white; border-color:#cc0033;
-        }
-        .flashes li.error::before { content:"⚠️"; }
-    
-        .flashes li.warning {
-            background:linear-gradient(135deg,var(--warning) 0%,#e6a700 100%);
-            color:white; border-color:#cc9900;
-        }
-        .flashes li.warning::before { content:"⚡"; }
-    
-        .flashes li.success {
-            background:linear-gradient(135deg,var(--success) 0%,#00b36e 100%);
-            color:white; border-color:#00995c;
-        }
-        .flashes li.success::before { content:"✓"; }
-    
-        .flashes li.info {
-            background:linear-gradient(135deg,var(--info) 0%,#009fb7 100%);
-            color:white; border-color:#0086a0;
-        }
-        .flashes li.info::before { content:"ℹ️"; }
-    </style>
 </head>
 <body>
     <nav class="navbar">
         <div class="navbar-container">
             <div class="logo">
                 <a href="{{ url_for('inicio') }}" class="logo-link-container">
+                    <img src="{{ url_for('static', filename='logos/logo.png') }}" alt="Gamechip Logo" class="logo-navbar-img">
                     
-                    <img src="{{ url_for('static', filename='img/gamechiplogo.png') }}" alt="Gamechip Logo" class="logo-navbar-img">
-                    
-                    <span class="logo-subtitle font-gamer-sub">
-                        RECARGA, CARDS & GAMES
-                    </span>
                 </a>
             </div>
 
@@ -482,469 +68,328 @@
         {% block conteudo %}{% endblock %}
     </main>
 
-<footer>
-    <div class="footer-content">
-        <div class="footer-grid">
-            <div class="footer-section">
-                <h3>🛍️ Institucional</h3>
-                <div class="footer-links">
-                    <a href="/sobre">Sobre</a>
-                    <a href="/contato">Contato</a>
-                    <a href="/trabalhe-conosco">Trabalhe Conosco</a>
+    <footer>
+        <div class="footer-content">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h3>🛍️ Institucional</h3>
+                    <div class="footer-links">
+                        <a href="/sobre">Sobre</a>
+                        <a href="/contato">Contato</a>
+                        <a href="/trabalhe-conosco">Trabalhe Conosco</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>📦 Atendimento</h3>
+                    <div class="footer-links">
+                        <a href="/faq">Perguntas Frequentes</a>
+                        <a href="/rastreio">Rastrear Pedido</a>
+                        <a href="/trocas">Trocas e Devoluções</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>🔒 Segurança</h3>
+                    <div class="footer-links">
+                        <a href="/termos">Termos de Uso</a>
+                        <a href="/privacidade">Política de Privacidade</a>
+                        <a href="/cookies">Política de Cookies</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>💳 Pagamento</h3>
+                    <div class="footer-links">
+                        <a href="/cartoes">Pagamento com Cartão</a>
+                        <a href="/boleto">Boleto Bancário</a>
+                        <a href="/pix">PIX</a>
+                    </div>
                 </div>
             </div>
-            <div class="footer-section">
-                <h3>📦 Atendimento</h3>
-                <div class="footer-links">
-                    <a href="/faq">Perguntas Frequentes</a>
-                    <a href="/rastreio">Rastrear Pedido</a>
-                    <a href="/trocas">Trocas e Devoluções</a>
-                </div>
-            </div>
-            <div class="footer-section">
-                <h3>🔒 Segurança</h3>
-                <div class="footer-links">
-                    <a href="/termos">Termos de Uso</a>
-                    <a href="/privacidade">Política de Privacidade</a>
-                    <a href="/cookies">Política de Cookies</a>
-                </div>
-            </div>
-            <div class="footer-section">
-                <h3>💳 Pagamento</h3>
-                <div class="footer-links">
-                    <a href="/cartoes">Pagamento com Cartão</a>
-                    <a href="/boleto">Boleto Bancário</a>
-                    <a href="/pix">PIX</a>
-                </div>
+
+            <div class="footer-bottom">
+                <p style="font-weight:600; font-size:15px; color:rgba(255,255,255,0.9); margin-bottom:12px;">© 2025 Loja GAMECHIP - Informática e Tecnologia</p>
+                <a href="https://github.com/TeamGHCP/" target="_blank" rel="noopener noreferrer" title="GitHub de TeamGHCP" style="font-size:14px; color:rgba(255,255,255,0.7); text-decoration:none;">
+                    Desenvolvido com 💜 por TeamGHCP
+                </a>
+                <p style="margin-top:12px; font-size:12px;">🔒 Ambiente 100% Seguro | 📦 Entrega Garantida | ⭐ Atendimento Premium</p>
             </div>
         </div>
+    </footer>
 
-        <div class="footer-bottom">
-            <p style="font-weight:600; font-size:15px; color:rgba(255,255,255,0.9); margin-bottom:12px;">© 2025 Loja GAMECHIP - Informática e Tecnologia</p>
-            <p>Desenvolvido com ❤️ por GHCP</p>
-            <p style="margin-top:12px; font-size:12px;">🔒 Ambiente 100% Seguro | 📦 Entrega Garantida | ⭐ Atendimento Premium</p>
+    <div id="cookie-banner" class="cookie-banner">
+        <div class="cookie-content">
+            <h4>🍪 Privacidade</h4>
+            <p>Usamos cookies para melhorar sua experiência. Ao continuar, você concorda com nossa <a href="/privacidade">Política de Privacidade</a>.</p>
+        </div>
+        <button id="accept-cookies" class="cookie-btn">Entendi e Aceito</button>
+    </div>
+
+    <div id="chatbot-btn">
+        🤖
+    </div>
+
+    <div id="chatbot-window">
+        <div id="chatbot-header">
+            <h3>Assistente</h3>
+            <span id="chatbot-close">&times;</span>
+        </div>
+
+        <div id="chatbot-messages"></div>
+
+        <div id="chatbot-input-box">
+            <input type="text" id="chatbot-input" placeholder="Digite sua pergunta...">
+            <button id="chatbot-send">Enviar</button>
         </div>
     </div>
-</footer>
 
-    <script>
-        const themeToggle = document.getElementById('themeToggle');
-        const menuToggle = document.getElementById('menuToggle');
-        const navLinks = document.getElementById('navLinks');
+<script>
+    // ============================================================
+    //               1. LÓGICA DE TEMA (DARK/LIGHT)
+    // ============================================================
+    const themeToggle = document.getElementById('themeToggle');
+    
+    // 1. Pega o tema que veio do Python (Banco de Dados via Sessão)
+    // O Jinja2 vai preencher isso antes da página carregar
+    const serverTheme = "{{ session.get('theme', '') }}";
+    
+    // 2. Pega o tema salvo no navegador (caso não esteja logado)
+    const localTheme = sessionStorage.getItem('theme');
 
-        const currentTheme = sessionStorage.getItem('theme') || 'light';
-        if(currentTheme === 'dark'){ document.documentElement.classList.add('dark-theme'); themeToggle.textContent='☀️'; }
+    // 3. Decide qual usar (Servidor tem prioridade absoluta)
+    let finalTheme = 'light';
+    
+    if (serverTheme) {
+        // Se o usuário está logado, usa a preferência dele
+        finalTheme = serverTheme === 'dark' ? 'dark-theme' : '';
+        // Atualiza o navegador para ficarem sincronizados
+        sessionStorage.setItem('theme', serverTheme === 'dark' ? 'dark' : 'light');
+    } else if (localTheme) {
+        // Se não está logado, usa o que estava salvo no navegador
+        finalTheme = localTheme === 'dark' ? 'dark-theme' : '';
+    }
 
-        themeToggle.addEventListener('click', ()=>{
+    // 4. Aplica o tema no HTML
+    if (finalTheme === 'dark-theme') {
+        document.documentElement.classList.add('dark-theme');
+        if(themeToggle) themeToggle.textContent = '☀️';
+    } else {
+        document.documentElement.classList.remove('dark-theme');
+        if(themeToggle) themeToggle.textContent = '🌙';
+    }
+
+    // 5. Botão de Alternar Manualmente
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
             document.documentElement.classList.toggle('dark-theme');
-            if(document.documentElement.classList.contains('dark-theme')) {
-                themeToggle.textContent='☀️';
-                sessionStorage.setItem('theme','dark');
-            } else {
-                themeToggle.textContent='🌙';
-                sessionStorage.setItem('theme','light');
-            }
+            const isDark = document.documentElement.classList.contains('dark-theme');
+            
+            themeToggle.textContent = isDark ? '☀️' : '🌙';
+            sessionStorage.setItem('theme', isDark ? 'dark' : 'light');
         });
+    }
 
+    // ============================================================
+    //               2. MENU MOBILE & LINKS ATIVOS
+    // ============================================================
+    const menuToggle = document.getElementById('menuToggle');
+    const navLinks = document.getElementById('navLinks');
+
+    if (menuToggle) {
         menuToggle.addEventListener('click', ()=>{
             navLinks.classList.toggle('active');
         });
+    }
 
-        // ADICIONE ESTE CÓDIGO CORRIGIDO:
-        document.addEventListener('DOMContentLoaded', function() {
-            const currentPath = window.location.pathname;
-            document.querySelectorAll('.nav-link').forEach(link => {
-                const linkHref = link.getAttribute('href');
-                if (linkHref) {
-                    // Remove a classe active de todos os links
-                    link.classList.remove('active');
-            
-                    // Verifica se o link atual corresponde à página
-                    if (currentPath === linkHref) {
-                        link.classList.add('active');
-                    }
-                    // Caso especial para a página inicial
-                    else if (linkHref.includes('inicio') && currentPath === '/') {
-                        link.classList.add('active');
-                    }
-                    // Para o login, verifica se estamos na página de login
-                    else if (linkHref.includes('/login') && currentPath.includes('/login')) {
-                        link.classList.add('active');
-                    }
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.nav-link').forEach(link => {
+            const linkHref = link.getAttribute('href');
+            if (linkHref) {
+                link.classList.remove('active');
+                if (currentPath === linkHref) {
+                    link.classList.add('active');
                 }
-            });
+                else if (linkHref.includes('inicio') && currentPath === '/') {
+                    link.classList.add('active');
+                }
+                else if (linkHref.includes('/login') && currentPath.includes('/login')) {
+                    link.classList.add('active');
+                }
+            }
         });
 
-        setTimeout(()=>{ document.querySelectorAll('.flashes li').forEach(el=>el.remove()); }, 5000);
-    </script>
+        // ============================================================
+        //               3. BANNER DE COOKIES
+        // ============================================================
+        const cookieBanner = document.getElementById('cookie-banner');
+        const acceptBtn = document.getElementById('accept-cookies');
+        const cookiesAccepted = localStorage.getItem('cookiesAccepted');
 
-<!-- BOTÃO FLUTUANTE DO CHAT -->
-<div id="chatbot-btn">
-    🤖
-</div>
+        if (!cookiesAccepted && cookieBanner) {
+            setTimeout(() => { cookieBanner.classList.add('show'); }, 1000);
+        }
 
-<!-- JANELA DO CHATBOT -->
-<div id="chatbot-window">
-    <div id="chatbot-header">
-        <h3>Assistente</h3>
-        <span id="chatbot-close">&times;</span>
-    </div>
+        if (acceptBtn) {
+            acceptBtn.addEventListener('click', () => {
+                localStorage.setItem('cookiesAccepted', 'true');
+                cookieBanner.classList.remove('show');
+                setTimeout(() => { cookieBanner.style.display = 'none'; }, 500);
+            });
+        }
+    });
 
-    <div id="chatbot-messages"></div>
+    // Remove mensagens flash após 5 segundos
+    setTimeout(()=>{ 
+        document.querySelectorAll('.flashes li').forEach(el=>el.remove()); 
+    }, 5000);
 
-    <div id="chatbot-input-box">
-        <input type="text" id="chatbot-input" placeholder="Digite sua pergunta...">
-        <button id="chatbot-send">Enviar</button>
-    </div>
-</div>
+    // ============================================================
+    //               4. CHATBOT INTELIGENTE
+    // ============================================================
+    const chatbotBtn = document.getElementById('chatbot-btn');
+    const chatbotWindow = document.getElementById('chatbot-window');
+    const chatbotClose = document.getElementById('chatbot-close');
+    const chatbotSend = document.getElementById('chatbot-send');
+    const chatbotInput = document.getElementById('chatbot-input');
+    const chatbotMessages = document.getElementById('chatbot-messages');
 
-<style>
-    #chatbot-btn {
-        position: fixed;
-        bottom: 25px;
-        right: 25px;
-        background: var(--primary-dark);
-        color: white;
-        font-size: 28px;
-        width: 55px;
-        height: 55px;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        box-shadow: var(--shadow-lg);
-        transition: var(--transition);
-        z-index: 9999;
+    let welcomeSent = false;
+
+    // Abrir/Fechar Chat
+    if (chatbotBtn) {
+        chatbotBtn.onclick = () => {
+            if (chatbotWindow.style.display === "flex") {
+                chatbotWindow.style.display = "none";
+            } else {
+                chatbotWindow.style.display = "flex";
+                if (!welcomeSent) {
+                    welcomeSent = true;
+                    botWelcomeMessage();
+                }
+            }
+        };
     }
 
-    #chatbot-btn:hover {
-        transform: scale(1.1);
-        background: var(--primary);
+    if (chatbotClose) {
+        chatbotClose.onclick = () => {
+            chatbotWindow.style.display = "none";
+        };
     }
 
-    /* JANELA DO CHAT */
-    #chatbot-window {
-        position: fixed;
-        bottom: 100px;
-        right: 25px;
-        width: 320px;
-        height: 420px;
-        background: var(--glass-white);
-        border-radius: 18px;
-        box-shadow: var(--shadow-lg);
-        backdrop-filter: var(--blur);
-        display: none;
-        flex-direction: column;
-        z-index: 9999;
+    // Mensagem de Boas-Vindas
+    function botWelcomeMessage() {
+        if (!chatbotMessages) return;
+        const typing = createTypingBubble();
+        chatbotMessages.appendChild(typing);
+
+        setTimeout(() => {
+            typing.remove();
+            chatbotMessages.innerHTML += `
+                <div class="msg-bot">
+                    Olá! 👋 Bem-vindo ao atendimento da GameChip. 
+                    Como posso te ajudar hoje?
+                </div>`;
+            
+            // Botões de Ação Rápida
+            chatbotMessages.innerHTML += `
+                <div class="floating-buttons">
+                    <div class="floating-btn" onclick="userInput('🔑 Problema com senha')">🔑 Senha</div>
+                    <div class="floating-btn" onclick="userInput('💳 Formas de pagamento')">💳 Pagamento</div>
+                    <div class="floating-btn" onclick="userInput('📦 Rastrear pedido')">📦 Rastreio</div>
+                    <div class="floating-btn" onclick="userInput('🛍️ Ver produtos')">🛍️ Produtos</div>
+                    <div class="floating-btn" onclick="userInput('📝 Criar cadastro')">📝 Cadastro</div>
+                    <div class="floating-btn" onclick="userInput('⏰ Horário de atendimento')">⏰ Horários</div>
+                </div>`;
+            
+            scrollToBottom();
+        }, 800);
     }
 
-    /* HEADER DO CHAT */
-    #chatbot-header {
-        background: var(--primary-dark);
-        padding: 12px;
-        color: white;
-        border-radius: 18px 18px 0 0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    // Cérebro do Bot (Respostas)
+    function getBotResponse(text) {
+        const cleanText = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+        if (cleanText.match(/^(oi|ola|ei|eai|hello|bom dia|boa tarde|boa noite)/)) {
+            return "Olá! Tudo bem? 😊 Escolha uma opção acima ou digite sua dúvida.";
+        }
+        if (cleanText.includes('obrigad') || cleanText.includes('valeu')) {
+            return "Por nada! 💜 Se precisar de mais alguma coisa, é só chamar.";
+        }
+        if (cleanText.includes('senha') || cleanText.includes('recuperar') || cleanText.includes('logar')) {
+            return `<strong>🔑 Problemas de Acesso?</strong><br>1. Vá até a página de <b>Login</b>.<br>2. Clique em <i>"Esqueci minha senha"</i>.<br>3. Digite seu e-mail para recuperar.`;
+        }
+        if (cleanText.includes('pagamento') || cleanText.includes('pix') || cleanText.includes('cartao') || cleanText.includes('boleto')) {
+            return `<strong>💳 Formas de Pagamento:</strong><br>• <b>PIX:</b> Aprovação imediata.<br>• <b>Cartão:</b> Em até 12x.<br>• <b>Boleto:</b> 1 a 2 dias úteis.`;
+        }
+        if (cleanText.includes('rastrei') || cleanText.includes('pedido') || cleanText.includes('entrega')) {
+            return `<strong>📦 Rastrear Pedido:</strong><br>Acesse <b>Minha Conta > Meus Pedidos</b> para ver o status e o código de rastreio.`;
+        }
+        if (cleanText.includes('produto') || cleanText.includes('estoque') || cleanText.includes('vende')) {
+            return `<strong>🛍️ Nossos Produtos:</strong><br>Temos Gift Cards, Jogos Digitais e Periféricos.<br>Use a busca no topo do site!`;
+        }
+        if (cleanText.includes('cadastro') || cleanText.includes('criar conta')) {
+            return `<strong>📝 Cadastro:</strong><br>Clique em <b>"Entrar"</b> no menu e selecione <b>"Criar nova conta"</b>.`;
+        }
+        if (cleanText.includes('horario') || cleanText.includes('atendimento')) {
+            return `<strong>⏰ Horário:</strong><br>Seg a Sex: 09h às 18h<br>Sáb: 09h às 13h<br>Dom: Fechado`;
+        }
+
+        return `Desculpe, não entendi. 😅<br>Tente usar os botões ou pergunte de outra forma.`;
     }
 
-    /* MENSAGENS */
-    #chatbot-messages {
-        padding: 12px;
-        height: 280px;
-        overflow-y: auto;
-        font-size: 14px;
-        color: var(--text-dark);
+    // Processa a entrada do usuário
+    function userInput(message) {
+        if (!chatbotMessages) return;
+
+        chatbotMessages.innerHTML += `<div class='msg-user'>${message}</div>`;
+        scrollToBottom();
+
+        const typing = createTypingBubble();
+        chatbotMessages.appendChild(typing);
+        scrollToBottom();
+
+        setTimeout(() => {
+            typing.remove();
+            const response = getBotResponse(message);
+            chatbotMessages.innerHTML += `<div class='msg-bot'>${response}</div>`;
+            scrollToBottom();
+        }, 1000);
     }
 
-    /* INPUT */
-    #chatbot-input-box {
-        display: flex;
-        border-top: 1px solid #ddd;
+    // Auxiliares
+    function createTypingBubble() {
+        const typingBubble = document.createElement("div");
+        typingBubble.className = "msg-bot typing";
+        typingBubble.innerHTML = "<span>.</span><span>.</span><span>.</span>";
+        return typingBubble;
     }
 
-    #chatbot-input {
-        flex: 1;
-        border: none;
-        padding: 10px;
-        outline: none;
-        background: transparent;
-        color: var(--text-dark);
+    function scrollToBottom() {
+        chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
     }
 
-    #chatbot-send {
-        background: var(--primary-dark);
-        color: white;
-        padding: 10px;
-        border: none;
-        cursor: pointer;
-        transition: var(--transition);
+    // Gatilhos de Envio
+    function enviarMensagem() {
+        if (!chatbotInput) return;
+        const msg = chatbotInput.value.trim();
+        if (!msg) return;
+
+        userInput(msg);
+        chatbotInput.value = "";
     }
 
-    #chatbot-send:hover {
-        background: var(--primary);
-    }
-
-    /* BOLHAS DE MENSAGEM */
-    .msg-user {
-        background: var(--primary);
-        color: white;
-        padding: 8px;
-        border-radius: 12px;
-        margin: 6px 0;
-        text-align: right;
-    }
-
-    .msg-bot {
-        background: var(--glass);
-        padding: 8px;
-        border-radius: 12px;
-        margin: 6px 0;
-        color: var(--text-dark);
-    }
-
-    /* ANIMAÇÃO DE DIGITAÇÃO */
-    .typing {
-        background: var(--glass);
-        padding: 8px;
-        border-radius: 12px;
-        margin: 6px 0;
-        color: var(--text-dark);
-        width: 60px;
-        display: flex;
-        gap: 4px;
-    }
-
-    .typing span {
-        animation: blink 1.4s infinite both;
-        opacity: 0;
-        font-size: 18px;
-        font-weight: bold;
-    }
-
-        /* BOTÕES FLUTUANTES */
-    .floating-buttons {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin: 12px 0;
-    }
-
-    .floating-btn {
-        background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
-        color: white;
-        padding: 10px 12px;
-        border-radius: 12px;
-        font-size: 12px;
-        cursor: pointer;
-        transition: var(--transition);
-        flex: 1;
-        min-width: calc(50% - 8px);
-        text-align: center;
-        box-shadow: var(--shadow);
-        border: none;
-        font-weight: 600;
-    }
-
-    .floating-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-lg);
-        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    }
-
-/* RESPONSIVIDADE DO CHAT */
-@media (max-width: 480px) {
-    #chatbot-window {
-        width: 90vw;
-        right: 5vw;
-        height: 70vh;
+    if (chatbotSend) {
+        chatbotSend.onclick = enviarMensagem;
     }
     
-    .floating-btn {
-        min-width: 100%;
-        font-size: 13px;
-        padding: 12px 16px;
+    if (chatbotInput) {
+        chatbotInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                if (e.shiftKey) return;
+                e.preventDefault();
+                enviarMensagem();
+            }
+        });
     }
-}
-
-    .typing span:nth-child(1) { animation-delay: 0s; }
-    .typing span:nth-child(2) { animation-delay: 0.2s; }
-    .typing span:nth-child(3) { animation-delay: 0.4s; }
-
-    @keyframes blink {
-        0% { opacity: 0; }
-        50% { opacity: 1; }
-        100% { opacity: 0; }
-    }
-</style>
-
-<script>
-const chatbotBtn = document.getElementById('chatbot-btn');
-const chatbotWindow = document.getElementById('chatbot-window');
-const chatbotClose = document.getElementById('chatbot-close');
-const chatbotSend = document.getElementById('chatbot-send');
-const chatbotInput = document.getElementById('chatbot-input');
-const chatbotMessages = document.getElementById('chatbot-messages');
-
-let welcomeSent = false;
-
-// Abrir/fechar pelo botão do bot (toggle)
-chatbotBtn.onclick = () => {
-    if (chatbotWindow.style.display === "flex") {
-        chatbotWindow.style.display = "none"; // fecha
-    } else {
-        chatbotWindow.style.display = "flex"; // abre
-
-        // Enviar boas-vindas só na primeira abertura
-        if (!welcomeSent) {
-            welcomeSent = true;
-            botWelcomeMessage();
-        }
-    }
-};
-
-// Fechar pelo X
-chatbotClose.onclick = () => {
-    chatbotWindow.style.display = "none";
-};
-
-// MENSAGEM DE BOAS-VINDAS COM BOTÕES FLUTUANTES
-function botWelcomeMessage() {
-    const typing = createTypingBubble();
-    chatbotMessages.appendChild(typing);
-
-    setTimeout(() => {
-        typing.remove();
-        chatbotMessages.innerHTML += `
-            <div class="msg-bot">
-                Olá! 👋 Bem-vindo ao atendimento da GameChip. 
-                Escolha uma opção abaixo ou digite sua dúvida:
-            </div>`;
-        
-        // Adicionar botões flutuantes de ações rápidas
-        chatbotMessages.innerHTML += `
-            <div class="floating-buttons">
-                <div class="floating-btn" onclick="sendQuickMessage('🔑 Problema com senha')">
-                    🔑 Senha
-                </div>
-                <div class="floating-btn" onclick="sendQuickMessage('💳 Dúvida sobre pagamento')">
-                    💳 Pagamento
-                </div>
-                <div class="floating-btn" onclick="sendQuickMessage('📦 Rastrear pedido')">
-                    📦 Rastreio
-                </div>
-                <div class="floating-btn" onclick="sendQuickMessage('🛍️ Consultar produtos')">
-                    🛍️ Produtos
-                </div>
-                <div class="floating-btn" onclick="sendQuickMessage('📝 Ajuda com cadastro')">
-                    📝 Cadastro
-                </div>
-                <div class="floating-btn" onclick="sendQuickMessage('⏰ Horário de atendimento')">
-                    ⏰ Horários
-                </div>
-            </div>`;
-        
-        chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-    }, 1200);
-}
-
-// Função para enviar mensagem rápida pelos botões flutuantes
-function sendQuickMessage(message) {
-    // Mostrar mensagem do usuário
-    chatbotMessages.innerHTML += `<div class='msg-user'>${message}</div>`;
-    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-
-    const typing = createTypingBubble();
-    chatbotMessages.appendChild(typing);
-    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-
-    setTimeout(() => {
-        typing.remove();
-        
-        // Determinar a resposta baseada na mensagem
-        let response = "";
-        if (message.includes('senha')) {
-            response = "🔑 <strong>Problema com senha?</strong><br>Para trocar sua senha:<br>1) Acesse 'Minha Conta'<br>2) Clique em 'Segurança'<br>3) Selecione 'Alterar Senha'<br>4) Digite a nova senha";
-        } else if (message.includes('pagamento')) {
-            response = "💳 <strong>Formas de pagamento:</strong><br>• <strong>PIX</strong> - Aprovação instantânea<br>• <strong>Cartão</strong> - Crédito e Débito<br>• <strong>Boleto</strong> - Vence em 3 dias";
-        } else if (message.includes('rastreio') || message.includes('pedido')) {
-            response = "📦 <strong>Rastrear pedido:</strong><br>1) Acesse 'Meus Pedidos'<br>2) Clique no pedido desejado<br>3) Use o código de rastreamento fornecido";
-        } else if (message.includes('produtos')) {
-            response = "🛍️ <strong>Nossos produtos:</strong><br>• Navegue por categorias<br>• Filtre por marca<br>• Use a busca para encontrar específicos";
-        } else if (message.includes('cadastro')) {
-            response = "📝 <strong>Fazer cadastro:</strong><br>1) Clique em 'Cadastrar' no menu<br>2) Preencha seus dados<br>3) Confirme seu email<br>4) Pronto! Sua conta será criada";
-        } else if (message.includes('horário') || message.includes('horarios')) {
-            response = "⏰ <strong>Horário de atendimento:</strong><br>Segunda a Sexta: 9h às 18h<br>Sábado: 9h às 13h<br>Domingo: Fechado";
-        } else {
-            response = "Como posso ajudar com isso?";
-        }
-        
-        chatbotMessages.innerHTML += `<div class='msg-bot'>${response}</div>`;
-        chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-    }, 1200);
-}
-
-// Criar animação de digitando
-function createTypingBubble() {
-    const typingBubble = document.createElement("div");
-    typingBubble.className = "msg-bot typing";
-    typingBubble.innerHTML = "<span>.</span><span>.</span><span>.</span>";
-    return typingBubble;
-}
-
-// Respostas prontas para mensagens digitadas
-function botResponse(text) {
-    const responses = {
-        "oi": "Oi! Como posso ajudar?",
-        "ola": "Olá! Tudo certo?",
-        "login": "Para fazer login, clique em 'Entrar' no menu superior.",
-        "cadastro": "Você pode criar sua conta no menu de cadastro.",
-        "senha": "Para problemas com senha, use o botão '🔑 Senha' acima!",
-        "pagamento": "Para informações sobre pagamento, use o botão '💳 Pagamento'!",
-        "agradecer": "De nada! 😊 Precisa de mais alguma coisa?",
-        "obrigado": "De nada! 😊 Fico feliz em ajudar!",
-        "obrigada": "De nada! 😊 Fico feliz em ajudar!"
-    };
-
-    text = text.toLowerCase();
-    return responses[text] || "Desculpe, ainda não sei responder isso 😅<br>Experimente usar os botões acima!";
-}
-
-// ENVIAR MENSAGEM DIGITADA
-function enviarMensagem() {
-    const msg = chatbotInput.value.trim();
-    if (!msg) return;
-
-    chatbotMessages.innerHTML += `<div class='msg-user'>${msg}</div>`;
-    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-
-    const typing = createTypingBubble();
-    chatbotMessages.appendChild(typing);
-    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-
-    setTimeout(() => {
-        typing.remove();
-        chatbotMessages.innerHTML += `<div class='msg-bot'>${botResponse(msg)}</div>`;
-        chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-    }, 1200);
-
-    chatbotInput.value = "";
-}
-
-// Botão enviar
-chatbotSend.onclick = enviarMensagem;
-
-// ENTER envia — SHIFT+ENTER quebra linha
-chatbotInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-        if (e.shiftKey) return;
-        e.preventDefault();
-        enviarMensagem();
-    }
-});
 </script>
-
 </body>
 </html>

@@ -103,12 +103,14 @@ def configure_admin_routes(app):
             
             # Consulta para pedidos de hoje (admin, gerente, vendedor)
             if user_cargo in ['admin', 'gerente', 'vendedor']:
-                cursor.execute("SELECT COUNT(*) as total FROM pedidos WHERE DATE(data_pedido) = CURDATE()")
+                # 🔥 CORREÇÃO: Usando NOT IN para excluir cancelado/pendente da contagem de pedidos finalizados
+                cursor.execute("SELECT COUNT(*) as total FROM pedidos WHERE DATE(data_pedido) = CURDATE() AND status NOT IN ('cancelado', 'pendente')")
                 pedidos_hoje = cursor.fetchone()['total']
             
             # Consulta para receita de hoje (admin, gerente, vendedor)
             if user_cargo in ['admin', 'gerente', 'vendedor']:
-                cursor.execute("SELECT SUM(total) as total FROM pedidos WHERE DATE(data_pedido) = CURDATE() AND status != 'cancelado'")
+                # 🔥 CORREÇÃO: Usando NOT IN para receita finalizada
+                cursor.execute("SELECT SUM(total) as total FROM pedidos WHERE DATE(data_pedido) = CURDATE() AND status NOT IN ('cancelado', 'pendente')")
                 receita_result = cursor.fetchone()
                 receita_hoje = receita_result['total'] or 0
             
@@ -131,7 +133,8 @@ def configure_admin_routes(app):
             # Consulta para pedidos recentes (admin, gerente, vendedor)
             if user_cargo in ['admin', 'gerente', 'vendedor']:
                 try:
-                    cursor.execute("SELECT p.*, c.nome as cliente_nome FROM pedidos p JOIN clientes c ON p.id_cliente = c.id_cliente ORDER BY p.data_pedido DESC LIMIT 5")
+                    # 🔥 CORREÇÃO: Usando NOT IN para pedidos finalizados
+                    cursor.execute("SELECT p.*, c.nome as cliente_nome FROM pedidos p JOIN clientes c ON p.id_cliente = c.id_cliente WHERE p.status NOT IN ('cancelado', 'pendente') ORDER BY p.data_pedido DESC LIMIT 5")
                     pedidos_recentes = cursor.fetchall()
                 except mysql.connector.Error:
                     pedidos_recentes = []

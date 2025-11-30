@@ -11,53 +11,77 @@
     <div class="documentation-content">
         
         <div class="download-section" style="margin: 20px 0;">
-            <h4>👀 Vizualizar PDF´s</h4>
+            <h4>👀 Visualizar PDFs</h4>
             <div class="download-links" style="display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0;">
-            <div class="pdf-actions" style="margin: 15px 0;">
+                
                 <a href="{{ url_for('static', filename='docs/pdf/Documentacao-SA-Requisitos-Regra-de-Negocio.pdf') }}" 
-                   target="_blank" 
-                   class="btn btn-primary btn-sm">
+                   target="_blank" class="btn btn-primary btn-sm">
                     📄 Requisitos e Regra de Negocio
                 </a>
                 
-                <a href="{{ url_for('static', filename='docs/guia-rapido.pdf') }}" 
-                   download="Guia_Rapido_GameChip.pdf" 
-                   class="btn btn-primary btn-sm">
-                    📄 Canvas
+                <a href="{{ url_for('static', filename='docs/pdf/Busines Model Canvas.pdf') }}" 
+                   target="_blank" class="btn btn-primary btn-sm">
+                    📄 Business Model Canvas
+                </a>
+
+                <a href="{{ url_for('static', filename='docs/pdf/MER.pdf') }}" 
+                   target="_blank" class="btn btn-primary btn-sm">
+                    📄 MER
+                </a>
+
+                <a href="{{ url_for('static', filename='docs/pdf/DER.pdf') }}" 
+                   target="_blank" class="btn btn-primary btn-sm">
+                    📄 DER
                 </a>
                 
-                <a href="{{ url_for('static', filename='docs/checklist.pdf') }}" 
-                   download class="btn btn-primary btn-sm">
+                <a href="{{ url_for('static', filename='docs/pdf/Wireframes SA.pdf') }}" 
+                   target="_blank" class="btn btn-primary btn-sm">
                     📄 WireFrame
                 </a>
                 
-                <a href="{{ url_for('static', filename='docs/checklist.pdf') }}" 
-                   download class="btn btn-primary btn-sm">
-                    📄 Diagramas de Classes/Casos de Uso
+                <a href="{{ url_for('static', filename='docs/pdf/Diagrama Casos de Uso.pdf') }}" 
+                   target="_blank" class="btn btn-primary btn-sm">
+                    📄 Diagramas de Casos de Uso
                 </a>
 
-                <a href="{{ url_for('static', filename='docs/checklist.pdf') }}" 
-                   download class="btn btn-primary btn-sm">
-                    📄 Código
+                <a href="{{ url_for('static', filename='docs/pdf/Diagrama de Classes SA.pdf') }}" 
+                    target="_blank" class="btn btn-primary btn-sm">
+                    📄 Diagramas de Classes
+                </a>
+
+                <a href="{{ url_for('static', filename='docs/pdf/Documentacao do Codigo.pdf') }}" 
+                   target="_blank" class="btn btn-primary btn-sm">
+                    📄 Documentação do Código
                 </a>
             </div>
         </div>
 
         <div class="video-section" style="margin: 30px 0;">
-            <h4>🎬 Vídeo Pitch</h4>
-            <div class="video-player" style="margin: 15px 0;">
-                <video width="100%" controls poster="{{ url_for('static', filename='docs/video/pitch.mp4') }}">
-                    <source src="{{ url_for('static', filename='docs/video/pitch.mp4') }}" type="video/mp4">
-                    Seu navegador não suporta o elemento de vídeo.
-                    <a href="{{ url_for('static', filename='docs/video/pitch.mp4') }}">Baixe o vídeo</a>.
-                </video>
+            <h4>🎬 Vídeo Pitch e QRcode</h4>
+            
+            <div class="media-container" style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+                
+                <div class="video-wrapper" style="flex: 1; min-width: 300px;">
+                    <video width="100%" controls poster="{{ url_for('static', filename='docs/video/pitch.mp4') }}" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <source src="{{ url_for('static', filename='docs/video/pitch.mp4') }}" type="video/mp4">
+                        Seu navegador não suporta o elemento de vídeo.
+                    </video>
+                </div>
+
+                <div class="image-wrapper" style="flex: 1; min-width: 300px;">
+                    <img src="{{ url_for('static', filename='docs/img/qrcode.jpg') }}" 
+                         alt="Imagem ilustrativa" 
+                         style="width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #eee;">
+                </div>
+
             </div>
         </div>
+
     </div>
 </div>
 
 <style>
-.download-section, .video-section, .pdf-viewer-section, .image-gallery {
+.download-section, .video-section {
     padding: 20px;
     border: 1px solid var(--border);
     border-radius: 10px;
@@ -65,11 +89,19 @@
     background: rgba(0,102,255,0.02);
 }
 
-.download-section h4, .video-section h4, .pdf-viewer-section h4, .image-gallery h4 {
+.download-section h4, .video-section h4 {
     color: var(--primary);
     margin-bottom: 15px;
     border-bottom: 2px solid var(--primary);
     padding-bottom: 8px;
+}
+@media (max-width: 768px) {
+    .media-container {
+        flex-direction: column;
+    }
+    .video-wrapper, .image-wrapper {
+        width: 100%;
+    }
 }
 </style>
 {% endblock %}

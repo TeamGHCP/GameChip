@@ -4,6 +4,7 @@ from utils.decorators import login_required
 import json
 import mysql.connector
 from datetime import datetime
+from utils.helpers import calcular_tempo_mercado # 🔥 ADICIONADO
 
 def configure_main_routes(app):
     
@@ -19,8 +20,7 @@ def configure_main_routes(app):
             cursor = conn.cursor(dictionary=True)
             
             cursor.execute("""
-                SELECT p.* 
-                FROM produto p 
+                SELECT p.* FROM produto p 
                 WHERE p.ativo = TRUE 
                 ORDER BY p.destaque DESC, p.data_cadastro DESC 
                 LIMIT 8
@@ -103,7 +103,7 @@ def configure_main_routes(app):
                     JOIN itens_pedido ip ON p.id_pedido = ip.id_pedido
                     JOIN produtos_empresa pe ON ip.id_produto = pe.id_produto
                     JOIN empresas e ON pe.id_empresa = e.id_empresa
-                    WHERE p.id_cliente = %s AND p.status = 'concluido'
+                    WHERE p.id_cliente = %s AND p.status IN ('concluido', 'entregue')
                 """, (session['usuario_id'],))
                 usuario_comprou_em_lojas = [row['id_empresa'] for row in cursor.fetchall()]
             
@@ -131,7 +131,7 @@ def configure_main_routes(app):
                     FROM pedidos p2
                     JOIN itens_pedido ip ON p2.id_pedido = ip.id_pedido
                     JOIN produtos_empresa pe2 ON ip.id_produto = pe2.id_produto
-                    WHERE p2.status = 'concluido'
+                    WHERE p2.status IN ('concluido', 'entregue')
                 ) p ON e.id_empresa = p.id_empresa
                 WHERE e.tipo_empresa IN ('vendedor', 'ambos') AND e.ativo = TRUE
                 GROUP BY e.id_empresa
@@ -145,10 +145,8 @@ def configure_main_routes(app):
             for empresa in empresas_db:
                 nome_exibicao = empresa['nome_fantasia'] or empresa['razao_social']
                 
-                # Calcular tempo no mercado
-                tempo_mercado = 0
-                if empresa['data_cadastro']:
-                    tempo_mercado = (datetime.now() - empresa['data_cadastro']).days // 365
+                # 🔥 CORREÇÃO: Usar função auxiliar para tempo de mercado
+                tempo_mercado = calcular_tempo_mercado(empresa['data_cadastro']) 
                 
                 # Garantir que os valores não sejam None
                 media_avaliacoes = empresa['media_avaliacoes'] or 0
@@ -166,7 +164,7 @@ def configure_main_routes(app):
                     'total_avaliacoes': total_avaliacoes,
                     'total_produtos': total_produtos,
                     'total_vendas': total_vendas,
-                    'tempo_mercado': f"{tempo_mercado} ano(s)" if tempo_mercado > 0 else "Menos de 1 ano",
+                    'tempo_mercado': tempo_mercado, # ✅ VALOR CORRIGIDO
                     'features': ["🚚 Entrega Rápida", "💳 Parcelamento", "🛡️ Garantia"],
                     'pode_avaliar': empresa['id_empresa'] in usuario_comprou_em_lojas if 'usuario_id' in session else False
                 })
