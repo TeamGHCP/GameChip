@@ -2,16 +2,61 @@
 
 {% block title %}Concorrentes{% endblock %}
 
-{% block page_title %}📊 Gestão de Concorrentes{% endblock %}
+{% block page_title %}📊 Gestão de Candidatos{% endblock %}
 
 {% block content %}
 <div class="table-header">
-    <h3>Lista de Concorrentes</h3>
+    <h3>Lista de Candidatos</h3>
     <div class="table-actions">
         <a href="{{ url_for('admin_novo_concorrente') }}" class="btn btn-primary">
-            ➕ Novo Concorrente
+            ➕ Novo Candidato Manual
+        </a>
+        <a href="{{ url_for('admin_gerenciar_vagas') }}" class="btn btn-secondary">
+            📋 Gerenciar Vagas
         </a>
     </div>
+</div>
+
+<!-- Filtros -->
+<div style="background: var(--glass); padding: 15px; border-radius: var(--radius); margin-bottom: 20px;">
+    <form method="GET" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+        <div>
+            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: var(--text);">Filtrar por Vaga:</label>
+            <select name="vaga" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                <option value="">Todas as vagas</option>
+                {% for vaga in vagas_unicas %}
+                <option value="{{ vaga }}" {% if vaga_filtro == vaga %}selected{% endif %}>{{ vaga }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div>
+            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: var(--text);">Filtrar por Status:</label>
+            <select name="status" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                <option value="">Todos os status</option>
+                <option value="pendente" {% if status_filtro == 'pendente' %}selected{% endif %}>Pendente</option>
+                <option value="contatado" {% if status_filtro == 'contatado' %}selected{% endif %}>Contatado</option>
+                <option value="em_negociacao" {% if status_filtro == 'em_negociacao' %}selected{% endif %}>Em Negociação</option>
+                <option value="contratado" {% if status_filtro == 'contratado' %}selected{% endif %}>Contratado</option>
+                <option value="recusado" {% if status_filtro == 'recusado' %}selected{% endif %}>Recusado</option>
+            </select>
+        </div>
+        
+        <div>
+            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: var(--text);">Data Início:</label>
+            <input type="date" name="data_inicio" value="{{ data_inicio }}" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+        </div>
+        
+        <div>
+            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: var(--text);">Data Fim:</label>
+            <input type="date" name="data_fim" value="{{ data_fim }}" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+        </div>
+        
+        <div style="align-self: flex-end;">
+            <button type="submit" class="btn btn-primary" style="padding: 8px 20px;">🔍 Filtrar</button>
+            <a href="{{ url_for('admin_concorrentes') }}" class="btn btn-warning">🔄 Limpar</a>
+        </div>
+    </form>
 </div>
 
 <div class="data-table">
@@ -19,11 +64,11 @@
         <thead>
             <tr>
                 <th>Nome</th>
-                <th>Empresa</th>
-                <th>Cargo</th>
+                <th>Vaga</th>
                 <th>Email</th>
                 <th>Telefone</th>
-                <th>Interesse</th>
+                <th>Currículo</th>
+                <th>LinkedIn</th>
                 <th>Status</th>
                 <th>Data</th>
                 <th>Ações</th>
@@ -34,37 +79,78 @@
             <tr>
                 <td>
                     <strong>{{ concorrente.nome }}</strong>
-                    {% if concorrente.observacoes %}
-                    <br><small style="color: var(--text-light);">{{ concorrente.observacoes[:50] }}...</small>
+                    {% if concorrente.empresa %}
+                    <br><small style="color: var(--text-light);">Empresa: {{ concorrente.empresa }}</small>
+                    {% endif %}
+                    {% if concorrente.cargo %}
+                    <br><small style="color: var(--text-light);">Cargo: {{ concorrente.cargo }}</small>
                     {% endif %}
                 </td>
-                <td>{{ concorrente.empresa }}</td>
-                <td>{{ concorrente.cargo or '-' }}</td>
+                <td>
+                    {% if concorrente.vaga %}
+                    <span style="background: var(--primary-light); color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.85rem;">
+                        {{ concorrente.vaga }}
+                    </span>
+                    {% else %}
+                    <span style="color: var(--text-light);">Espontânea</span>
+                    {% endif %}
+                </td>
                 <td>
                     <a href="mailto:{{ concorrente.email }}" style="color: var(--primary); text-decoration: none;">
                         {{ concorrente.email }}
                     </a>
                 </td>
                 <td>{{ concorrente.telefone or '-' }}</td>
-                <td>{{ concorrente.interesse or '-' }}</td>
+                <td>
+                    {% if concorrente.arquivo_pdf %}
+                    <a href="{{ url_for('download_curriculo', filename=concorrente.arquivo_pdf) }}" 
+                       class="btn btn-sm btn-success" title="Download Currículo" style="padding: 4px 10px;">
+                        📄 PDF
+                    </a>
+                    {% else %}
+                    <span style="color: var(--text-light);">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if concorrente.linkedin_url %}
+                    <a href="{{ concorrente.linkedin_url }}" target="_blank" 
+                       style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">
+                        🔗 LinkedIn
+                    </a>
+                    {% else %}
+                    <span style="color: var(--text-light);">-</span>
+                    {% endif %}
+                </td>
                 <td>
                     <span class="badge 
                         {% if concorrente.status == 'contatado' %}badge-success
                         {% elif concorrente.status == 'pendente' %}badge-warning
                         {% elif concorrente.status == 'recusado' %}badge-danger
+                        {% elif concorrente.status == 'contratado' %}badge-success
+                        {% elif concorrente.status == 'em_negociacao' %}badge-info
                         {% else %}badge-info{% endif %}">
                         {{ concorrente.status|title }}
                     </span>
                 </td>
-                <td>{{ concorrente.data_cadastro.strftime('%d/%m/%Y') }}</td>
                 <td>
-                    <div style="display: flex; gap: 8px;">
+                    {{ concorrente.data_candidatura.strftime('%d/%m/%Y') if concorrente.data_candidatura else concorrente.data_cadastro.strftime('%d/%m/%Y') }}
+                    <br>
+                    <small style="color: var(--text-light);">
+                        {{ concorrente.data_candidatura.strftime('%H:%M') if concorrente.data_candidatura else '' }}
+                    </small>
+                </td>
+                <td>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                         <a href="{{ url_for('admin_editar_concorrente', id_concorrente=concorrente.id_concorrente) }}" 
                            class="btn btn-sm btn-primary" title="Editar">
                             ✏️
                         </a>
+                        <a href="{{ url_for('admin_visualizar_concorrente', id_concorrente=concorrente.id_concorrente) }}" 
+                           class="btn btn-sm btn-info" title="Ver Detalhes">
+                            👁️
+                        </a>
                         <form method="POST" action="{{ url_for('admin_excluir_concorrente', id_concorrente=concorrente.id_concorrente) }}" 
-                              style="display: inline;" onsubmit="return confirm('Tem certeza que deseja excluir este concorrente?')">
+                              style="display: inline;" onsubmit="return confirm('Tem certeza que deseja excluir este candidato?')">
                             <button type="submit" class="btn btn-sm btn-danger" title="Excluir">
                                 🗑️
                             </button>
@@ -75,7 +161,7 @@
             {% else %}
             <tr>
                 <td colspan="9" style="text-align: center; padding: 40px; color: var(--text-light);">
-                    📝 Nenhum concorrente cadastrado ainda.
+                    📝 Nenhum candidato encontrado com os filtros atuais.
                 </td>
             </tr>
             {% endfor %}
@@ -83,28 +169,71 @@
     </table>
 </div>
 
-<!-- Estatísticas Rápidas -->
+<!-- Paginação -->
+{% if pagination %}
+<div style="display: flex; justify-content: center; margin-top: 20px;">
+    <div class="pagination">
+        {% if pagination.has_prev %}
+        <a href="{{ url_for('admin_concorrentes', page=pagination.prev_num, vaga=vaga_filtro, status=status_filtro, data_inicio=data_inicio, data_fim=data_fim) }}" class="page-link">← Anterior</a>
+        {% endif %}
+        
+        {% for page_num in pagination.iter_pages() %}
+            {% if page_num %}
+                {% if page_num == pagination.page %}
+                <span class="page-link active">{{ page_num }}</span>
+                {% else %}
+                <a href="{{ url_for('admin_concorrentes', page=page_num, vaga=vaga_filtro, status=status_filtro, data_inicio=data_inicio, data_fim=data_fim) }}" class="page-link">{{ page_num }}</a>
+                {% endif %}
+            {% else %}
+                <span class="ellipsis">...</span>
+            {% endif %}
+        {% endfor %}
+        
+        {% if pagination.has_next %}
+        <a href="{{ url_for('admin_concorrentes', page=pagination.next_num, vaga=vaga_filtro, status=status_filtro, data_inicio=data_inicio, data_fim=data_fim) }}" class="page-link">Próxima →</a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Estatísticas -->
 <div class="stats-grid" style="margin-top: 40px;">
     <div class="stat-card">
-        <h3>Total de Concorrentes</h3>
-        <div class="value">{{ concorrentes|length }}</div>
+        <h3>Total de Candidatos</h3>
+        <div class="value">{{ total_candidatos }}</div>
         <div class="trend up">📈 Todos os registros</div>
     </div>
     
     <div class="stat-card">
         <h3>Pendentes</h3>
         <div class="value" style="color: var(--warning);">
-            {{ concorrentes|selectattr('status', 'equalto', 'pendente')|list|length }}
+            {{ contadores.pendente }}
         </div>
-        <div class="trend">⏳ Aguardando contato</div>
+        <div class="trend">⏳ Aguardando análise</div>
     </div>
     
     <div class="stat-card">
-        <h3>Contatados</h3>
+        <h3>Contratados</h3>
         <div class="value" style="color: var(--success);">
-            {{ concorrentes|selectattr('status', 'equalto', 'contatado')|list|length }}
+            {{ contadores.contratado }}
         </div>
-        <div class="trend up">✅ Contato realizado</div>
+        <div class="trend up">✅ Sucesso</div>
     </div>
+    
+    <div class="stat-card">
+        <h3>Com LinkedIn</h3>
+        <div class="value" style="color: var(--info);">
+            {{ contadores.com_linkedin }}
+        </div>
+        <div class="trend">🔗 Perfil profissional</div>
+    </div>
+</div>
+
+<!-- Exportar Dados -->
+<div style="margin-top: 30px; text-align: center;">
+    <a href="{{ url_for('admin_exportar_candidatos') }}?vaga={{ vaga_filtro }}&status={{ status_filtro }}&data_inicio={{ data_inicio }}&data_fim={{ data_fim }}" 
+       class="btn btn-success">
+        📊 Exportar para Excel
+    </a>
 </div>
 {% endblock %}

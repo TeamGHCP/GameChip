@@ -1,16 +1,19 @@
 from flask import render_template, flash, session, redirect, url_for, request, jsonify
 from models.database import get_db_connection
 from utils.decorators import login_required
+import os
 import json
 import mysql.connector
 from datetime import datetime
-from utils.helpers import calcular_tempo_mercado # 🔥 ADICIONADO
+from utils.helpers import calcular_tempo_mercado
+from werkzeug.utils import secure_filename
+import time
 
 def configure_main_routes(app):
     
     @app.route('/')
     def inicio():
-        # ... (código anterior mantido)
+        # ... (código anterior mantido - não alterei esta parte)
         try:
             conn = get_db_connection()
             if not conn:
@@ -85,7 +88,7 @@ def configure_main_routes(app):
 
     @app.route('/empresas-vendedoras')
     def empresas_vendedoras():
-        # ... (código anterior mantido)
+        # ... (código anterior mantido - não alterei)
         try:
             conn = get_db_connection()
             if not conn:
@@ -164,7 +167,7 @@ def configure_main_routes(app):
                     'total_avaliacoes': total_avaliacoes,
                     'total_produtos': total_produtos,
                     'total_vendas': total_vendas,
-                    'tempo_mercado': tempo_mercado, # ✅ VALOR CORRIGIDO
+                    'tempo_mercado': tempo_mercado,
                     'features': ["🚚 Entrega Rápida", "💳 Parcelamento", "🛡️ Garantia"],
                     'pode_avaliar': empresa['id_empresa'] in usuario_comprou_em_lojas if 'usuario_id' in session else False
                 })
@@ -288,57 +291,10 @@ def configure_main_routes(app):
     def garantia():
         return render_template('central-garantia.html', titulo="Central de Garantia")
 
-    @app.route('/trabalhe-conosco', methods=['GET', 'POST'])
-    def trabalhe_conosco():
-        if request.method == 'POST':
-            nome = request.form.get('nome', '').strip()
-            email = request.form.get('email', '').strip()
-            telefone = request.form.get('telefone', '').strip()
-            formacao = request.form.get('formacao', '').strip()
-            conhecimento = request.form.get('conhecimento', '').strip()
-            ingles = request.form.get('ingles', '').strip()
-            seguranca = request.form.get('seguranca', '').strip()
-            
-            if not all([nome, email, formacao, conhecimento, ingles, seguranca]):
-                flash('❌ Por favor, preencha todos os campos obrigatórios.', 'error')
-                return render_template('trabalhe_conosco.html')
-            
-            try:
-                conn = get_db_connection()
-                if not conn:
-                    flash('Erro ao conectar ao banco de dados.', 'error')
-                    return render_template('trabalhe_conosco.html')
-                
-                cursor = conn.cursor()
-                
-                mensagem_completa = f"""
-                FORMAÇÃO: {formacao}
-                CONHECIMENTO PRÁTICO: {conhecimento}
-                INGLÊS: {ingles}
-                SEGURANÇA DA INFORMAÇÃO: {seguranca}
-                TELEFONE: {telefone if telefone else 'Não informado'}
-                """
-                
-                cursor.execute("""
-                    INSERT INTO concorrentes (nome, email, telefone, empresa, cargo, interesse, mensagem, status)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                """, (nome, email, telefone, "Candidato GHCP", "Candidato", "Trabalhe Conosco", mensagem_completa, "pendente"))
-                
-                conn.commit()
-                
-                flash('✅ Seus dados foram enviados com sucesso! Entraremos em contato em breve.', 'success')
-                return redirect(url_for('trabalhe_conosco_sucesso'))
-                
-            except mysql.connector.Error as err:
-                flash(f'❌ Erro ao enviar dados: {err}', 'error')
-                return render_template('trabalhe_conosco.html')
-            
-            finally:
-                if conn and conn.is_connected():
-                    cursor.close()
-                    conn.close()
-
-        return render_template('trabalhe_conosco.html')
+    # ROTA TRABALHE CONOSCO - REMOVIDA (substituída pela nova versão abaixo)
+    # @app.route('/trabalhe-conosco', methods=['GET', 'POST'])  # REMOVA ESTA ROTA
+    # def trabalhe_conosco():
+    #     ... código antigo ...
 
     @app.route('/trabalhe-conosco-sucesso')
     def trabalhe_conosco_sucesso():
@@ -542,3 +498,270 @@ def configure_main_routes(app):
                 conn.close()
         
         return redirect(request.referrer or url_for('inicio'))
+    
+    # ============================================================================
+    # NOVAS ROTAS PARA TRABALHE CONOSCO (VAGAS) - adicionadas dentro de configure_main_routes
+    # ============================================================================
+    
+    # Função auxiliar para upload de PDF
+    def allowed_pdf_file(filename):
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() in ['pdf']
+    
+    @app.route('/trabalhe-conosco')
+    def trabalhe_conosco():
+        """Página principal com lista de vagas (NOVA VERSÃO)"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            
+            # Verificar se a tabela vagas existe
+            cursor.execute("""
+                SELECT COUNT(*) as existe
+                FROM information_schema.tables 
+                WHERE table_schema = DATABASE() 
+                AND table_name = 'vagas'
+            """)
+            tabela_existe = cursor.fetchone()['existe'] > 0
+            
+            vagas_list = []
+            
+            if tabela_existe:
+                # Buscar vagas ativas
+                cursor.execute("""
+                    SELECT * FROM vagas 
+                    WHERE status = 'aberta' 
+                    ORDER BY data_publicacao DESC
+                """)
+                vagas = cursor.fetchall()
+                
+                for vaga in vagas:
+                    vagas_list.append({
+                        'id_vaga': vaga['id_vaga'],
+                        'titulo': vaga['titulo'],
+                        'slug': vaga['slug'],
+                        'descricao': vaga['descricao'],
+                        'requisitos': vaga['requisitos'],
+                        'tipo': vaga['tipo'],
+                        'data_publicacao': vaga['data_publicacao']
+                    })
+            else:
+                # Se não existir tabela, usar vagas fixas
+                vagas_fixas = [
+                    {
+                        'id_vaga': 1,
+                        'titulo': 'Estagiário(a) de Marketing Digital',
+                        'slug': 'estagiario-marketing-digital',
+                        'descricao': '<h3>Sobre a Vaga</h3><p>Estamos buscando um(a) estagiário(a) de Marketing Digital apaixonado(a) por tecnologia e inovação.</p><ul><li>Acompanhar campanhas de marketing digital</li><li>Criar conteúdo para redes sociais</li><li>Analisar métricas e resultados</li><li>Auxiliar na produção de materiais promocionais</li></ul>',
+                        'requisitos': '<h3>Requisitos</h3><ul><li>Cursando Marketing, Publicidade, Administração ou áreas afins</li><li>Conhecimento em redes sociais</li><li>Boa comunicação escrita</li><li>Proatividade e vontade de aprender</li><li>Disponibilidade para estágio de 6h diárias</li></ul>',
+                        'tipo': 'Estágio',
+                        'data_publicacao': datetime.now()
+                    },
+                    {
+                        'id_vaga': 2,
+                        'titulo': 'Designer de Mídias Digitais (Freelancer/Estágio)',
+                        'slug': 'designer-midias-digitais',
+                        'descricao': '<h3>Sobre a Vaga</h3><p>Buscamos designer criativo para produção de conteúdo visual para redes sociais e materiais de marketing.</p><ul><li>Criar artes para Instagram, Facebook, TikTok</li><li>Desenvolver identidade visual para campanhas</li><li>Produzir materiais promocionais</li><li>Trabalhar com motion graphics (diferencial)</li></ul>',
+                        'requisitos': '<h3>Requisitos</h3><ul><li>Conhecimento em Adobe Creative Suite (Photoshop, Illustrator)</li><li>Noções de design para mídias sociais</li><li>Criatividade e atenção aos detalhes</li><li>Portfólio de trabalhos anteriores</li><li>Disponibilidade para home office</li></ul>',
+                        'tipo': 'Freelancer',
+                        'data_publicacao': datetime.now()
+                    },
+                    {
+                        'id_vaga': 3,
+                        'titulo': 'Desenvolvedor(a) Web Front-End',
+                        'slug': 'desenvolvedor-front-end',
+                        'descricao': '<h3>Sobre a Vaga</h3><p>Desenvolver interfaces modernas e responsivas para nossos sistemas e e-commerce.</p><ul><li>Desenvolvimento de interfaces com HTML, CSS, JavaScript</li><li>Trabalhar com frameworks modernos (React, Vue.js)</li><li>Otimização de performance</li><li>Integração com APIs</li></ul>',
+                        'requisitos': '<h3>Requisitos</h3><ul><li>Experiência com HTML5, CSS3, JavaScript</li><li>Conhecimento em React ou Vue.js</li><li>Versionamento com Git</li><li>Responsive design</li><li>Inglês técnico (leitura)</li></ul>',
+                        'tipo': 'CLT',
+                        'data_publicacao': datetime.now()
+                    }
+                ]
+                vagas_list = vagas_fixas
+            
+            cursor.close()
+            conn.close()
+            
+            return render_template('trabalhe_conosco.html', vagas=vagas_list)
+            
+        except Exception as e:
+            print(f"Erro ao carregar vagas: {str(e)}")
+            return render_template('trabalhe_conosco.html', vagas=[])
+    
+    @app.route('/vaga/<slug>')
+    def detalhes_vaga(slug):
+        """Página de detalhes de uma vaga específica"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            
+            # Buscar vaga pelo slug
+            cursor.execute("SELECT * FROM vagas WHERE slug = %s", (slug,))
+            vaga = cursor.fetchone()
+            
+            if not vaga:
+                flash('Vaga não encontrada.', 'error')
+                return redirect(url_for('trabalhe_conosco'))
+            
+            cursor.close()
+            conn.close()
+            
+            return render_template('detalhes_vaga.html', vaga=vaga)
+            
+        except Exception as e:
+            print(f"Erro ao carregar vaga: {str(e)}")
+            flash('Erro ao carregar detalhes da vaga.', 'error')
+            return redirect(url_for('trabalhe_conosco'))
+    
+    @app.route('/candidatar-vaga/<int:id_vaga>', methods=['POST'])
+    def candidatar_vaga(id_vaga):
+        """Processar candidatura para uma vaga específica"""
+        try:
+            # Validar campos obrigatórios
+            nome = request.form.get('nome', '').strip()
+            email = request.form.get('email', '').strip()
+            telefone = request.form.get('telefone', '').strip()
+            linkedin = request.form.get('linkedin', '').strip()
+            mensagem = request.form.get('mensagem', '').strip()
+            vaga_nome = request.form.get('vaga', '').strip()
+            
+            if not all([nome, email]):
+                flash('❌ Preencha todos os campos obrigatórios.', 'error')
+                return redirect(request.referrer or url_for('trabalhe_conosco'))
+            
+            # Validar LinkedIn
+            if linkedin and not (linkedin.startswith(('https://linkedin.com/', 'http://linkedin.com/', 
+                                                    'https://www.linkedin.com/', 'http://www.linkedin.com/'))):
+                flash('❌ O link do LinkedIn deve começar com linkedin.com', 'error')
+                return redirect(request.referrer or url_for('trabalhe_conosco'))
+            
+            # Processar upload do PDF
+            if 'curriculo_pdf' not in request.files:
+                flash('❌ É necessário enviar um currículo em PDF.', 'error')
+                return redirect(request.referrer or url_for('trabalhe_conosco'))
+            
+            file = request.files['curriculo_pdf']
+            
+            if file.filename == '':
+                flash('❌ Nenhum arquivo selecionado.', 'error')
+                return redirect(request.referrer or url_for('trabalhe_conosco'))
+            
+            if not allowed_pdf_file(file.filename):
+                flash('❌ Apenas arquivos PDF são permitidos.', 'error')
+                return redirect(request.referrer or url_for('trabalhe_conosco'))
+            
+            # Gerar nome único para o arquivo
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            nome_arquivo = secure_filename(f"{timestamp}_{vaga_nome[:20]}_{file.filename}")
+            
+            # Criar pasta para o mês atual
+            pasta_mensal = os.path.join(app.root_path, 'static', 'uploads', 'curriculos', 
+                                       datetime.now().strftime("%Y_%m"))
+            os.makedirs(pasta_mensal, exist_ok=True)
+            
+            # Salvar arquivo
+            filepath = os.path.join(pasta_mensal, nome_arquivo)
+            file.save(filepath)
+            
+            # Salvar no banco de dados
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                INSERT INTO concorrentes 
+                (nome, email, telefone, vaga, linkedin_url, mensagem, arquivo_pdf, status, data_candidatura)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, 'pendente', NOW())
+            """, (nome, email, telefone, vaga_nome, linkedin, mensagem, nome_arquivo))
+            
+            conn.commit()
+            
+            cursor.close()
+            conn.close()
+            
+            # Redirecionar para página de sucesso
+            return redirect(url_for('candidatura_sucesso'))
+            
+        except Exception as e:
+            print(f"Erro ao processar candidatura: {str(e)}")
+            flash('❌ Erro ao processar sua candidatura. Tente novamente.', 'error')
+            return redirect(request.referrer or url_for('trabalhe_conosco'))
+    
+    @app.route('/candidatura-espontanea')
+    def candidatura_espontanea():
+        """Página para candidatura espontânea"""
+        return render_template('candidatura_espontanea.html')
+    
+    @app.route('/candidatura-sucesso')
+    def candidatura_sucesso():
+        """Página de confirmação de candidatura"""
+        return render_template('trabalhe_conosco_sucesso.html')
+    
+    @app.route('/processar-candidatura-espontanea', methods=['POST'])
+    def processar_candidatura_espontanea():
+        """Processar candidatura espontânea"""
+        try:
+            nome = request.form.get('nome', '').strip()
+            email = request.form.get('email', '').strip()
+            telefone = request.form.get('telefone', '').strip()
+            interesse = request.form.get('interesse', '').strip()
+            linkedin = request.form.get('linkedin', '').strip()
+            mensagem = request.form.get('mensagem', '').strip()
+            
+            if not all([nome, email, interesse]):
+                flash('❌ Preencha todos os campos obrigatórios.', 'error')
+                return redirect(url_for('candidatura_espontanea'))
+            
+            # Validar LinkedIn
+            if linkedin and not (linkedin.startswith(('https://linkedin.com/', 'http://linkedin.com/', 
+                                                    'https://www.linkedin.com/', 'http://www.linkedin.com/'))):
+                flash('❌ O link do LinkedIn deve começar com linkedin.com', 'error')
+                return redirect(url_for('candidatura_espontanea'))
+            
+            # Processar upload do PDF
+            if 'curriculo_pdf' not in request.files:
+                flash('❌ É necessário enviar um currículo em PDF.', 'error')
+                return redirect(url_for('candidatura_espontanea'))
+            
+            file = request.files['curriculo_pdf']
+            
+            if file.filename == '':
+                flash('❌ Nenhum arquivo selecionado.', 'error')
+                return redirect(url_for('candidatura_espontanea'))
+            
+            if not allowed_pdf_file(file.filename):
+                flash('❌ Apenas arquivos PDF são permitidos.', 'error')
+                return redirect(url_for('candidatura_espontanea'))
+            
+            # Gerar nome único para o arquivo
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            nome_arquivo = secure_filename(f"{timestamp}_espontanea_{file.filename}")
+            
+            # Criar pasta para o mês atual
+            pasta_mensal = os.path.join(app.root_path, 'static', 'uploads', 'curriculos', 
+                                       datetime.now().strftime("%Y_%m"))
+            os.makedirs(pasta_mensal, exist_ok=True)
+            
+            # Salvar arquivo
+            filepath = os.path.join(pasta_mensal, nome_arquivo)
+            file.save(filepath)
+            
+            # Salvar no banco de dados
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                INSERT INTO concorrentes 
+                (nome, email, telefone, interesse, linkedin_url, mensagem, arquivo_pdf, status, data_candidatura)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, 'pendente', NOW())
+            """, (nome, email, telefone, interesse, linkedin, mensagem, nome_arquivo))
+            
+            conn.commit()
+            
+            cursor.close()
+            conn.close()
+            
+            # Redirecionar para página de sucesso
+            return redirect(url_for('candidatura_sucesso'))
+            
+        except Exception as e:
+            print(f"Erro ao processar candidatura espontânea: {str(e)}")
+            flash('❌ Erro ao processar sua candidatura. Tente novamente.', 'error')
+            return redirect(url_for('candidatura_espontanea'))
