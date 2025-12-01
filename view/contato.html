@@ -3,11 +3,11 @@
 {% set titulo = "Contato - Fale Conosco" %}
 
 {% block conteudo %}
-<section style="padding: 40px 20px; max-width: 800px; margin: 0 auto;">
+<section style="padding: 20px; max-width: 800px; margin: 0 auto; width: 100%; box-sizing: border-box;">
     <!-- Título -->
-    <div style="text-align: center; margin-bottom: 40px;">
-        <h1 style="font-size: 2.5rem; font-weight: 900; color: var(--primary); margin-bottom: 10px;">📞 Fale Conosco</h1>
-        <p style="font-size: 1.1rem; color: var(--text-light); max-width: 700px; margin: 0 auto;">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="font-size: clamp(1.8rem, 5vw, 2.5rem); font-weight: 900; color: var(--primary); margin-bottom: 10px;">📞 Fale Conosco</h1>
+        <p style="font-size: clamp(0.95rem, 3vw, 1.1rem); color: var(--text-light); max-width: 700px; margin: 0 auto; line-height: 1.5;">
             Tem alguma dúvida, sugestão ou precisa de suporte? Entre em contato conosco!
         </p>
     </div>
@@ -16,25 +16,31 @@
     <div style="
         background: var(--glass);
         border-radius: var(--radius);
-        padding: 30px;
+        padding: 25px 20px;
         box-shadow: var(--shadow-lg);
         backdrop-filter: blur(10px);
-        margin-bottom: 30px;
+        margin-bottom: 25px;
+        width: 100%;
+        box-sizing: border-box;
     ">
-        <h2 style="font-size: 1.8rem; font-weight: 800; color: var(--primary); margin-bottom: 20px;">📱 Nossos Contatos</h2>
-        <div style="display: grid; gap: 15px;">
-            <p style="display: flex; align-items: center; gap: 10px;">
-                <strong>📧 E-mail:</strong> contato@gamechip.com.br
-            </p>
-            <p style="display: flex; align-items: center; gap: 10px;">
-                <strong>💬 WhatsApp: </strong> (47) 99291-3723
-            </p>
-            <p style="display: flex; align-items: center; gap: 10px;">
-                <strong>🏢 Endereço:</strong> Rua Exemplo, 123 - São Paulo/SP
-            </p>
-            <p style="display: flex; align-items: center; gap: 10px;">
-                <strong>🕒 Horário de Atendimento:</strong> Segunda a Sexta, 8h às 18h
-            </p>
+        <h2 style="font-size: clamp(1.5rem, 4vw, 1.8rem); font-weight: 800; color: var(--primary); margin-bottom: 20px;">📱 Nossos Contatos</h2>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap;">
+                <strong style="min-width: 160px;">📧 E-mail:</strong>
+                <span>contato@gamechip.com.br</span>
+            </div>
+            <div style="display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap;">
+                <strong style="min-width: 160px;">💬 WhatsApp:</strong>
+                <span>(47) 99291-3723</span>
+            </div>
+            <div style="display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap;">
+                <strong style="min-width: 160px;">🏢 Endereço:</strong>
+                <span>Rua Exemplo, 123 - São Paulo/SP</span>
+            </div>
+            <div style="display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap;">
+                <strong style="min-width: 160px;">🕒 Horário:</strong>
+                <span>Segunda a Sexta, 8h às 18h</span>
+            </div>
         </div>
     </div>
 
@@ -42,53 +48,210 @@
     <div style="
         background: var(--glass);
         border-radius: var(--radius);
-        padding: 30px;
+        padding: 25px 20px;
         box-shadow: var(--shadow-lg);
         backdrop-filter: blur(10px);
+        width: 100%;
+        box-sizing: border-box;
     ">
-        <h2 style="font-size: 1.8rem; font-weight: 800; color: var(--primary); margin-bottom: 20px;">✉️ Envie sua Mensagem</h2>
-        <form method="POST" action="{{ url_for('contato') }}" style="display: grid; gap: 20px;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <label style="display: flex; flex-direction: column; font-weight: 600; color: var(--text);">
-                    Nome Completo *
-                    <input type="text" name="nome" placeholder="Seu nome completo" required style="padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
-                </label>
-
-                <label style="display: flex; flex-direction: column; font-weight: 600; color: var(--glass);">
-                    Telefone
-                    <input type="tel" name="telefone" placeholder="(11) 99999-9999" style="padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
-                </label>
+        <h2 style="font-size: clamp(1.5rem, 4vw, 1.8rem); font-weight: 800; color: var(--primary); margin-bottom: 20px;">✉️ Envie sua Mensagem</h2>
+        <form method="POST" action="{{ url_for('contato') }}" style="display: flex; flex-direction: column; gap: 20px;">
+            <!-- Linha com Nome e Telefone (responsiva) -->
+            <div style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
+                <div style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
+                    <!-- Nome Completo -->
+                    <div style="width: 100%;">
+                        <label style="display: block; font-weight: 600; color: var(--text); margin-bottom: 8px;">
+                            Nome Completo *
+                        </label>
+                        <input type="text" name="nome" placeholder="Seu nome completo" required style="
+                            padding: 14px;
+                            border-radius: 8px;
+                            border: 1px solid var(--border);
+                            width: 100%;
+                            box-sizing: border-box;
+                            font-size: 16px;
+                            background: var(--glass);
+                            color: var(--text);
+                        ">
+                    </div>
+                    
+                    <!-- Telefone -->
+                    <div style="width: 100%;">
+                        <label style="display: block; font-weight: 600; color: var(--text); margin-bottom: 8px;">
+                            Telefone
+                        </label>
+                        <input type="tel" name="telefone" placeholder="(11) 99999-9999" style="
+                            padding: 14px;
+                            border-radius: 8px;
+                            border: 1px solid var(--border);
+                            width: 100%;
+                            box-sizing: border-box;
+                            font-size: 16px;
+                            background: var(--glass);
+                            color: var(--text);
+                        ">
+                    </div>
+                </div>
             </div>
 
-            <label style="display: flex; flex-direction: column; font-weight: 600; color: var(--text);">
-                Email *
-                <input type="email" name="email" placeholder="seu@email.com" required style="padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
-            </label>
+            <!-- Email -->
+            <div style="width: 100%;">
+                <label style="display: block; font-weight: 600; color: var(--text); margin-bottom: 8px;">
+                    Email *
+                </label>
+                <input type="email" name="email" placeholder="seu@email.com" required style="
+                    padding: 14px;
+                    border-radius: 8px;
+                    border: 1px solid var(--border);
+                    width: 100%;
+                    box-sizing: border-box;
+                    font-size: 16px;
+                    background: var(--glass);
+                    color: var(--text);
+                ">
+            </div>
 
-            <label style="display: flex; flex-direction: column; font-weight: 600; color: var(--text);">
-                Assunto *
-                <input type="text" name="assunto" placeholder="Assunto da mensagem" required style="padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
-            </label>
+            <!-- Assunto -->
+            <div style="width: 100%;">
+                <label style="display: block; font-weight: 600; color: var(--text); margin-bottom: 8px;">
+                    Assunto *
+                </label>
+                <input type="text" name="assunto" placeholder="Assunto da mensagem" required style="
+                    padding: 14px;
+                    border-radius: 8px;
+                    border: 1px solid var(--border);
+                    width: 100%;
+                    box-sizing: border-box;
+                    font-size: 16px;
+                    background: var(--glass);
+                    color: var(--text);
+                ">
+            </div>
 
-            <label style="display: flex; flex-direction: column; font-weight: 600; color: var(--text);">
-                Mensagem *
-                <textarea name="mensagem" rows="6" placeholder="Descreva sua dúvida, sugestão ou solicitação..." required style="padding: 12px; border-radius: 8px; border: 1px solid var(--border); resize: vertical;"></textarea>
-            </label>
+            <!-- Mensagem -->
+            <div style="width: 100%;">
+                <label style="display: block; font-weight: 600; color: var(--text); margin-bottom: 8px;">
+                    Mensagem *
+                </label>
+                <textarea name="mensagem" rows="6" placeholder="Descreva sua dúvida, sugestão ou solicitação..." required style="
+                    padding: 14px;
+                    border-radius: 8px;
+                    border: 1px solid var(--border);
+                    width: 100%;
+                    box-sizing: border-box;
+                    font-size: 16px;
+                    background: var(--glass);
+                    color: var(--text);
+                    resize: vertical;
+                    min-height: 120px;
+                "></textarea>
+            </div>
 
+            <!-- Botão de Envio -->
             <button type="submit" style="
                 background: var(--primary);
                 color: white;
-                padding: 15px 30px;
+                padding: 16px 30px;
                 border: none;
                 border-radius: 8px;
                 font-weight: 700;
                 cursor: pointer;
                 transition: transform 0.3s, background 0.3s;
                 font-size: 1.1em;
+                width: 100%;
+                box-sizing: border-box;
+                margin-top: 10px;
             " onmouseover="this.style.background='#004aad'; this.style.transform='scale(1.02)'" onmouseout="this.style.background='var(--primary)'; this.style.transform='scale(1)'">
                 📤 Enviar Mensagem
             </button>
         </form>
     </div>
 </section>
+
+<style>
+    /* Estilo para placeholders */
+    input::placeholder,
+    textarea::placeholder {
+        color: var(--text-light);
+        opacity: 0.8;
+    }
+    
+    /* Foco nos campos */
+    input:focus,
+    textarea:focus {
+        outline: none;
+        border-color: var(--primary) !important;
+        box-shadow: 0 0 0 2px rgba(0, 91, 187, 0.2);
+    }
+    
+    /* Media Queries para responsividade */
+    @media (min-width: 768px) {
+        section {
+            padding: 40px 20px !important;
+        }
+        
+        /* Em telas maiores, Nome e Telefone ficam lado a lado */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        /* Adicionando classe para a linha do formulário */
+        form > div:first-child > div {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 20px !important;
+        }
+        
+        .contact-info > div {
+            flex-direction: row !important;
+            align-items: center !important;
+        }
+    }
+    
+    /* Ajustes específicos para celular */
+    @media (max-width: 767px) {
+        .contact-info strong {
+            min-width: 140px !important;
+        }
+        
+        button {
+            font-size: 1em !important;
+        }
+    }
+    
+    /* Para telas muito pequenas */
+    @media (max-width: 480px) {
+        .contact-info strong {
+            min-width: 120px !important;
+            font-size: 0.95rem;
+        }
+        
+        .contact-info span {
+            font-size: 0.95rem;
+        }
+        
+        h1, h2 {
+            text-align: center;
+        }
+        
+        input, textarea {
+            padding: 12px !important;
+        }
+    }
+    
+    /* Melhorias de acessibilidade para inputs em mobile */
+    input, textarea, button {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+    }
+    
+    /* Aumenta área de toque em mobile */
+    label {
+        cursor: pointer;
+    }
+</style>
 {% endblock %}

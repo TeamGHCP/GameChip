@@ -7,10 +7,10 @@ class Config:
     
     # Database Configuration - Usar variáveis de ambiente em produção
     DB_CONFIG = {
-        'host': os.environ.get('DB_HOST', 'tini.click'),
+        'host': os.environ.get('DB_HOST', 'localhost'),
         'port': os.environ.get('DB_PORT', '3306'),
-        'user': os.environ.get('DB_USER', 'loja_informatica'),
-        'password': os.environ.get('DB_PASSWORD', '7787a5c08b46a3ada35c3a1f7ca7dd9b'),
+        'user': os.environ.get('DB_USER', 'root'),
+        'password': os.environ.get('DB_PASSWORD', ''),
         'database': os.environ.get('DB_NAME', 'loja_informatica')
     }
     

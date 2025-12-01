@@ -242,7 +242,17 @@ body::before {
     .nav-links.active { display: flex; }
     .nav-links li, .nav-links li a { width: 100%; text-align: center; }
     .icons { margin-left: 0; order: 2; gap: 8px; }
-    .icon span { display: none; }
+
+    /* CORREÇÃO: mostrar emoji (primeiro span) e esconder apenas o texto (último span) */
+    .icon span:first-child {
+        display: inline !important;
+        font-size: 20px;
+        line-height: 1;
+    }
+    .icon span:last-child {
+        display: none !important;
+    }
+
     .icon { padding: 10px; width: 45px; height: 45px; justify-content: center; }
     .logo { order: 0; }
 }
