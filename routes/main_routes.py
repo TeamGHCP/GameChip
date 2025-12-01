@@ -260,9 +260,9 @@ def configure_main_routes(app):
     def trocas():
         return render_template('trocas.html')
 
-    @app.route('/rastreio')
-    def rastreio():
-        return render_template('rastreio.html')
+    @app.route('/central-ativacao')
+    def central_ativacao():
+        return render_template('central-ativacao.html')
 
     @app.route('/condicoes')
     def condicoes():
