@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% set titulo = "Central de Ativação - Gamechip" %}
+
+{% block conteudo %}
+
+<style>
+    .ativacao-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .ativacao-container h1 {
+        font-size: 36px;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+    .ativacao-container p.subtitulo {
+        text-align: center;
+        font-size: 18px;
+        margin-bottom: 40px;
+        opacity: .8;
+    }
+
+    .categoria {
+        margin-bottom: 40px;
+    }
+
+    .categoria h2 {
+        font-size: 26px;
+        margin-bottom: 10px;
+        border-left: 5px solid #0066ff;
+        padding-left: 10px;
+    }
+
+    details {
+        background: rgba(0,0,0,0.05);
+        border-radius: 8px;
+        margin-bottom: 12px;
+        padding: 15px 18px;
+        cursor: pointer;
+        transition: .2s;
+    }
+
+    .dark-theme details {
+        background: rgba(255,255,255,0.07);
+    }
+
+    details summary {
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    details p {
+        margin-top: 10px;
+        line-height: 1.6;
+    }
+</style>
+
+
+<div class="ativacao-container">
+
+    <h1>Central de Ativação</h1>
+    <p class="subtitulo">Siga as instruções abaixo para ativar seus jogos, gift cards e conteúdos digitais.</p>
+
+
+    <!-- ========================
+          CATEGORIA: JOGOS PARA PC
+    ========================== -->
+    <div class="categoria">
+        <h2>🎮 Jogos para PC</h2>
+
+        <details>
+            <summary>Steam</summary>
+            <p>1. Abra o aplicativo Steam.<br>
+               2. No menu superior, clique em <b>Jogos</b>.<br>
+               3. Selecione <b>Ativar um produto na Steam</b>.<br>
+               4. Digite o código recebido.<br>
+               5. Confirme e o jogo será adicionado à sua biblioteca.</p>
+        </details>
+
+        <details>
+            <summary>Epic Games</summary>
+            <p>1. Acesse o aplicativo da Epic Games.<br>
+               2. Vá em <b>Conta</b> > <b>Resgatar Código</b>.<br>
+               3. Insira o código e confirme.</p>
+        </details>
+
+        <details>
+            <summary>Ubisoft Connect</summary>
+            <p>1. Abra o Ubisoft Connect.<br>
+               2. Vá em <b>Menu</b> → <b>Ativar um código</b>.<br>
+               3. Digite o código e finalize.</p>
+        </details>
+
+        <details>
+            <summary>Rockstar Launcher</summary>
+            <p>1. Abra o Rockstar Launcher.<br>
+               2. Clique em <b>Configurações</b> → <b>Resgatar Código</b>.<br>
+               3. Insira o código e confirme.</p>
+        </details>
+    </div>
+
+
+    <!-- ========================
+          CATEGORIA: CONSOLES
+    ========================== -->
+    <div class="categoria">
+        <h2>🕹️ Consoles</h2>
+
+        <details>
+            <summary>Xbox</summary>
+            <p>1. No console ou no site da Microsoft, vá até <b>Resgatar Código</b>.<br>
+               2. Insira os 25 caracteres.<br>
+               3. Confirme para receber o conteúdo.</p>
+        </details>
+
+        <details>
+            <summary>PlayStation</summary>
+            <p>1. No PS4/PS5, abra a PlayStation Store.<br>
+               2. Na lateral, selecione <b>Resgatar Código</b>.<br>
+               3. Insira o código de 12 dígitos.</p>
+        </details>
+
+        <details>
+            <summary>Nintendo</summary>
+            <p>1. No Nintendo Switch, abra a eShop.<br>
+               2. Vá em <b>Resgatar Código</b>.<br>
+               3. Insira o código e confirme.</p>
+        </details>
+    </div>
+
+
+    <!-- ========================
+          CATEGORIA: GIFT CARDS
+    ========================== -->
+    <div class="categoria">
+        <h2>💳 Gift Cards</h2>
+
+        <details>
+            <summary>Google Play</summary>
+            <p>1. Abra o Google Play.<br>
+               2. Toque no seu perfil → <b>Pagamentos e assinaturas</b>.<br>
+               3. Toque em <b>Resgatar código</b>.</p>
+        </details>
+
+        <details>
+            <summary>PlayStation Store</summary>
+            <p>1. Entre na PS Store.<br>
+               2. Vá em <b>Resgatar Código</b>.<br>
+               3. Insira os 12 caracteres.</p>
+        </details>
+
+        <details>
+            <summary>Xbox / Microsoft</summary>
+            <p>1. Acesse redeem.microsoft.com.<br>
+               2. Faça login.<br>
+               3. Digite o código e confirme.</p>
+        </details>
+
+        <details>
+            <summary>Steam Wallet</summary>
+            <p>1. Entre na Steam Store.<br>
+               2. Vá em <b>Carteira Steam</b>.<br>
+               3. Clique em <b>Resgatar um código</b>.</p>
+        </details>
+
+        <details>
+            <summary>Roblox</summary>
+            <p>1. Acesse roblox.com/redeem.<br>
+               2. Faça login.<br>
+               3. Insira o código do cartão.</p>
+        </details>
+
+        <details>
+            <summary>Riot Games (LoL / Valorant)</summary>
+            <p>1. Abra o jogo.<br>
+               2. Vá até a loja.<br>
+               3. Selecione <b>Resgatar Código</b> e insira a chave.</p>
+        </details>
+
+        <details>
+            <summary>Spotify</summary>
+            <p>1. Vá até spotify.com/redeem.<br>
+               2. Faça login.<br>
+               3. Digite o código.</p>
+        </details>
+
+        <details>
+            <summary>Netflix</summary>
+            <p>1. Acesse netflix.com/redeem.<br>
+               2. Entre na sua conta.<br>
+               3. Coloque o código e confirme.</p>
+        </details>
+    </div>
+
+</div>
+
+{% endblock %}
