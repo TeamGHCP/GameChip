@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 
-{% set titulo = "Política de Trocas e Devoluções" %}
+{% set titulo = "Política de Trocas e Devoluções - Produtos Digitais" %}
 
 {% block conteudo %}
 <style>
     /* Estilos baseados no seu modelo anterior, adaptados para o tema "Trocas e Devoluções" */
     :root {
-      --card-primary: #27ae60; /* Cor Verde de renovação/política */
+      --card-primary: #3498db; /* Cor Azul para produtos digitais */
       --card-bg-light: #ffffff;
       --card-bg-dark: rgba(255, 255, 255, 0.05);
       --card-text-light: #222;
@@ -43,9 +43,11 @@
     }
 
     .card-header h2 {
-      font-size: 2.0rem;
-      color: var(--card-primary);
-      margin-bottom: 10px;
+      font-size: 2.2rem;
+      background: linear-gradient(135deg, var(--card-primary) 0%, #2ecc71 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 15px;
     }
     
     .card-header p {
@@ -54,7 +56,6 @@
     }
 
     .card-section {
-      /* Estilo da barra lateral para destacar cada tópico */
       border-left: 4px solid var(--card-primary);
       border-radius: 10px;
       padding: 25px;
@@ -62,10 +63,10 @@
     }
     
     body.dark-mode .card-section {
-        background: rgba(255,255,255,0.03);
+        background: rgba(52, 152, 219, 0.03);
     }
     body.light-mode .card-section {
-        background: rgba(0,0,0,0.01);
+        background: rgba(52, 152, 219, 0.02);
     }
 
     .card-section h4 {
@@ -96,7 +97,7 @@
         line-height: 1.5;
     }
     .card-list li::before {
-        content: "✅";
+        content: "🎮";
         color: var(--card-primary);
         font-weight: bold;
         display: inline-block;
@@ -104,13 +105,30 @@
         margin-left: -1em;
     }
     
+    .important-list li::before {
+        content: "⚠️";
+    }
+    
+    .no-refund-list li::before {
+        content: "❌";
+    }
+    
     .card-alert {
-      background: rgba(230, 126, 34, 0.1); /* Laranja para aviso/procedimento */
-      border-left: 4px solid #e67e22;
+      background: rgba(231, 76, 60, 0.1);
+      border-left: 4px solid #e74c3c;
       padding: 20px;
       border-radius: 10px;
-      color: #e67e22;
-      margin-top: 20px;
+      color: #e74c3c;
+      margin: 20px 0;
+    }
+    
+    .card-success {
+      background: rgba(46, 204, 113, 0.1);
+      border-left: 4px solid #2ecc71;
+      padding: 20px;
+      border-radius: 10px;
+      color: #2ecc71;
+      margin: 20px 0;
     }
 
     .card-footer {
@@ -121,62 +139,117 @@
       border-top: 1px dashed var(--card-border-light);
       padding-top: 20px;
     }
+    
+    .warning-box {
+      background: rgba(241, 196, 15, 0.1);
+      border: 2px solid #f1c40f;
+      border-radius: 10px;
+      padding: 25px;
+      margin: 25px 0;
+      text-align: center;
+    }
+    
+    .warning-box h5 {
+      color: #f1c40f;
+      margin-bottom: 10px;
+      font-size: 1.3rem;
+    }
 </style>
 
 <div class="card-container">
     <div class="card-header">
-        <h2>🔄 Política de Trocas e Devoluções</h2>
-        <p>Garantia de satisfação: Veja como realizar sua troca ou devolução de forma simples e segura.</p>
+        <h2>💻 Política de Trocas e Devoluções - Produtos Digitais</h2>
+        <p>Para Gift Cards, GamePass, Spotify Premium e outros produtos digitais - Entenda nossas regras específicas</p>
+    </div>
+    
+    <div class="warning-box">
+        <h5>⚠️ ATENÇÃO - PRODUTOS DIGITAIS</h5>
+        <p>Por se tratar de códigos ativáveis imediatamente, algumas regras são diferentes de produtos físicos.</p>
+        <p><strong>Após a ativação do código, NÃO é possível realizar troca ou devolução.</strong></p>
     </div>
 
     <div class="card-section">
-        <h4><i class="fas fa-calendar-check"></i> 1. Prazos</h4>
+        <h4>🔑 1. Condições para Trocas/Devoluções</h4>
         <p>
-            Oferecemos diferentes prazos dependendo da sua necessidade, respeitando sempre o Código de Defesa do Consumidor.
+            Por se tratar de produtos digitais, aceitamos trocas ou devoluções APENAS nas seguintes situações:
         </p>
         <ul class="card-list">
-            <li><strong>Desistência/Arrependimento:</strong> 7 dias corridos, contados a partir da data de recebimento do produto.</li>
-            <li><strong>Troca por Tamanho/Cor:</strong> Aceitamos trocas em até <strong>30 dias</strong> corridos após o recebimento.</li>
-            <li><strong>Defeito de Fabricação:</strong> 90 dias corridos para produtos duráveis.</li>
+            <li><strong> Produto não ativado:</strong> Código NÃO foi resgatado/ativado</li>
+            <li><strong> Erro na compra:</strong> Comprou o produto errado (ex: PS Plus em vez de Xbox Game Pass)</li>
+            <li><strong> Código inválido:</strong> O código fornecido não funciona (após verificação de nossa equipe)</li>
+            <li><strong> Problema técnico:</strong> Erro em nosso sistema que impede a entrega</li>
         </ul>
-    </div>
-
-    <div class="card-section">
-        <h4><i class="fas fa-box-open"></i> 2. Condição do Produto</h4>
-        <p>
-            Para que a troca ou devolução seja aceita, é crucial que o item respeite as seguintes condições:
-        </p>
-        <ul class="card-list">
-            <li>O produto deve estar em sua embalagem original, com todos os acessórios e manuais.</li>
-            <li>Não pode apresentar quaisquer indícios de uso, lavagem ou modificação pelo cliente.</li>
-            <li>A etiqueta original deve estar intacta e fixada ao produto.</li>
-        </ul>
-    </div>
-
-    <div class="card-section">
-        <h4><i class="fas fa-forward"></i> 3. Como Iniciar o Processo</h4>
-        <p>
-            Para solicitar uma troca ou devolução, o procedimento deve ser iniciado através do nosso canal de atendimento:
-        </p>
+        
         <div class="card-alert">
-             Para evitar atrasos, tenha em mãos o número do seu pedido e o motivo detalhado da solicitação (ex: cor errada, tamanho incorreto, defeito).
+            <strong>NÃO aceitamos devolução se:</strong> O código já foi ativado, você mudou de ideia após a compra, ou não tem mais interesse no produto.
+        </div>
+    </div>
+
+    <div class="card-section">
+        <h4>⏰ 2. Prazos</h4>
+        <p>
+            Prazos específicos para produtos digitais:
+        </p>
+        <ul class="card-list important-list">
+            <li><strong> Reclamação por código inválido:</strong> Até <strong>7 dias</strong> após a compra</li>
+            <li><strong> Troca por produto errado:</strong> Até <strong>24 horas</strong> após a compra (desde que não ativado)</li>
+            <li><strong> Solicitação de reembolso:</strong> Processada em até <strong>10 dias úteis</strong></li>
+        </ul>
+    </div>
+
+    <div class="card-section">
+        <h4>📋 3. Como Solicitar Troca/Devolução</h4>
+        <p>
+            Para solicitar uma troca ou devolução de produto digital:
+        </p>
+        <ul class="card-list">
+            <li> Acesse "Minha Conta" → "Meus Pedidos"</li>
+            <li> Selecione o pedido com o produto digital</li>
+            <li> Clique em "Solicitar Troca/Devolução"</li>
+            <li> Informe o motivo detalhadamente</li>
+            <li><strong> NÃO ative o código</strong> enquanto a solicitação estiver em análise</li>
+        </ul>
+        
+        <div class="card-success">
+            <strong>💡 Dica importante:</strong> Se comprou o produto errado, NÃO ative o código. Entre em contato imediatamente para troca.
         </div>
     </div>
     
     <div class="card-section">
-        <h4><i class="fas fa-hand-holding-usd"></i> 4. Opções de Reembolso</h4>
+        <h4>💳 4. Processo de Reembolso</h4>
         <p>
-            Após o recebimento e inspeção do produto em nosso centro de distribuição, você poderá escolher entre:
+            Caso seu pedido se enquadre nas condições acima:
         </p>
         <ul class="card-list">
-            <li>**Estorno** (para compras no cartão de crédito).</li>
-            <li>**Crédito na loja** para uso em futuras compras.</li>
-            <li>**Transferência Bancária** (para compras feitas via Boleto ou Pix).</li>
+            <li><strong> Cartão de crédito:</strong> Estorno na fatura seguinte (2-3 ciclos de faturamento)</li>
+            <li><strong> PIX:</strong> Reembolso em até 24 horas após aprovação</li>
+            <li><strong> Crédito na loja:</strong> Imediato para uso em novas compras</li>
+            <li><strong> Troca por outro produto:</strong> Processada em até 2 horas úteis</li>
+        </ul>
+    </div>
+    
+    <div class="card-section">
+        <h4>🔒 5. Garantia de Produtos Digitais</h4>
+        <p>
+            Garantimos que todos os códigos fornecidos são:
+        </p>
+        <ul class="card-list">
+            <li> 100% originais e oficiais</li>
+            <li> Válidos para a região especificada (Brasil, Global, etc.)</li>
+            <li> Com validade conforme anunciado</li>
+            <li> Entregues em até 5 minutos após confirmação do pagamento</li>
+        </ul>
+        
+        <ul class="card-list no-refund-list" style="margin-top: 20px;">
+            <li><strong> Não há garantia</strong> se o código foi ativado e consumido</li>
+            <li><strong> Não há garantia</strong> por banimento/bloqueio da conta do cliente</li>
+            <li><strong> Não há garantia</strong> por mudanças nas políticas das plataformas (Steam, Xbox, PlayStation, etc.)</li>
         </ul>
     </div>
 
     <div class="card-footer">
-        Esta política está em conformidade com o Código de Defesa do Consumidor brasileiro.
+        📞  Dúvidas? Entre em contato pelo nosso suporte antes de ativar qualquer código.<br>
+        Esta política está em conformidade com o Código de Defesa do Consumidor para produtos digitais.
     </div>
 </div>
 {% endblock %}
