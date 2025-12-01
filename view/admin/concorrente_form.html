@@ -1,48 +1,104 @@
 {% extends 'admin/base.html' %}
 
-{% block title %}{% if concorrente %}Editar{% else %}Novo{% endif %} Concorrente{% endblock %}
+{% block title %}
+    {% if modo == 'visualizar' %}
+        Visualizar Candidato
+    {% elif concorrente %}
+        Editar Candidato
+    {% else %}
+        Novo Candidato
+    {% endif %}
+{% endblock %}
 
-{% block page_title %}{% if concorrente %}✏️ Editar{% else %}➕ Novo{% endif %} Concorrente{% endblock %}
+{% block page_title %}
+    {% if modo == 'visualizar' %}
+        👁️ Visualizar Candidato
+    {% elif concorrente %}
+        ✏️ Editar Candidato
+    {% else %}
+        ➕ Novo Candidato
+    {% endif %}
+{% endblock %}
 
 {% block content %}
 <div class="form-container">
-    <form method="POST" action="{% if concorrente %}{{ url_for('admin_editar_concorrente', id_concorrente=concorrente.id_concorrente) }}{% else %}{{ url_for('admin_novo_concorrente') }}{% endif %}">
+    {% if modo == 'visualizar' %}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <div>
+            <h2 style="font-size: 1.8rem; font-weight: 800; color: var(--primary); margin: 0;">
+                {{ concorrente.nome }}
+            </h2>
+            <p style="color: var(--text-light); margin: 5px 0 0 0;">
+                {% if concorrente.vaga %}
+                Vaga: {{ concorrente.vaga }}
+                {% else %}
+                Candidatura Espontânea
+                {% endif %}
+                • {{ concorrente.data_candidatura.strftime('%d/%m/%Y') if concorrente.data_candidatura else concorrente.data_cadastro.strftime('%d/%m/%Y') }}
+            </p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <a href="{{ url_for('admin_concorrentes') }}" class="btn btn-warning">← Voltar</a>
+            <a href="{{ url_for('admin_editar_concorrente', id_concorrente=concorrente.id_concorrente) }}" class="btn btn-primary">✏️ Editar</a>
+        </div>
+    </div>
+    {% endif %}
+
+    <form method="POST" 
+          action="{% if concorrente %}{{ url_for('admin_editar_concorrente', id_concorrente=concorrente.id_concorrente) }}{% else %}{{ url_for('admin_novo_concorrente') }}{% endif %}"
+          {% if modo == 'visualizar' %}style="pointer-events: none; opacity: 0.8;"{% endif %}>
+        
         <div class="form-grid">
             <!-- Informações Pessoais -->
             <div class="form-group">
                 <label for="nome">Nome Completo *</label>
                 <input type="text" id="nome" name="nome" class="form-control" 
-                       value="{{ concorrente.nome if concorrente else '' }}" required>
+                       value="{{ concorrente.nome if concorrente else '' }}" 
+                       {% if modo == 'visualizar' %}readonly{% else %}required{% endif %}>
             </div>
 
             <div class="form-group">
                 <label for="email">Email *</label>
                 <input type="email" id="email" name="email" class="form-control" 
-                       value="{{ concorrente.email if concorrente else '' }}" required>
+                       value="{{ concorrente.email if concorrente else '' }}" 
+                       {% if modo == 'visualizar' %}readonly{% else %}required{% endif %}>
             </div>
 
             <div class="form-group">
                 <label for="telefone">Telefone</label>
                 <input type="tel" id="telefone" name="telefone" class="form-control" 
-                       value="{{ concorrente.telefone if concorrente else '' }}">
+                       value="{{ concorrente.telefone if concorrente else '' }}"
+                       {% if modo == 'visualizar' %}readonly{% endif %}>
             </div>
 
             <!-- Informações Profissionais -->
             <div class="form-group">
-                <label for="empresa">Empresa *</label>
+                <label for="empresa">Empresa</label>
                 <input type="text" id="empresa" name="empresa" class="form-control" 
-                       value="{{ concorrente.empresa if concorrente else '' }}" required>
+                       value="{{ concorrente.empresa if concorrente else '' }}"
+                       {% if modo == 'visualizar' %}readonly{% endif %}>
             </div>
 
             <div class="form-group">
-                <label for="cargo">Cargo</label>
+                <label for="cargo">Cargo Atual</label>
                 <input type="text" id="cargo" name="cargo" class="form-control" 
-                       value="{{ concorrente.cargo if concorrente else '' }}">
+                       value="{{ concorrente.cargo if concorrente else '' }}"
+                       {% if modo == 'visualizar' %}readonly{% endif %}>
+            </div>
+
+            <!-- NOVO: Campo para Vaga -->
+            <div class="form-group">
+                <label for="vaga">Vaga</label>
+                <input type="text" id="vaga" name="vaga" class="form-control" 
+                       value="{{ concorrente.vaga if concorrente else '' }}"
+                       placeholder="Ex: Desenvolvedor Front-End"
+                       {% if modo == 'visualizar' %}readonly{% endif %}>
             </div>
 
             <div class="form-group">
                 <label for="interesse">Área de Interesse</label>
-                <select id="interesse" name="interesse" class="form-control">
+                <select id="interesse" name="interesse" class="form-control"
+                        {% if modo == 'visualizar' %}disabled{% endif %}>
                     <option value="">Selecione...</option>
                     <option value="tecnologia" {% if concorrente and concorrente.interesse == 'tecnologia' %}selected{% endif %}>Tecnologia</option>
                     <option value="vendas" {% if concorrente and concorrente.interesse == 'vendas' %}selected{% endif %}>Vendas</option>
@@ -51,41 +107,143 @@
                     <option value="suporte" {% if concorrente and concorrente.interesse == 'suporte' %}selected{% endif %}>Suporte Técnico</option>
                     <option value="outro" {% if concorrente and concorrente.interesse == 'outro' %}selected{% endif %}>Outro</option>
                 </select>
+                {% if modo == 'visualizar' %}
+                <input type="hidden" name="interesse" value="{{ concorrente.interesse }}">
+                {% endif %}
+            </div>
+
+            <!-- NOVO: LinkedIn -->
+            <div class="form-group">
+                <label for="linkedin_url">LinkedIn</label>
+                <input type="url" id="linkedin_url" name="linkedin_url" class="form-control" 
+                       value="{{ concorrente.linkedin_url if concorrente else '' }}"
+                       placeholder="https://linkedin.com/in/seuperfil"
+                       {% if modo == 'visualizar' %}readonly{% endif %}>
             </div>
 
             <div class="form-group">
                 <label for="status">Status</label>
-                <select id="status" name="status" class="form-control">
+                <select id="status" name="status" class="form-control"
+                        {% if modo == 'visualizar' %}disabled{% endif %}>
                     <option value="pendente" {% if concorrente and concorrente.status == 'pendente' %}selected{% endif %}>Pendente</option>
                     <option value="contatado" {% if concorrente and concorrente.status == 'contatado' %}selected{% endif %}>Contatado</option>
                     <option value="em_negociacao" {% if concorrente and concorrente.status == 'em_negociacao' %}selected{% endif %}>Em Negociação</option>
                     <option value="contratado" {% if concorrente and concorrente.status == 'contratado' %}selected{% endif %}>Contratado</option>
                     <option value="recusado" {% if concorrente and concorrente.status == 'recusado' %}selected{% endif %}>Recusado</option>
                 </select>
+                {% if modo == 'visualizar' %}
+                <input type="hidden" name="status" value="{{ concorrente.status }}">
+                {% endif %}
             </div>
+
+            <!-- NOVO: Informações do PDF -->
+            {% if concorrente and concorrente.arquivo_pdf %}
+            <div class="form-group full-width" style="background: var(--success-light); padding: 15px; border-radius: var(--radius); border: 1px solid var(--success);">
+                <label style="font-weight: 600; color: var(--success); margin-bottom: 10px; display: block;">
+                    📄 Currículo em PDF
+                </label>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div>
+                        <strong>Arquivo:</strong> {{ concorrente.arquivo_pdf.split('_')[-1] if '_' in concorrente.arquivo_pdf else concorrente.arquivo_pdf }}
+                    </div>
+                    <a href="{{ url_for('download_curriculo', filename=concorrente.arquivo_pdf) }}" 
+                       class="btn btn-sm btn-success" style="padding: 5px 15px;">
+                        📥 Baixar Currículo
+                    </a>
+                </div>
+                {% if modo != 'visualizar' %}
+                <small style="color: var(--text-light); display: block; margin-top: 10px;">
+                    Para alterar o currículo, exclua este candidato e crie um novo.
+                </small>
+                {% endif %}
+            </div>
+            {% endif %}
 
             <!-- Mensagens -->
             <div class="form-group full-width">
-                <label for="mensagem">Mensagem/Interesse</label>
+                <label for="mensagem">Mensagem do Candidato</label>
                 <textarea id="mensagem" name="mensagem" class="form-control" rows="4" 
-                          placeholder="Descreva o interesse ou proposta do concorrente...">{{ concorrente.mensagem if concorrente else '' }}</textarea>
+                          placeholder="Mensagem enviada pelo candidato..."
+                          {% if modo == 'visualizar' %}readonly{% endif %}>{{ concorrente.mensagem if concorrente else '' }}</textarea>
             </div>
 
             <div class="form-group full-width">
                 <label for="observacoes">Observações Internas</label>
                 <textarea id="observacoes" name="observacoes" class="form-control" rows="3" 
-                          placeholder="Anotações internas sobre o contato...">{{ concorrente.observacoes if concorrente else '' }}</textarea>
+                          placeholder="Anotações internas sobre o candidato..."
+                          {% if modo == 'visualizar' %}readonly{% endif %}>{{ concorrente.observacoes if concorrente else '' }}</textarea>
             </div>
         </div>
 
         <div class="form-actions">
-            <a href="{{ url_for('admin_concorrentes') }}" class="btn btn-warning">
-                ↩️ Cancelar
-            </a>
-            <button type="submit" class="btn btn-primary">
-                {% if concorrente %}💾 Atualizar{% else %}✅ Cadastrar{% endif %} Concorrente
-            </button>
+            {% if modo == 'visualizar' %}
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <a href="{{ url_for('admin_concorrentes') }}" class="btn btn-warning">
+                    ↩️ Voltar para Lista
+                </a>
+                <a href="{{ url_for('admin_editar_concorrente', id_concorrente=concorrente.id_concorrente) }}" class="btn btn-primary">
+                    ✏️ Editar Candidato
+                </a>
+                {% if concorrente.email %}
+                <a href="mailto:{{ concorrente.email }}?subject=Resposta à candidatura - {{ concorrente.vaga or 'GHCP' }}" 
+                   class="btn btn-info" target="_blank">
+                    📧 Enviar Email
+                </a>
+                {% endif %}
+            </div>
+            {% else %}
+            <div style="display: flex; gap: 15px;">
+                <a href="{{ url_for('admin_concorrentes') }}" class="btn btn-warning">
+                    ↩️ Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    {% if concorrente %}💾 Atualizar{% else %}✅ Cadastrar{% endif %} Candidato
+                </button>
+            </div>
+            {% endif %}
         </div>
     </form>
+
+    <!-- Informações do Sistema (apenas modo visualizar) -->
+    {% if modo == 'visualizar' %}
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);">
+        <h3 style="font-size: 1.2rem; color: var(--text-light); margin-bottom: 15px;">📊 Informações do Sistema</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; color: var(--text-light);">
+            <div>
+                <strong>ID:</strong> {{ concorrente.id_concorrente }}
+            </div>
+            <div>
+                <strong>Cadastrado em:</strong> {{ concorrente.data_cadastro.strftime('%d/%m/%Y %H:%M') }}
+            </div>
+            {% if concorrente.data_candidatura %}
+            <div>
+                <strong>Candidatou-se em:</strong> {{ concorrente.data_candidatura.strftime('%d/%m/%Y %H:%M') }}
+            </div>
+            {% endif %}
+            {% if concorrente.linkedin_url %}
+            <div>
+                <strong>LinkedIn:</strong> 
+                <a href="{{ concorrente.linkedin_url }}" target="_blank" style="color: var(--primary);">
+                    Ver perfil
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 </div>
+
+<style>
+    /* Estilo para campos read-only */
+    input:read-only, textarea:read-only, select:disabled {
+        background-color: #f5f5f5;
+        cursor: not-allowed;
+        border-color: #ddd;
+    }
+    
+    .success-light {
+        background-color: rgba(40, 167, 69, 0.1);
+        border-color: #28a745;
+    }
+</style>
 {% endblock %}

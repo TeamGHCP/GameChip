@@ -4,6 +4,10 @@ from models.database import get_db_connection
 from utils.decorators import admin_required, permission_required, PERMISSIONS
 import mysql.connector
 import json
+import uuid
+from flask import send_from_directory
+from werkzeug.utils import secure_filename
+from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
 from config import Config
@@ -14,6 +18,47 @@ def configure_admin_routes(app):
     def allowed_file(filename):
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
 
+        # Função auxiliar para gerar nome único para arquivos PDF
+    def gerar_nome_arquivo(nome_original, vaga_nome=""):
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        nome_base = secure_filename(nome_original)
+        nome_arquivo = f"{timestamp}_{vaga_nome[:20]}_{nome_base}" if vaga_nome else f"{timestamp}_{nome_base}"
+        return nome_arquivo
+    
+    # Função para criar pasta de uploads se não existir
+    def criar_pasta_uploads():
+        pasta_curriculos = os.path.join(app.root_path, 'static', 'uploads', 'curriculos')
+        pasta_mensal = os.path.join(pasta_curriculos, datetime.now().strftime("%Y_%m"))
+        
+        if not os.path.exists(pasta_mensal):
+            os.makedirs(pasta_mensal, exist_ok=True)
+        
+        return pasta_mensal
+    
+    # Função para verificar se é LinkedIn válido
+    def validar_linkedin(url):
+        if not url:
+            return True
+        url = url.lower().strip()
+        return url.startswith(('https://linkedin.com/', 'http://linkedin.com/', 
+                             'https://www.linkedin.com/', 'http://www.linkedin.com/'))
+    
+    # Função para listar vagas únicas para filtros
+    def obter_vagas_unicas():
+        try:
+            conn = get_db_connection()
+            if not conn:
+                return []
+            
+            cursor = conn.cursor()
+            cursor.execute("SELECT DISTINCT vaga FROM concorrentes WHERE vaga IS NOT NULL AND vaga != '' ORDER BY vaga")
+            vagas = [row[0] for row in cursor.fetchall()]
+            cursor.close()
+            conn.close()
+            return vagas
+        except:
+            return []
+        
     # Context processor para injetar user_cargo em todos os templates
     @app.context_processor
     def inject_user_cargo():
@@ -352,29 +397,105 @@ def configure_admin_routes(app):
             flash(f'Erro ao carregar ofertas: {err}', 'error')
             return render_template('admin/ofertas.html', ofertas=[])
 
-    # CONCORRENTES - Admin e Gerente
+    # CONCORRENTES - Admin e Gerente (COM FILTROS)
     @app.route('/admin/concorrentes')
     @permission_required(['admin', 'gerente'])
     def admin_concorrentes():
         try:
+            # Obter parâmetros de filtro
+            vaga_filtro = request.args.get('vaga', '')
+            status_filtro = request.args.get('status', '')
+            data_inicio = request.args.get('data_inicio', '')
+            data_fim = request.args.get('data_fim', '')
+            page = request.args.get('page', 1, type=int)
+            per_page = 20  # Itens por página
+            
             conn = get_db_connection()
             if not conn:
                 flash('Erro ao conectar ao banco de dados.', 'error')
-                return render_template('admin/concorrentes.html', concorrentes=[])
+                return render_template('admin/concorrentes.html', 
+                                     concorrentes=[], 
+                                     vagas_unicas=obter_vagas_unicas(),
+                                     vaga_filtro=vaga_filtro,
+                                     status_filtro=status_filtro,
+                                     data_inicio=data_inicio,
+                                     data_fim=data_fim,
+                                     total_candidatos=0,
+                                     contadores={})
             
             cursor = conn.cursor(dictionary=True)
             
-            cursor.execute("""
-                SELECT * FROM concorrentes 
-                ORDER BY data_cadastro DESC
-            """)
-            concorrentes = cursor.fetchall()
+            # Construir query com filtros
+            query = "SELECT * FROM concorrentes WHERE 1=1"
+            params = []
             
-            return render_template('admin/concorrentes.html', concorrentes=concorrentes)
+            if vaga_filtro:
+                query += " AND vaga = %s"
+                params.append(vaga_filtro)
+            
+            if status_filtro:
+                query += " AND status = %s"
+                params.append(status_filtro)
+            
+            if data_inicio:
+                query += " AND DATE(data_candidatura) >= %s"
+                params.append(data_inicio)
+            
+            if data_fim:
+                query += " AND DATE(data_candidatura) <= %s"
+                params.append(data_fim)
+            
+            query += " ORDER BY data_candidatura DESC, data_cadastro DESC"
+            
+            # Executar query paginada
+            cursor.execute(query, params)
+            todos_concorrentes = cursor.fetchall()
+            
+            # Paginação manual (simples)
+            total = len(todos_concorrentes)
+            inicio = (page - 1) * per_page
+            fim = inicio + per_page
+            concorrentes = todos_concorrentes[inicio:fim]
+            
+            # Calcular estatísticas
+            contadores = {
+                'pendente': sum(1 for c in todos_concorrentes if c['status'] == 'pendente'),
+                'contatado': sum(1 for c in todos_concorrentes if c['status'] == 'contatado'),
+                'contratado': sum(1 for c in todos_concorrentes if c['status'] == 'contratado'),
+                'com_linkedin': sum(1 for c in todos_concorrentes if c.get('linkedin_url')),
+            }
+            
+            # Obter vagas únicas para filtro
+            cursor.execute("SELECT DISTINCT vaga FROM concorrentes WHERE vaga IS NOT NULL AND vaga != '' ORDER BY vaga")
+            vagas_unicas = [row['vaga'] for row in cursor.fetchall()]
+            
+            return render_template('admin/concorrentes.html', 
+                                 concorrentes=concorrentes,
+                                 vagas_unicas=vagas_unicas,
+                                 vaga_filtro=vaga_filtro,
+                                 status_filtro=status_filtro,
+                                 data_inicio=data_inicio,
+                                 data_fim=data_fim,
+                                 total_candidatos=total,
+                                 contadores=contadores,
+                                 pagination={
+                                     'page': page,
+                                     'per_page': per_page,
+                                     'total': total,
+                                     'pages': (total + per_page - 1) // per_page
+                                 })
             
         except mysql.connector.Error as err:
             flash(f'Erro ao carregar concorrentes: {err}', 'error')
-            return render_template('admin/concorrentes.html', concorrentes=[])
+            return render_template('admin/concorrentes.html', 
+                                 concorrentes=[], 
+                                 vagas_unicas=[],
+                                 vaga_filtro='',
+                                 status_filtro='',
+                                 data_inicio='',
+                                 data_fim='',
+                                 total_candidatos=0,
+                                 contadores={})
         
         finally:
             if conn and conn.is_connected():
@@ -443,6 +564,39 @@ def configure_admin_routes(app):
             if conn and conn.is_connected():
                 cursor.close()
                 conn.close()
+
+    @app.route('/admin/concorrente/visualizar/<int:id_concorrente>')
+    @permission_required(['admin', 'gerente'])
+    def admin_visualizar_concorrente(id_concorrente):
+        try:
+            conn = get_db_connection()
+            if not conn:
+                flash('Erro ao conectar ao banco de dados.', 'error')
+                return redirect(url_for('admin_concorrentes'))
+            
+            cursor = conn.cursor(dictionary=True)
+            
+            cursor.execute("SELECT * FROM concorrentes WHERE id_concorrente = %s", (id_concorrente,))
+            concorrente = cursor.fetchone()
+            
+            if not concorrente:
+                flash('❌ Candidato não encontrado.', 'error')
+                return redirect(url_for('admin_concorrentes'))
+            
+            return render_template('admin/concorrente_form.html', 
+                                 concorrente=concorrente, 
+                                 modo='visualizar')
+        
+        except mysql.connector.Error as err:
+            flash(f'Erro ao carregar candidato: {err}', 'error')
+            return redirect(url_for('admin_concorrentes'))
+        
+        finally:
+            if conn and conn.is_connected():
+                cursor.close()
+                conn.close()
+
+                
 
     # RELATÓRIOS - Admin, Gerente e Vendedor (apenas visualização)
     @app.route('/admin/relatorios')
@@ -936,125 +1090,9 @@ def configure_admin_routes(app):
                 cursor.close()
                 conn.close()
 
-    @app.route('/admin/concorrente/novo', methods=['GET', 'POST'])
-    @permission_required(['admin', 'gerente'])
-    def admin_novo_concorrente():
-        if request.method == 'POST':
-            nome = request.form.get('nome', '').strip()
-            email = request.form.get('email', '').strip()
-            telefone = request.form.get('telefone', '').strip()
-            empresa = request.form.get('empresa', '').strip()
-            cargo = request.form.get('cargo', '').strip()
-            interesse = request.form.get('interesse', '').strip()
-            mensagem = request.form.get('mensagem', '').strip()
-            status = request.form.get('status', 'pendente')
-            
-            if not all([nome, email, empresa]):
-                flash('❌ Preencha todos os campos obrigatórios.', 'error')
-                return render_template('admin/concorrente_form.html')
-            
-            try:
-                conn = get_db_connection()
-                if not conn:
-                    flash('Erro ao conectar ao banco de dados.', 'error')
-                    return render_template('admin/concorrente_form.html')
-                
-                cursor = conn.cursor()
-                
-                cursor.execute("""
-                    INSERT INTO concorrentes (nome, email, telefone, empresa, cargo, interesse, mensagem, status)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                """, (nome, email, telefone, empresa, cargo, interesse, mensagem, status))
-                
-                conn.commit()
-                
-                # Log da ação
-                if session.get('admin_id'):
-                    try:
-                        cursor.execute("""
-                            INSERT INTO logs_sistema (id_funcionario, acao, modulo, descricao)
-                            VALUES (%s, 'CADASTRO', 'CONCORRENTES', %s)
-                        """, (session['admin_id'], f'Concorrente cadastrado: {nome}'))
-                        conn.commit()
-                    except mysql.connector.Error:
-                        pass
-                
-                flash('✅ Concorrente cadastrado com sucesso!', 'success')
-                return redirect(url_for('admin_concorrentes'))
-            
-            except mysql.connector.Error as err:
-                flash(f'Erro ao cadastrar concorrente: {err}', 'error')
-            
-            finally:
-                if conn and conn.is_connected():
-                    cursor.close()
-                    conn.close()
-        
-        return render_template('admin/concorrente_form.html')
+    
 
-    @app.route('/admin/concorrente/editar/<int:id_concorrente>', methods=['GET', 'POST'])
-    @permission_required(['admin', 'gerente'])
-    def admin_editar_concorrente(id_concorrente):
-        try:
-            conn = get_db_connection()
-            if not conn:
-                flash('Erro ao conectar ao banco de dados.', 'error')
-                return redirect(url_for('admin_concorrentes'))
-            
-            cursor = conn.cursor(dictionary=True)
-            
-            if request.method == 'POST':
-                nome = request.form.get('nome', '').strip()
-                email = request.form.get('email', '').strip()
-                telefone = request.form.get('telefone', '').strip()
-                empresa = request.form.get('empresa', '').strip()
-                cargo = request.form.get('cargo', '').strip()
-                interesse = request.form.get('interesse', '').strip()
-                mensagem = request.form.get('mensagem', '').strip()
-                status = request.form.get('status', 'pendente')
-                observacoes = request.form.get('observacoes', '').strip()
-                
-                cursor.execute("""
-                    UPDATE concorrentes 
-                    SET nome = %s, email = %s, telefone = %s, empresa = %s, cargo = %s, 
-                        interesse = %s, mensagem = %s, status = %s, observacoes = %s
-                    WHERE id_concorrente = %s
-                """, (nome, email, telefone, empresa, cargo, interesse, mensagem, status, observacoes, id_concorrente))
-                
-                conn.commit()
-                
-                # Log da ação
-                if session.get('admin_id'):
-                    try:
-                        cursor.execute("""
-                            INSERT INTO logs_sistema (id_funcionario, acao, modulo, descricao)
-                            VALUES (%s, 'EDICAO', 'CONCORRENTES', %s)
-                        """, (session['admin_id'], f'Concorrente editado: {nome} (ID: {id_concorrente})'))
-                        conn.commit()
-                    except mysql.connector.Error:
-                        pass
-                
-                flash('✅ Concorrente atualizado com sucesso!', 'success')
-                return redirect(url_for('admin_concorrentes'))
-            
-            else:
-                cursor.execute("SELECT * FROM concorrentes WHERE id_concorrente = %s", (id_concorrente,))
-                concorrente = cursor.fetchone()
-                
-                if not concorrente:
-                    flash('❌ Concorrente não encontrado.', 'error')
-                    return redirect(url_for('admin_concorrentes'))
-                
-                return render_template('admin/concorrente_form.html', concorrente=concorrente)
-        
-        except mysql.connector.Error as err:
-            flash(f'Erro ao editar concorrente: {err}', 'error')
-            return redirect(url_for('admin_concorrentes'))
-        
-        finally:
-            if conn and conn.is_connected():
-                cursor.close()
-                conn.close()
+    
 
     @app.route('/admin/concorrente/excluir/<int:id_concorrente>', methods=['POST'])
     @permission_required(['admin', 'gerente'])
@@ -1303,3 +1341,210 @@ def configure_admin_routes(app):
                 cursor.close()
                 conn.close()
         return redirect(url_for('admin_funcionarios'))
+    
+    @app.route('/admin/concorrente/download-curriculo/<filename>')
+    @permission_required(['admin', 'gerente'])
+    def download_curriculo(filename):
+        try:
+            # Buscar o arquivo na pasta de curriculos
+            pasta_base = os.path.join(app.root_path, 'static', 'uploads', 'curriculos')
+            
+            # Procurar o arquivo em todas as subpastas
+            for root, dirs, files in os.walk(pasta_base):
+                if filename in files:
+                    return send_from_directory(root, filename, as_attachment=True)
+            
+            flash('❌ Arquivo não encontrado.', 'error')
+            return redirect(url_for('admin_concorrentes'))
+            
+        except Exception as e:
+            flash(f'Erro ao baixar arquivo: {str(e)}', 'error')
+            return redirect(url_for('admin_concorrentes'))
+        
+    @app.route('/admin/concorrente/editar/<int:id_concorrente>', methods=['GET', 'POST'])
+    @permission_required(['admin', 'gerente'])
+    def admin_editar_concorrente(id_concorrente):
+        try:
+            conn = get_db_connection()
+            if not conn:
+                flash('Erro ao conectar ao banco de dados.', 'error')
+                return redirect(url_for('admin_concorrentes'))
+            
+            cursor = conn.cursor(dictionary=True)
+            
+            if request.method == 'POST':
+                nome = request.form.get('nome', '').strip()
+                email = request.form.get('email', '').strip()
+                telefone = request.form.get('telefone', '').strip()
+                empresa = request.form.get('empresa', '').strip()
+                cargo = request.form.get('cargo', '').strip()
+                vaga = request.form.get('vaga', '').strip()
+                interesse = request.form.get('interesse', '').strip()
+                linkedin_url = request.form.get('linkedin_url', '').strip()
+                mensagem = request.form.get('mensagem', '').strip()
+                status = request.form.get('status', 'pendente')
+                observacoes = request.form.get('observacoes', '').strip()
+                
+                # Validar LinkedIn
+                if linkedin_url and not validar_linkedin(linkedin_url):
+                    flash('❌ O link do LinkedIn deve começar com linkedin.com', 'error')
+                    cursor.execute("SELECT * FROM concorrentes WHERE id_concorrente = %s", (id_concorrente,))
+                    concorrente = cursor.fetchone()
+                    return render_template('admin/concorrente_form.html', concorrente=concorrente)
+                
+                cursor.execute("""
+                    UPDATE concorrentes 
+                    SET nome = %s, email = %s, telefone = %s, empresa = %s, cargo = %s, 
+                        vaga = %s, interesse = %s, linkedin_url = %s, mensagem = %s, 
+                        status = %s, observacoes = %s
+                    WHERE id_concorrente = %s
+                """, (nome, email, telefone, empresa, cargo, vaga, interesse, 
+                      linkedin_url, mensagem, status, observacoes, id_concorrente))
+                
+                conn.commit()
+                
+                # Log da ação
+                if session.get('admin_id'):
+                    try:
+                        cursor.execute("""
+                            INSERT INTO logs_sistema (id_funcionario, acao, modulo, descricao)
+                            VALUES (%s, 'EDICAO', 'CONCORRENTES', %s)
+                        """, (session['admin_id'], f'Candidato editado: {nome} (ID: {id_concorrente})'))
+                        conn.commit()
+                    except mysql.connector.Error:
+                        pass
+                
+                flash('✅ Candidato atualizado com sucesso!', 'success')
+                return redirect(url_for('admin_concorrentes'))
+            
+            else:
+                cursor.execute("SELECT * FROM concorrentes WHERE id_concorrente = %s", (id_concorrente,))
+                concorrente = cursor.fetchone()
+                
+                if not concorrente:
+                    flash('❌ Candidato não encontrado.', 'error')
+                    return redirect(url_for('admin_concorrentes'))
+                
+                return render_template('admin/concorrente_form.html', concorrente=concorrente)
+        
+        except mysql.connector.Error as err:
+            flash(f'Erro ao editar candidato: {err}', 'error')
+            return redirect(url_for('admin_concorrentes'))
+        
+        finally:
+            if conn and conn.is_connected():
+                cursor.close()
+                conn.close()
+
+    @app.route('/admin/concorrente/novo', methods=['GET', 'POST'])
+    @permission_required(['admin', 'gerente'])
+    def admin_novo_concorrente():
+        if request.method == 'POST':
+            nome = request.form.get('nome', '').strip()
+            email = request.form.get('email', '').strip()
+            telefone = request.form.get('telefone', '').strip()
+            empresa = request.form.get('empresa', '').strip()
+            cargo = request.form.get('cargo', '').strip()
+            vaga = request.form.get('vaga', '').strip()
+            interesse = request.form.get('interesse', '').strip()
+            linkedin_url = request.form.get('linkedin_url', '').strip()
+            mensagem = request.form.get('mensagem', '').strip()
+            status = request.form.get('status', 'pendente')
+            observacoes = request.form.get('observacoes', '').strip()
+            
+            if not all([nome, email, empresa]):
+                flash('❌ Preencha todos os campos obrigatórios.', 'error')
+                return render_template('admin/concorrente_form.html')
+            
+            # Validar LinkedIn
+            if linkedin_url and not validar_linkedin(linkedin_url):
+                flash('❌ O link do LinkedIn deve começar com linkedin.com', 'error')
+                return render_template('admin/concorrente_form.html')
+            
+            try:
+                conn = get_db_connection()
+                if not conn:
+                    flash('Erro ao conectar ao banco de dados.', 'error')
+                    return render_template('admin/concorrente_form.html')
+                
+                cursor = conn.cursor()
+                
+                cursor.execute("""
+                    INSERT INTO concorrentes 
+                    (nome, email, telefone, empresa, cargo, vaga, interesse, 
+                     linkedin_url, mensagem, status, observacoes)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (nome, email, telefone, empresa, cargo, vaga, interesse, 
+                      linkedin_url, mensagem, status, observacoes))
+                
+                conn.commit()
+                
+                # Log da ação
+                if session.get('admin_id'):
+                    try:
+                        cursor.execute("""
+                            INSERT INTO logs_sistema (id_funcionario, acao, modulo, descricao)
+                            VALUES (%s, 'CADASTRO', 'CONCORRENTES', %s)
+                        """, (session['admin_id'], f'Candidato cadastrado manualmente: {nome}'))
+                        conn.commit()
+                    except mysql.connector.Error:
+                        pass
+                
+                flash('✅ Candidato cadastrado com sucesso!', 'success')
+                return redirect(url_for('admin_concorrentes'))
+            
+            except mysql.connector.Error as err:
+                flash(f'Erro ao cadastrar candidato: {err}', 'error')
+            
+            finally:
+                if conn and conn.is_connected():
+                    cursor.close()
+                    conn.close()
+        
+        return render_template('admin/concorrente_form.html')
+    
+    @app.route('/admin/concorrente/atualizar-status/<int:id_concorrente>', methods=['POST'])
+    @permission_required(['admin', 'gerente'])
+    def admin_atualizar_status(id_concorrente):
+        try:
+            status = request.form.get('status', 'pendente')
+            
+            conn = get_db_connection()
+            if not conn:
+                flash('Erro ao conectar ao banco de dados.', 'error')
+                return redirect(url_for('admin_concorrentes'))
+            
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE concorrentes 
+                SET status = %s 
+                WHERE id_concorrente = %s
+            """, (status, id_concorrente))
+            
+            conn.commit()
+            
+            # Log da ação
+            if session.get('admin_id'):
+                try:
+                    cursor.execute("SELECT nome FROM concorrentes WHERE id_concorrente = %s", (id_concorrente,))
+                    nome = cursor.fetchone()[0]
+                    cursor.execute("""
+                        INSERT INTO logs_sistema (id_funcionario, acao, modulo, descricao)
+                        VALUES (%s, 'EDICAO', 'CONCORRENTES', %s)
+                    """, (session['admin_id'], f'Status alterado para {status}: {nome}'))
+                    conn.commit()
+                except mysql.connector.Error:
+                    pass
+            
+            flash(f'✅ Status atualizado para {status}!', 'success')
+            
+        except mysql.connector.Error as err:
+            flash(f'Erro ao atualizar status: {err}', 'error')
+        
+        finally:
+            if conn and conn.is_connected():
+                cursor.close()
+                conn.close()
+        
+        return redirect(request.referrer or url_for('admin_concorrentes'))

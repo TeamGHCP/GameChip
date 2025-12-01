@@ -1,14 +1,36 @@
 from flask import Flask
 from config import Config
+
+# Importação correta das funções de configuração de rotas
 from routes.main_routes import configure_main_routes
 from routes.auth_routes import configure_auth_routes
 from routes.empresa_routes import configure_empresa_routes
 from routes.admin_routes import configure_admin_routes
 from routes.produto_routes import configure_produto_routes
 from routes.carrinho_routes import configure_carrinho_routes
-from utils.helpers import from_json_filter
 from routes.avaliacao_routes import avaliacao_bp
+
+from utils.helpers import from_json_filter
 import os
+
+# Cria a instância do Flask
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Configura os filtros do Jinja2
+app.jinja_env.filters['from_json'] = from_json_filter
+
+# Configura todas as rotas
+configure_main_routes(app)
+configure_auth_routes(app)
+configure_empresa_routes(app)
+configure_admin_routes(app)  # Agora está importado corretamente
+configure_produto_routes(app)
+configure_carrinho_routes(app)
+
+# Registra o blueprint de avaliações
+app.register_blueprint(avaliacao_bp)
+
 
 def create_app():
     app = Flask(__name__, template_folder="view", static_folder="static")

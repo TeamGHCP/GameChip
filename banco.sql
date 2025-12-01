@@ -1,3 +1,4 @@
+create database loja_informatica;
 USE loja_informatica;
 
 -- Remover tabelas existentes (em ordem correta para evitar problemas de FK)
@@ -106,6 +107,43 @@ CREATE TABLE concorrentes (
     INDEX idx_status (status),
     INDEX idx_data_cadastro (data_cadastro)
 );
+
+-- Adicione estas colunas à tabela existente:
+ALTER TABLE concorrentes
+ADD COLUMN vaga VARCHAR(255) AFTER empresa,
+ADD COLUMN arquivo_pdf VARCHAR(255) AFTER telefone,
+ADD COLUMN linkedin_url VARCHAR(500) AFTER arquivo_pdf,
+ADD COLUMN data_candidatura TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER data_cadastro;
+
+-- Crie uma tabela para as vagas (opcional, mas útil):
+CREATE TABLE IF NOT EXISTS vagas (
+    id_vaga INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(255) NOT NULL,
+    slug VARCHAR(100) UNIQUE NOT NULL,
+    descricao LONGTEXT NOT NULL,
+    requisitos LONGTEXT NOT NULL,
+    beneficios TEXT,
+    tipo ENUM('CLT', 'PJ', 'Estágio', 'Freelancer') DEFAULT 'CLT',
+    status ENUM('aberta', 'pausada', 'encerrada') DEFAULT 'aberta',
+    data_publicacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_encerramento DATE,
+    INDEX idx_status (status),
+    INDEX idx_tipo (tipo)
+);
+
+-- Insira as vagas que você listou:
+INSERT INTO vagas (titulo, slug, descricao, requisitos, tipo) VALUES
+('Estagiário(a) de Marketing Digital', 'estagiario-marketing-digital', 'Descrição detalhada da vaga de Estagiário de Marketing Digital...', 'Requisitos para Estagiário de Marketing Digital...', 'Estágio'),
+('Designer de Mídias Digitais (Freelancer/Estágio)', 'designer-midias-digitais', 'Descrição detalhada da vaga...', 'Requisitos para Designer...', 'Freelancer'),
+('Desenvolvedor(a) Web Front-End', 'desenvolvedor-front-end', 'Descrição detalhada da vaga...', 'Requisitos para Front-End...', 'CLT'),
+('Desenvolvedor(a) Back-End (Python/Flask)', 'desenvolvedor-back-end-python', 'Descrição detalhada da vaga...', 'Requisitos para Back-End Python...', 'CLT'),
+('Suporte ao Cliente (Produtos Digitais)', 'suporte-cliente-produtos-digitais', 'Descrição detalhada da vaga...', 'Requisitos para Suporte...', 'CLT'),
+('Analista de Produtos Digitais (Games & Gift Cards)', 'analista-produtos-digitais', 'Descrição detalhada da vaga...', 'Requisitos para Analista...', 'CLT'),
+('Gestor(a) de E-commerce', 'gestor-ecommerce', 'Descrição detalhada da vaga...', 'Requisitos para Gestor E-commerce...', 'CLT'),
+('Social Media (TikTok / Instagram)', 'social-media-tiktok-instagram', 'Descrição detalhada da vaga...', 'Requisitos para Social Media...', 'CLT'),
+('Editor(a) de Vídeo (Shorts, Reels, TikTok)', 'editor-video-shorts-reels', 'Descrição detalhada da vaga...', 'Requisitos para Editor de Vídeo...', 'CLT'),
+('Redator(a) Publicitário(a) / Copywriter', 'redator-publicitario-copywriter', 'Descrição detalhada da vaga...', 'Requisitos para Redator...', 'CLT');
+
 
 -- Tabela enderecos
 CREATE TABLE enderecos (
