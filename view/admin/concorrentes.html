@@ -1,300 +1,386 @@
 {% extends 'admin/base.html' %}
 
-{% block title %}Concorrentes{% endblock %}
-
-{% block page_title %}📊 Gestão de Candidatos{% endblock %}
+{% block title %}Candidatos{% endblock %}
+{% block page_title %}Gestão de Candidatos{% endblock %}
 
 {% block content %}
-<div class="table-header table-header-responsive">
-    <h3>Lista de Candidatos</h3>
-    <div class="table-actions table-actions-responsive">
-        <a href="{{ url_for('admin_novo_concorrente') }}" class="btn btn-primary">
-            ➕ Novo Candidato
-        </a>
-        <a href="{{ url_for('admin_gerenciar_vagas') }}" class="btn btn-secondary btn-hide-mobile">
-            📋 Gerenciar Vagas
-        </a>
-    </div>
-</div>
 
-<div style="background: var(--glass); padding: 15px; border-radius: var(--radius); margin-bottom: 20px;">
-    <form method="GET" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-        <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: var(--text);">Filtrar por Vaga:</label>
-            <select name="vaga" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); max-width: 100%;">
-                <option value="">Todas as vagas</option>
-                {% for vaga in vagas_unicas %}
-                <option value="{{ vaga }}" {% if vaga_filtro == vaga %}selected{% endif %}>{{ vaga }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        
-        <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: var(--text);">Filtrar por Status:</label>
-            <select name="status" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); max-width: 100%;">
-                <option value="">Todos os status</option>
-                <option value="pendente" {% if status_filtro == 'pendente' %}selected{% endif %}>Pendente</option>
-                <option value="contatado" {% if status_filtro == 'contatado' %}selected{% endif %}>Contatado</option>
-                <option value="em_negociacao" {% if status_filtro == 'em_negociacao' %}selected{% endif %}>Em Negociação</option>
-                <option value="contratado" {% if status_filtro == 'contratado' %}selected{% endif %}>Contratado</option>
-                <option value="recusado" {% if status_filtro == 'recusado' %}selected{% endif %}>Recusado</option>
-            </select>
-        </div>
-        
-        <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: var(--text);">Data Início:</label>
-            <input type="date" name="data_inicio" value="{{ data_inicio }}" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); max-width: 100%;">
-        </div>
-        
-        <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: var(--text);">Data Fim:</label>
-            <input type="date" name="data_fim" value="{{ data_fim }}" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); max-width: 100%;">
-        </div>
-        
-        <div style="align-self: flex-end; display: flex; gap: 10px; flex-wrap: wrap;">
-            <button type="submit" class="btn btn-primary" style="padding: 8px 20px;">🔍 Filtrar</button>
-            <a href="{{ url_for('admin_concorrentes') }}" class="btn btn-warning">🔄 Limpar</a>
-        </div>
-    </form>
-</div>
-
-<div class="data-table-responsive">
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Nome</th>
-                <th>Vaga</th>
-                <th>Email</th>
-                <th>Telefone</th>
-                <th>Currículo</th>
-                <th>LinkedIn</th>
-                <th>Status</th>
-                <th>Data</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for concorrente in concorrentes %}
-            <tr>
-                <td>
-                    <strong>{{ concorrente.nome }}</strong>
-                    {% if concorrente.empresa %}
-                    <br><small style="color: var(--text-light);">Empresa: {{ concorrente.empresa }}</small>
-                    {% endif %}
-                    {% if concorrente.cargo %}
-                    <br><small style="color: var(--text-light);">Cargo: {{ concorrente.cargo }}</small>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if concorrente.vaga %}
-                    <span class="badge badge-vaga">
-                        {{ concorrente.vaga }}
-                    </span>
-                    {% else %}
-                    <span style="color: var(--text-light);">Espontânea</span>
-                    {% endif %}
-                </td>
-                <td>
-                    <a href="mailto:{{ concorrente.email }}" style="color: var(--primary); text-decoration: none; word-break: break-all;">
-                        {{ concorrente.email }}
-                    </a>
-                </td>
-                <td>{{ concorrente.telefone or '-' }}</td>
-                <td>
-                    {% if concorrente.arquivo_pdf %}
-                    <a href="{{ url_for('download_curriculo', filename=concorrente.arquivo_pdf) }}" 
-                       class="btn btn-sm btn-success" title="Download Currículo" style="padding: 4px 10px;">
-                        📄 PDF
-                    </a>
-                    {% else %}
-                    <span style="color: var(--text-light);">-</span>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if concorrente.linkedin_url %}
-                    <a href="{{ concorrente.linkedin_url }}" target="_blank" 
-                       style="color: var(--primary); text-decoration: none; font-size: 0.9rem; word-break: break-all;">
-                        🔗 LinkedIn
-                    </a>
-                    {% else %}
-                    <span style="color: var(--text-light);">-</span>
-                    {% endif %}
-                </td>
-                <td>
-                    <span class="badge 
-                        {% if concorrente.status == 'contatado' %}badge-success
-                        {% elif concorrente.status == 'pendente' %}badge-warning
-                        {% elif concorrente.status == 'recusado' %}badge-danger
-                        {% elif concorrente.status == 'contratado' %}badge-success
-                        {% elif concorrente.status == 'em_negociacao' %}badge-info
-                        {% else %}badge-info{% endif %}">
-                        {{ concorrente.status|title }}
-                    </span>
-                </td>
-                <td>
-                    {{ concorrente.data_candidatura.strftime('%d/%m/%Y') if concorrente.data_candidatura else concorrente.data_cadastro.strftime('%d/%m/%Y') }}
-                    <br>
-                    <small style="color: var(--text-light);">
-                        {{ concorrente.data_candidatura.strftime('%H:%M') if concorrente.data_candidatura else '' }}
-                    </small>
-                </td>
-                <td>
-                    <div style="display: flex; gap: 5px; flex-wrap: wrap; min-width: 90px;">
-                        <a href="{{ url_for('admin_editar_concorrente', id_concorrente=concorrente.id_concorrente) }}" 
-                           class="btn btn-sm btn-primary" title="Editar">
-                            ✏️
-                        </a>
-                        <a href="{{ url_for('admin_visualizar_concorrente', id_concorrente=concorrente.id_concorrente) }}" 
-                           class="btn btn-sm btn-info" title="Ver Detalhes">
-                            👁️
-                        </a>
-                        <form method="POST" action="{{ url_for('admin_excluir_concorrente', id_concorrente=concorrente.id_concorrente) }}" 
-                              style="display: inline;" onsubmit="return confirm('Tem certeza que deseja excluir este candidato?')">
-                            <button type="submit" class="btn btn-sm btn-danger" title="Excluir">
-                                🗑️
-                            </button>
-                        </form>
-                    </div>
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="9" style="text-align: center; padding: 40px; color: var(--text-light);">
-                    📝 Nenhum candidato encontrado com os filtros atuais.
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-{% if pagination and pagination.pages > 1 %}
-<div style="display: flex; justify-content: center; margin-top: 20px;">
-    <div class="pagination">
-        
-        {# Link Anterior #}
-        {% if pagination.has_prev %}
-        <a href="{{ url_for('admin_concorrentes', page=pagination.prev_num, vaga=vaga_filtro, status=status_filtro, data_inicio=data_inicio, data_fim=data_fim) }}" class="page-link">← Anterior</a>
-        {% endif %}
-        
-        {# Lógica para gerar os números das páginas (mostra até 5 páginas ao redor da atual) #}
-        {% set start_page = [1, pagination.page - 2] | max %}
-        {% set end_page = [pagination.pages, pagination.page + 2] | min %}
-        
-        {% if start_page > 1 %}
-            <a href="{{ url_for('admin_concorrentes', page=1, vaga=vaga_filtro, status=status_filtro, data_inicio=data_inicio, data_fim=data_fim) }}" class="page-link">1</a>
-            {% if start_page > 2 %}
-                <span class="ellipsis">...</span>
-            {% endif %}
-        {% endif %}
-        
-        {% for page_num in range(start_page, end_page + 1) %}
-            {% if page_num == pagination.page %}
-            <span class="page-link active">{{ page_num }}</span>
-            {% else %}
-            <a href="{{ url_for('admin_concorrentes', page=page_num, vaga=vaga_filtro, status=status_filtro, data_inicio=data_inicio, data_fim=data_fim) }}" class="page-link">{{ page_num }}</a>
-            {% endif %}
-        {% endfor %}
-
-        {% if end_page < pagination.pages %}
-            {% if end_page < pagination.pages - 1 %}
-                <span class="ellipsis">...</span>
-            {% endif %}
-            <a href="{{ url_for('admin_concorrentes', page=pagination.pages, vaga=vaga_filtro, status=status_filtro, data_inicio=data_inicio, data_fim=data_fim) }}" class="page-link">{{ pagination.pages }}</a>
-        {% endif %}
-
-        {# Link Próxima #}
-        {% if pagination.has_next %}
-        <a href="{{ url_for('admin_concorrentes', page=pagination.next_num, vaga=vaga_filtro, status=status_filtro, data_inicio=data_inicio, data_fim=data_fim) }}" class="page-link">Próxima →</a>
-        {% endif %}
-    </div>
-</div>
-{% endif %}
-
-<div class="stats-grid stats-grid-responsive" style="margin-top: 40px;">
+<div class="stats-grid">
     <div class="stat-card">
-        <h3>Total de Candidatos</h3>
+        <div class="stat-header">
+            <span class="stat-icon">👥</span>
+            <h3>Total</h3>
+        </div>
         <div class="value">{{ total_candidatos }}</div>
-        <div class="trend up">📈 Todos os registros</div>
+        <div class="stat-desc">Candidatos cadastrados</div>
     </div>
     
-    <div class="stat-card">
-        <h3>Pendentes</h3>
-        <div class="value" style="color: var(--warning);">
-            {{ contadores.pendente }}
+    <div class="stat-card" style="border-left: 4px solid var(--warning);">
+        <div class="stat-header">
+            <span class="stat-icon">⏳</span>
+            <h3>Pendentes</h3>
         </div>
-        <div class="trend">⏳ Aguardando análise</div>
+        <div class="value" style="color: var(--warning);">{{ contadores.pendente }}</div>
+        <div class="stat-desc">Aguardando análise</div>
     </div>
     
-    <div class="stat-card">
-        <h3>Contratados</h3>
-        <div class="value" style="color: var(--success);">
-            {{ contadores.contratado }}
+    <div class="stat-card" style="border-left: 4px solid var(--success);">
+        <div class="stat-header">
+            <span class="stat-icon">✅</span>
+            <h3>Contratados</h3>
         </div>
-        <div class="trend up">✅ Sucesso</div>
+        <div class="value" style="color: var(--success);">{{ contadores.contratado }}</div>
+        <div class="stat-desc">Processos finalizados</div>
     </div>
     
-    <div class="stat-card">
-        <h3>Com LinkedIn</h3>
-        <div class="value" style="color: var(--info);">
-            {{ contadores.com_linkedin }}
+    <div class="stat-card" style="border-left: 4px solid var(--info);">
+        <div class="stat-header">
+            <span class="stat-icon">👔</span>
+            <h3>LinkedIn</h3>
         </div>
-        <div class="trend">🔗 Perfil profissional</div>
+        <div class="value" style="color: var(--info);">{{ contadores.com_linkedin }}</div>
+        <div class="stat-desc">Perfis Profissionais</div>
     </div>
 </div>
 
-<div style="margin-top: 30px; text-align: center;">
-    <a href="{{ url_for('admin_exportar_candidatos') }}?vaga={{ vaga_filtro }}&status={{ status_filtro }}&data_inicio={{ data_inicio }}&data_fim={{ data_fim }}" 
-       class="btn btn-success">
-        📊 Exportar para Excel
+<div class="actions-bar">
+    <div class="left-actions">
+        <details class="filter-details" {% if vaga_filtro or status_filtro or data_inicio or data_fim %}open{% endif %}>
+            <summary class="btn-filter">
+                🔍 Filtros Avançados
+            </summary>
+            
+            <div class="filter-panel">
+                <form method="GET" class="filter-grid-layout">
+                    <div class="form-group">
+                        <label>Vaga</label>
+                        <select name="vaga" class="form-control">
+                            <option value="">Todas as vagas</option>
+                            {% for vaga in vagas_unicas %}
+                            <option value="{{ vaga }}" {% if vaga_filtro == vaga %}selected{% endif %}>{{ vaga }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select name="status" class="form-control">
+                            <option value="">Todos os status</option>
+                            <option value="pendente" {% if status_filtro == 'pendente' %}selected{% endif %}>Pendente</option>
+                            <option value="contatado" {% if status_filtro == 'contatado' %}selected{% endif %}>Contatado</option>
+                            <option value="em_negociacao" {% if status_filtro == 'em_negociacao' %}selected{% endif %}>Em Negociação</option>
+                            <option value="contratado" {% if status_filtro == 'contratado' %}selected{% endif %}>Contratado</option>
+                            <option value="recusado" {% if status_filtro == 'recusado' %}selected{% endif %}>Recusado</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>De</label>
+                        <input type="date" name="data_inicio" value="{{ data_inicio }}" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Até</label>
+                        <input type="date" name="data_fim" value="{{ data_fim }}" class="form-control">
+                    </div>
+                    
+                    <div class="filter-buttons">
+                        <a href="{{ url_for('admin_concorrentes') }}" class="btn-reset">Limpar</a>
+                        <button type="submit" class="btn-apply">Aplicar Filtros</button>
+                    </div>
+                </form>
+            </div>
+        </details>
+    </div>
+
+    <div class="right-actions">
+        <a href="{{ url_for('admin_novo_concorrente') }}" class="btn-primary-action">
+            <span class="icon">+</span> Novo Candidato
+        </a>
+        <a href="{{ url_for('admin_gerenciar_vagas') }}" class="btn-secondary-action">
+            💼 Vagas
+        </a>
+    </div>
+</div>
+
+<div class="data-table">
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Candidato</th>
+                    <th>Vaga Aplicada</th>
+                    <th>Contato</th>
+                    <th style="text-align: center;">CV</th>
+                    <th style="text-align: center;">Status</th>
+                    <th>Data</th>
+                    <th style="text-align: right;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for concorrente in concorrentes %}
+                <tr>
+                    <td>
+                        <div class="user-profile">
+                            <div class="avatar">{{ concorrente.nome[:1].upper() }}</div>
+                            <div class="user-info-text">
+                                <span class="name">{{ concorrente.nome }}</span>
+                                {% if concorrente.cargo %}
+                                <span class="role">{{ concorrente.cargo }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if concorrente.vaga %}
+                            <span class="badge-vaga">{{ concorrente.vaga }}</span>
+                        {% else %}
+                            <span class="badge-espontanea">Espontânea</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="contact-mini">
+                            <a href="mailto:{{ concorrente.email }}" title="{{ concorrente.email }}">✉️ Email</a>
+                            {% if concorrente.telefone %}
+                            <span title="{{ concorrente.telefone }}">📞 {{ concorrente.telefone }}</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td style="text-align: center;">
+                        {% if concorrente.arquivo_pdf %}
+                        <a href="{{ url_for('download_curriculo', filename=concorrente.arquivo_pdf) }}" class="icon-btn" target="_blank" title="Ver PDF">
+                            📄
+                        </a>
+                        {% else %}
+                        <span style="opacity: 0.3;">-</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        <span class="status-pill status-{{ concorrente.status }}">
+                            {{ concorrente.status|replace('_', ' ')|title }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="date-mini">
+                            <strong>{{ concorrente.data_candidatura.strftime('%d/%m') }}</strong>
+                            <small>{{ concorrente.data_candidatura.strftime('%H:%M') }}</small>
+                        </div>
+                    </td>
+                    <td style="text-align: right;">
+                        <div class="action-buttons">
+                            <a href="{{ url_for('admin_editar_concorrente', id_concorrente=concorrente.id_concorrente) }}" class="icon-btn edit" title="Editar">✏️</a>
+                            <a href="{{ url_for('admin_visualizar_concorrente', id_concorrente=concorrente.id_concorrente) }}" class="icon-btn view" title="Detalhes">👁️</a>
+                            <form method="POST" action="{{ url_for('admin_excluir_concorrente', id_concorrente=concorrente.id_concorrente) }}" onsubmit="return confirm('Tem certeza?');" style="display:inline;">
+                                <button type="submit" class="icon-btn delete" title="Excluir">🗑️</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-light);">
+                        Nenhum candidato encontrado.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="footer-actions" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+    <span style="color: var(--text-light);">Total: {{ concorrentes|length }} registros</span>
+    <a href="{{ url_for('admin_exportar_candidatos') }}" class="btn-success-action">
+        📊 Exportar Excel
     </a>
 </div>
 
 <style>
-    /* Estilos para responsividade da Tabela */
-    .data-table-responsive {
-        overflow-x: auto; /* Permite rolar a tabela horizontalmente em telas pequenas */
-        width: 100%;
+    /* ESTILOS LOCAIS - Usando APENAS variáveis do base.html 
+       Isso garante compatibilidade total com o tema escuro/claro
+    */
+
+    .stat-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
     }
-    .data-table {
-        min-width: 900px; /* Garante que a tabela não fique espremida demais */
-        width: 100%;
-        border-collapse: collapse;
+    .stat-header h3 { font-size: 0.9rem; color: var(--text-light); margin: 0; }
+    .stat-icon { font-size: 1.2rem; }
+    .stat-desc { font-size: 0.8rem; color: var(--text-light); margin-top: 5px; }
+
+    /* Barra de Ações */
+    .actions-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .btn-primary-action {
+        background: var(--primary);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: var(--transition);
+    }
+    .btn-primary-action:hover { background: var(--primary-dark); transform: translateY(-2px); }
+
+    .btn-secondary-action {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+    .btn-secondary-action:hover { background: var(--border); }
+
+    .btn-success-action {
+        background: var(--success);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    /* Filtros (Estilo "Glass" do base.html) */
+    .btn-filter {
+        background: var(--glass);
+        border: 1px solid var(--border);
+        padding: 10px 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        color: var(--text);
+        font-weight: 600;
+        list-style: none;
     }
     
-    /* Estilos para responsividade do Header */
-    .table-header-responsive {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        align-items: center;
-        gap: 15px; /* Espaçamento quando quebra a linha */
+    .filter-panel {
+        background: var(--glass);
+        padding: 20px;
+        border-radius: var(--radius);
+        margin-top: 10px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
     }
 
-    .table-actions-responsive {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
+    .filter-grid-layout {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        align-items: end;
     }
 
-    /* Estilos para responsividade das Estatísticas */
-    .stats-grid-responsive {
-        display: grid !important;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important; /* Min 150px no mobile */
-        gap: 20px;
+    /* Inputs forçados a usar variáveis do tema para não ficarem brancos no dark mode */
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--text-light);
+        font-size: 0.9rem;
+    }
+    
+    .form-control {
+        background-color: var(--secondary) !important; /* Importante para dark mode */
+        color: var(--text) !important;
+        border-color: var(--border) !important;
     }
 
-    /* Media Queries */
+    .btn-apply {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 100%;
+    }
+    .btn-reset {
+        text-decoration: none;
+        color: var(--text-light);
+        font-size: 0.9rem;
+        text-align: center;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    /* Elementos da Tabela */
+    .user-profile { display: flex; align-items: center; gap: 10px; }
+    .avatar {
+        width: 35px; height: 35px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        color: white;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: bold;
+    }
+    .user-info-text { display: flex; flex-direction: column; }
+    .user-info-text .name { font-weight: 600; color: var(--text); }
+    .user-info-text .role { font-size: 0.8rem; color: var(--text-light); }
+
+    .badge-vaga {
+        background: rgba(0, 102, 255, 0.1);
+        color: var(--primary);
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .badge-espontanea {
+        background: rgba(113, 128, 150, 0.1);
+        color: var(--text-light);
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+    }
+
+    .contact-mini a, .contact-mini span {
+        display: block;
+        font-size: 0.85rem;
+        color: var(--text-light);
+        text-decoration: none;
+        margin-bottom: 2px;
+    }
+    .contact-mini a:hover { color: var(--primary); }
+
+    /* Status Pills */
+    .status-pill { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+    .status-pendente { background: rgba(255, 184, 0, 0.15); color: var(--warning); }
+    .status-contratado { background: rgba(0, 208, 132, 0.15); color: var(--success); }
+    .status-recusado { background: rgba(255, 51, 102, 0.15); color: var(--danger); }
+    .status-contatado { background: rgba(0, 184, 212, 0.15); color: var(--info); }
+    .status-em_negociacao { background: rgba(0, 102, 255, 0.15); color: var(--primary); }
+
+    .icon-btn {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        font-size: 1.1rem;
+        padding: 5px;
+        border-radius: 5px;
+        transition: 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    .icon-btn:hover { background: rgba(0,0,0,0.05); }
+    
+    /* Responsividade */
     @media (max-width: 768px) {
-        /* Esconde o botão de "Gerenciar Vagas" para priorizar espaço */
-        .btn-hide-mobile {
-            display: none !important;
-        }
-
-        /* Ajusta o alinhamento dos filtros em telas menores */
-        .table-actions-responsive {
-            justify-content: flex-start;
-        }
+        .actions-bar { flex-direction: column; }
+        .left-actions, .right-actions { width: 100%; }
+        .right-actions { display: flex; gap: 10px; }
+        .btn-primary-action, .btn-secondary-action { flex: 1; justify-content: center; }
+        
+        .filter-grid-layout { grid-template-columns: 1fr; }
     }
 </style>
 {% endblock %}

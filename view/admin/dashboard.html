@@ -39,7 +39,7 @@
 <div class="content-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 40px;">
     <!-- Estoque Baixo -->
     <div class="data-table">
-        <div class="table-header">
+        <div class="table-header" style="display: flex; justify-content: space-between; align-items: center;">
             <h3>⚠️ Estoque Baixo</h3>
             <div class="table-actions">
                 <a href="{{ url_for('admin_produtos') }}" class="btn btn-warning btn-sm">Gerenciar</a>
@@ -79,7 +79,7 @@
 
     <!-- Pedidos Recentes -->
     <div class="data-table">
-        <div class="table-header">
+        <div class="table-header" style="display: flex; justify-content: space-between; align-items: center;">
             <h3>📦 Pedidos Recentes</h3>
             <div class="table-actions">
                 <a href="{{ url_for('admin_relatorios') }}" class="btn btn-primary btn-sm">Ver Todos</a>

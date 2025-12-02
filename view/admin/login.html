@@ -34,7 +34,8 @@
         html, body {
             min-height: 100vh;
             width: 100%;
-            overflow: hidden;
+            /* 'overflow: hidden' para manter o efeito das partículas fixo */
+            overflow: hidden; 
         }
 
         body {
@@ -51,13 +52,14 @@
         .particle {
             position: absolute;
             border-radius: 50%;
-            filter: blur(120px); /* Mais desfoque para um efeito mais suave */
+            filter: blur(120px); 
             opacity: 0.65;
             z-index: 1;
             animation: particleMovement 25s infinite alternate ease-in-out;
             pointer-events: none;
         }
 
+        /* Definições de cor, tamanho e posição para cada partícula */
         .particle-1 { 
             width: 350px; 
             height: 350px; 
@@ -84,6 +86,7 @@
             animation-delay: -15s; 
         }
 
+        /* Animação para movimentação suave e alteração de escala */
         @keyframes particleMovement {
             0% { transform: translate(0, 0) scale(1); opacity: 0.65; }
             50% { transform: translate(70px, -70px) scale(1.1); opacity: 0.8; }
@@ -99,18 +102,20 @@
 
         .login-box {
             background: var(--glass-bg);
-            backdrop-filter: blur(25px) saturate(180%); /* Mais desfoque no vidro */
+            /* Efeito Glassmorphism: Desfoque no fundo e saturação */
+            backdrop-filter: blur(25px) saturate(180%); 
             -webkit-backdrop-filter: blur(25px) saturate(180%);
             padding: clamp(2rem, 8vh, 3.5rem);
-            border-radius: 35px; /* Bordas mais suaves */
+            border-radius: 35px; 
             box-shadow: var(--shadow-glass);
             border: 1px solid var(--glass-border);
             text-align: center;
             transition: var(--transition);
         }
         
+        /* Efeito de hover no container */
         .login-box:hover {
-            transform: scale(1.01) translateY(-8px); /* Efeito 3D mais pronunciado */
+            transform: scale(1.01) translateY(-8px); 
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
         }
 
@@ -119,15 +124,16 @@
             margin-bottom: 2.5rem;
         }
 
+        /* Título com gradiente de cor */
         .logo h1 {
-            font-size: clamp(2.4rem, 6vw, 3.0rem); /* Tamanho maior */
+            font-size: clamp(2.4rem, 6vw, 3.0rem); 
             font-weight: 900;
             background: var(--gradient-primary);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             margin-bottom: 0.5rem;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.25); /* Brilho mais intenso */
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.25); 
             line-height: 1.1;
         }
 
@@ -138,7 +144,7 @@
             font-weight: 500;
         }
         
-        /* Flash Messages */
+        /* Flash Messages (mensagens de erro/sucesso do backend, ex: Flask) */
         .flash-messages {
             margin-bottom: 2rem;
             text-align: left;
@@ -146,7 +152,7 @@
 
         .flash {
             padding: 1rem 1.5rem;
-            border-radius: 18px; /* Mais arredondado */
+            border-radius: 18px; 
             margin-bottom: 1rem;
             font-weight: 700;
             display: flex;
@@ -164,6 +170,7 @@
             font-size: 1.3rem;
         }
 
+        /* Estilos específicos por categoria */
         .flash-success { 
             background: var(--success); 
             color: white; 
@@ -183,7 +190,7 @@
 
         /* Formulário e Inputs */
         .form-group {
-            margin-bottom: 3rem; /* Mais espaçamento */
+            margin-bottom: 3rem; 
             text-align: left;
             position: relative;
         }
@@ -204,8 +211,8 @@
 
         .form-control {
             width: 100%;
-            padding: 1.3rem 1.8rem; /* Padding premium */
-            padding-right: 5rem; 
+            padding: 1.3rem 1.8rem; 
+            padding-right: 5rem; /* Espaço para o botão de toggle */
             border: 2px solid transparent;
             border-radius: 18px;
             font-size: 1.1rem;
@@ -273,7 +280,7 @@
             z-index: 10;
         }
         
-        /* Efeito de Brilho no Botão */
+        /* Efeito de Brilho no Botão (Shine Effect) */
         .btn::after {
             content: '';
             position: absolute;
@@ -281,19 +288,19 @@
             left: -100%;
             width: 40%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.4); /* Mais brilho */
+            background: rgba(255, 255, 255, 0.4); 
             transform: skewX(-25deg);
             transition: all 0.8s ease;
         }
 
         .btn:hover {
-            transform: translateY(-8px); /* Mais destaque no hover */
+            transform: translateY(-8px); 
             box-shadow: 0 25px 50px rgba(138, 43, 226, 0.8);
             filter: brightness(1.2);
         }
         
         .btn:hover::after {
-            left: 150%;
+            left: 150%; /* Faz o brilho "passar" */
         }
 
         .btn:active {
@@ -416,9 +423,11 @@
 
             if (toggleButton && passwordInput) {
                 toggleButton.addEventListener('click', () => {
+                    // Alterna entre 'password' e 'text'
                     const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
                     passwordInput.setAttribute('type', type);
                     
+                    // Altera o ícone de olho aberto para olho fechado
                     const icon = toggleButton.querySelector('i');
                     if (type === 'text') {
                         icon.classList.remove('fa-eye');

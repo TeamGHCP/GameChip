@@ -49,6 +49,34 @@
             --shadow-lg: 0 20px 60px rgba(214, 51, 255, 0.35);
         }
 
+        /* Adicione esta seção ao seu bloco <style> */
+
+/* Correção Definitiva para garantir contraste no Dark Theme */
+.dark-theme .stat-card h3 {
+    /* Força o título do card a ser a cor de texto clara do tema escuro */
+    color: var(--text) !important; 
+}
+
+.dark-theme .stat-card .value {
+    /* Força o valor (número grande) a ser a cor primária (roxa) do tema escuro */
+    color: var(--primary) !important; 
+}
+
+/* Garante que os trends (setas e porcentagens) também tenham bom contraste */
+.dark-theme .stat-card .trend {
+    color: var(--text-light) !important; 
+}
+
+/* Garante que o texto 'GameChip' no header lateral seja visível, usando o gradiente */
+.dark-theme .sidebar-header h2 {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+        
+
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         
         body {
@@ -413,6 +441,7 @@
                 padding: 10px;
             }
         }
+
     </style>
 </head>
 <body>

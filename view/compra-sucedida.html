@@ -361,44 +361,56 @@ function confirmarPagamento() {
     btn.innerHTML = '⏳ Processando...';
     btn.disabled = true;
 
-    // Simular processamento do pagamento
-    setTimeout(() => {
-        // 1. Esconder a seção do PIX
-        document.querySelector('.pix-section').style.display = 'none';
-        
-        // 2. Mostrar a seção de sucesso
-        document.getElementById('success-section').style.display = 'block';
-        
-        // 3. Atualizar os passos
-        document.querySelectorAll('.step')[1].classList.add('active');
-        document.querySelectorAll('.step')[2].classList.add('active');
-        
-        // 4. Atualizar o título
-        document.querySelector('.payment-title').textContent = '✅ Pagamento Confirmado';
-        document.querySelector('.payment-title').style.background = 'linear-gradient(135deg, var(--success) 0%, #00b36e 100%)';
-        
-        // 5. Atualizar a mensagem
-        document.querySelector('.payment-message').innerHTML = 
-            'Seu pagamento foi confirmado com sucesso!<br>Obrigado por comprar conosco.';
+    // 1. Chamar API para confirmar pagamento
+    fetch('/confirmar-pagamento', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // 2. Esconder a seção do PIX
+            document.querySelector('.pix-section').style.display = 'none';
             
-        // 6. Rolar para a seção de sucesso
-        document.getElementById('success-section').scrollIntoView({ 
-            behavior: 'smooth' 
-        });
-
-        // 🔥 MARCAR NA SESSION QUE O PAGAMENTO FOI CONFIRMADO
-        // Isso permitirá o acesso à página de avaliações
-        fetch('/confirmar-pagamento', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        }).then(response => response.json())
-          .then(data => {
-              console.log('Pagamento confirmado na session');
-          });
-
-    }, 1500);
+            // 3. Mostrar a seção de sucesso
+            document.getElementById('success-section').style.display = 'block';
+            
+            // 4. Atualizar os passos
+            document.querySelectorAll('.step')[1].classList.add('active');
+            document.querySelectorAll('.step')[2].classList.add('active');
+            
+            // 5. Atualizar o título
+            document.querySelector('.payment-title').textContent = '✅ Pagamento Confirmado';
+            document.querySelector('.payment-title').style.background = 'linear-gradient(135deg, var(--success) 0%, #00b36e 100%)';
+            
+            // 6. Atualizar a mensagem
+            document.querySelector('.payment-message').innerHTML = 
+                `Seu pagamento foi confirmado com sucesso!<br>
+                 Pedido #${data.pedido_id} - Status: <strong style="color: var(--success);">Concluído</strong>`;
+                 
+            // 7. Rolar para a seção de sucesso
+            document.getElementById('success-section').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+            
+            // 8. Recarregar a session (opcional)
+            location.reload();
+            
+        } else {
+            // Se houver erro
+            alert('❌ Erro: ' + data.message);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('❌ Erro ao confirmar pagamento. Tente novamente.');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
 }
 
 // Auto-seleciona o código PIX quando clicar na textarea

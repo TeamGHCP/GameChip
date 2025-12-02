@@ -174,7 +174,6 @@ def configure_carrinho_routes(app):
 
                 conn.commit()
 
-                # Limpa carrinho após criar pedido
                 session.pop('carrinho', None)
                 session.modified = True
 
@@ -205,21 +204,20 @@ def configure_carrinho_routes(app):
                             produtos_carrinho=produtos_carrinho,
                             total_geral=total_geral)
 
-
     @app.route('/confirmar-pagamento', methods=['POST'])
     @login_required
     def confirmar_pagamento():
-        """Atualiza o status para CONCLUÍDO (Corrigido erro SQL 1093)"""
+        """Confirma o pagamento e atualiza o status do pedido"""
         try:
             conn = get_db_connection()
-            # Usar dictionary=True para facilitar
             cursor = conn.cursor(dictionary=True)
             
-            # 1. Busca o ID do último pedido do cliente
+            # 1. Buscar o ÚLTIMO pedido PENDENTE do cliente
             cursor.execute("""
                 SELECT id_pedido 
                 FROM pedidos 
                 WHERE id_cliente = %s 
+                AND status = 'pendente' 
                 ORDER BY id_pedido DESC 
                 LIMIT 1
             """, (session['usuario_id'],))
@@ -229,7 +227,7 @@ def configure_carrinho_routes(app):
             if pedido:
                 id_pedido = pedido['id_pedido']
                 
-                # 2. Atualiza esse pedido específico usando o ID encontrado
+                # 2. Atualizar status para 'concluido' (ou 'aprovado')
                 cursor.execute("""
                     UPDATE pedidos 
                     SET status = 'concluido' 
@@ -238,19 +236,31 @@ def configure_carrinho_routes(app):
                 
                 conn.commit()
                 
+                # 3. Marcar na sessão que o pagamento foi confirmado
                 session['pagamento_confirmado'] = True
-                return jsonify({'status': 'success', 'message': 'Pagamento confirmado!'})
+                session.modified = True
+                
+                return jsonify({
+                    'status': 'success', 
+                    'message': 'Pagamento confirmado!',
+                    'pedido_id': id_pedido
+                })
             else:
-                return jsonify({'status': 'error', 'message': 'Nenhum pedido encontrado para confirmar.'})
+                return jsonify({
+                    'status': 'error', 
+                    'message': 'Nenhum pedido pendente encontrado.'
+                })
             
         except Exception as err:
             print(f"Erro ao confirmar pagamento: {err}")
+            if 'conn' in locals() and conn.is_connected():
+                conn.rollback()
             return jsonify({'status': 'error', 'message': str(err)})
         finally:
-            if conn and conn.is_connected():
+            if 'conn' in locals() and conn and conn.is_connected():
                 cursor.close()
                 conn.close()
-    
+                
     @app.route('/compra-sucedida')
     def compra_sucedida():
         return render_template('compra-sucedida.html')

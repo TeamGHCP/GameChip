@@ -4,7 +4,6 @@
 
 {% block conteudo %}
 <section style="padding: 40px 20px; max-width: 900px; margin: 0 auto;">
-    <!-- Cabeçalho da Vaga -->
     <div style="margin-bottom: 30px;">
         <a href="{{ url_for('trabalhe_conosco') }}" 
            style="display: inline-flex; align-items: center; color: var(--primary); text-decoration: none; margin-bottom: 20px;">
@@ -31,9 +30,8 @@
         </div>
     </div>
 
-    <!-- Conteúdo da Vaga em duas colunas -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 40px;">
-        <!-- Coluna 1: Descrição -->
+    <div class="grid-2-colunas" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 40px;">
+        
         <div>
             <div style="margin-bottom: 30px;">
                 <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--primary); margin-bottom: 15px;">
@@ -68,7 +66,6 @@
             {% endif %}
         </div>
 
-        <!-- Coluna 2: Requisitos -->
         <div>
             <div style="margin-bottom: 30px;">
                 <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--primary); margin-bottom: 15px;">
@@ -85,7 +82,6 @@
                 </div>
             </div>
 
-            <!-- Formulário de Candidatura -->
             <div>
                 <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--primary); margin-bottom: 15px;">
                     🚀 Quero me Candidatar
@@ -96,19 +92,19 @@
                     border-radius: var(--radius);
                     padding: 25px;
                     box-shadow: var(--shadow-md);
+                    color: var(--text);
                 ">
                     <form method="POST" action="{{ url_for('candidatar_vaga', id_vaga=vaga.id_vaga) }}" enctype="multipart/form-data">
                         <input type="hidden" name="vaga" value="{{ vaga.titulo }}">
                         
                         <div style="display: grid; gap: 20px;">
-                            <!-- Nome e Email -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div class="form-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                                 <div>
                                     <label style="display: block; font-weight: 600; color: var(--text); margin-bottom: 5px;">
                                         Nome Completo *
                                     </label>
                                     <input type="text" name="nome" required 
-                                           style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
+                                           style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text);">
                                 </div>
                                 
                                 <div>
@@ -116,30 +112,27 @@
                                         Email *
                                     </label>
                                     <input type="email" name="email" required 
-                                           style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
+                                           style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text);">
                                 </div>
                             </div>
                             
-                            <!-- Telefone -->
                             <div>
                                 <label style="display: block; font-weight: 600; color: var(--text); margin-bottom: 5px;">
                                     Telefone
                                 </label>
                                 <input type="tel" name="telefone" 
-                                       style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
+                                       style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text);">
                             </div>
                             
-                            <!-- Upload do PDF -->
                             <div>
                                 <label style="display: block; font-weight: 600; color: var(--text); margin-bottom: 5px;">
                                     Currículo (PDF) *
                                     <small style="font-weight: 400; color: var(--text-light);">Tamanho máximo: 5MB</small>
                                 </label>
                                 <input type="file" name="curriculo_pdf" accept=".pdf" required 
-                                       style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
+                                       style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text);">
                             </div>
                             
-                            <!-- LinkedIn -->
                             <div>
                                 <label style="display: block; font-weight: 600; color: var(--text); margin-bottom: 5px;">
                                     LinkedIn (Opcional)
@@ -148,23 +141,21 @@
                                 <input type="url" name="linkedin" 
                                        placeholder="https://linkedin.com/in/seuperfil"
                                        pattern="https?://(www\.)?linkedin\.com/.*"
-                                       style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
+                                       style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text);">
                                 <small style="color: var(--text-light); display: block; margin-top: 5px;">
                                     Deve começar com linkedin.com
                                 </small>
                             </div>
                             
-                            <!-- Mensagem -->
                             <div>
                                 <label style="display: block; font-weight: 600; color: var(--text); margin-bottom: 5px;">
                                     Mensagem (Opcional)
                                 </label>
                                 <textarea name="mensagem" rows="3" 
                                           placeholder="Conte-nos por que você é a pessoa certa para esta vaga..."
-                                          style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); resize: vertical;"></textarea>
+                                          style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); resize: vertical; background: transparent; color: var(--text);"></textarea>
                             </div>
                             
-                            <!-- Botão -->
                             <button type="submit" 
                                     style="
                                         background: var(--primary);
@@ -194,18 +185,19 @@
 
 <style>
     /* Melhorar a responsividade */
+    /* Estas classes agora estão aplicadas nas divs correspondentes no HTML acima */
     @media (max-width: 768px) {
         section {
             padding: 20px 15px;
         }
         
         .grid-2-colunas {
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr !important; /* Forçar uma coluna */
             gap: 20px;
         }
         
         .form-grid-2 {
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr !important; /* Forçar uma coluna no form */
         }
     }
 </style>
