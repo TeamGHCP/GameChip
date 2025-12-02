@@ -2,12 +2,151 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="Gamechip - Recarga, Gift Cards e Conteúdo para o universo Gamer.">
     <title>{{ titulo if titulo else "Gamechip - Recarga, Gift Cards e Conteúdo Gamer" }}</title>
     
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='logos/favicon.ico') }}">
+    
+    <style>
+        /* Ajustes Mobile para Navbar */
+        @media (max-width: 968px) {
+            .navbar-container {
+                padding: 10px 15px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: nowrap; /* Impede que os itens caiam para outra linha */
+                height: 70px;
+            }
+            
+            /* 1. LOGO (Esquerda) */
+            .logo {
+                flex-shrink: 0;
+                margin-right: auto; /* Empurra o resto para a direita */
+            }
+            
+            .logo-navbar-img {
+                height: 50px !important; /* Tamanho controlado no mobile */
+                width: auto;
+                margin: 0 !important;
+            }
+            
+            /* 2. ÍCONES (Centro-Direita, ao lado do Menu) */
+            .icons {
+                display: flex !important;
+                flex-direction: row !important; /* Garante linha horizontal */
+                align-items: center;
+                gap: 5px; /* Espaço menor entre ícones para caber */
+                margin-left: 10px;
+                order: 2;
+            }
+            
+            /* Estilo dos botões de ícone no mobile */
+            .icon {
+                width: 36px;
+                height: 36px;
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 8px;
+                background: transparent; /* Remove fundo pesado se desejar */
+                border: 1px solid var(--border);
+            }
+            
+            .icon span {
+                font-size: 1.2rem;
+                line-height: 1;
+            }
+            
+            /* Esconde texto dos ícones no mobile */
+            .desktop-only {
+                display: none !important;
+            }
+            
+            /* Botão de Tema (Lua/Sol) */
+            .theme-toggle {
+                width: 36px;
+                height: 36px;
+                font-size: 1.2rem;
+            }
+
+            /* 3. MENU HAMBÚRGUER (Extrema Direita) */
+            .menu-toggle {
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                width: 40px;
+                height: 40px;
+                font-size: 1.5rem;
+                margin-left: 10px; /* Separa dos ícones */
+                order: 3;
+                flex-shrink: 0;
+                background: var(--primary);
+                border: none;
+                border-radius: 8px;
+                color: white;
+            }
+            
+            /* Menu Dropdown (Escondido por padrão) */
+            .nav-links {
+                position: absolute;
+                top: 70px; /* Altura da navbar */
+                left: 0;
+                width: 100%;
+                background: var(--glass); /* Vidro */
+                backdrop-filter: blur(25px);
+                -webkit-backdrop-filter: blur(25px);
+                border-top: 1px solid var(--border);
+                border-bottom: 1px solid var(--border);
+                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                flex-direction: column;
+                padding: 20px;
+                display: none; /* JS troca para flex */
+                z-index: 999;
+            }
+            
+            .nav-links.active {
+                display: flex !important;
+            }
+            
+            .nav-links li {
+                width: 100%;
+                text-align: center;
+                margin-bottom: 15px;
+            }
+            
+            .nav-links li a {
+                display: block;
+                font-size: 1.1rem;
+                padding: 10px;
+                background: rgba(255,255,255,0.05);
+                border-radius: 10px;
+            }
+        }
+        
+        /* Ajuste fino para telas muito pequenas (iPhone SE, etc) */
+        @media (max-width: 380px) {
+            .logo-navbar-img { height: 40px !important; }
+            .icon { width: 32px; height: 32px; }
+            .theme-toggle { width: 32px; height: 32px; }
+            .menu-toggle { width: 36px; height: 36px; }
+            .icons { gap: 3px; }
+        }
+        
+        /* Ajuste do Chatbot no Mobile */
+        @media (max-width: 480px) {
+            #chatbot-window {
+                width: 90% !important;
+                right: 5% !important;
+                bottom: 90px !important;
+                height: 60vh !important;
+            }
+            #chatbot-btn { bottom: 20px; right: 20px; }
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -15,11 +154,8 @@
             <div class="logo">
                 <a href="{{ url_for('inicio') }}" class="logo-link-container">
                     <img src="{{ url_for('static', filename='logos/logo.png') }}" alt="Gamechip Logo" class="logo-navbar-img">
-                    
                 </a>
             </div>
-
-            <button class="menu-toggle" id="menuToggle">☰</button>
 
             <ul class="nav-links" id="navLinks">
                 {% block menu %}
@@ -34,23 +170,34 @@
 
                 {% if session.get('usuario_id') or session.get('empresa_id') %}
                     {% if session.get('empresa_id') %}
-                        <a href="{{ url_for('painel_empresa') }}" class="icon">
+                        <a href="{{ url_for('painel_empresa') }}" class="icon" title="Painel">
                             <span>🏢</span>
-                            <span>{{ session['empresa_nome'] }}</span>
+                            <span class="desktop-only">{{ session['empresa_nome'] }}</span>
                         </a>
                     {% else %}
-                        <a href="{{ url_for('minha_conta') }}" class="icon">
+                        <a href="{{ url_for('minha_conta') }}" class="icon" title="Minha Conta">
                             <span>👤</span>
-                            <span>{{ session['usuario_nome'] }}</span>
+                            <span class="desktop-only">{{ session['usuario_nome'] }}</span>
                         </a>
                     {% endif %}
-                    <a href="{{ url_for('logout') }}" class="icon"><span>🚪</span><span>Sair</span></a>
+                    <a href="{{ url_for('logout') }}" class="icon" title="Sair">
+                        <span>🚪</span>
+                        <span class="desktop-only">Sair</span>
+                    </a>
                 {% else %}
-                    <a href="{{ url_for('login') }}" class="icon"><span>👤</span><span>Entrar</span></a>
+                    <a href="{{ url_for('login') }}" class="icon" title="Entrar">
+                        <span>👤</span>
+                        <span class="desktop-only">Entrar</span>
+                    </a>
                 {% endif %}
 
-                <a href="{{ url_for('carrinho') }}" class="icon"><span>🛒</span><span>Carrinho</span></a>
+                <a href="{{ url_for('carrinho') }}" class="icon" title="Carrinho">
+                    <span>🛒</span>
+                    <span class="desktop-only">Carrinho</span>
+                </a>
             </div>
+            
+            <button class="menu-toggle" id="menuToggle" aria-label="Menu">☰</button>
         </div>
     </nav>
 
@@ -123,18 +270,14 @@
         <button id="accept-cookies" class="cookie-btn">Entendi e Aceito</button>
     </div>
 
-    <div id="chatbot-btn">
-        🤖
-    </div>
+    <div id="chatbot-btn">🤖</div>
 
     <div id="chatbot-window">
         <div id="chatbot-header">
             <h3>Assistente</h3>
             <span id="chatbot-close">&times;</span>
         </div>
-
         <div id="chatbot-messages"></div>
-
         <div id="chatbot-input-box">
             <input type="text" id="chatbot-input" placeholder="Digite sua pergunta...">
             <button id="chatbot-send">Enviar</button>
@@ -143,7 +286,7 @@
 
 <script>
     // ============================================================
-    //               1. LÓGICA DE TEMA (DARK/LIGHT)
+    //                1. LÓGICA DE TEMA (DARK/LIGHT)
     // ============================================================
     const themeToggle = document.getElementById('themeToggle');
     
@@ -188,7 +331,7 @@
     }
 
     // ============================================================
-    //               2. MENU MOBILE & LINKS ATIVOS
+    //                2. MENU MOBILE & LINKS ATIVOS
     // ============================================================
     const menuToggle = document.getElementById('menuToggle');
     const navLinks = document.getElementById('navLinks');
@@ -218,7 +361,7 @@
         });
 
         // ============================================================
-        //               3. BANNER DE COOKIES
+        //                3. BANNER DE COOKIES
         // ============================================================
         const cookieBanner = document.getElementById('cookie-banner');
         const acceptBtn = document.getElementById('accept-cookies');
@@ -243,7 +386,7 @@
     }, 5000);
 
     // ============================================================
-    //               4. CHATBOT INTELIGENTE
+    //                4. CHATBOT INTELIGENTE
     // ============================================================
     const chatbotBtn = document.getElementById('chatbot-btn');
     const chatbotWindow = document.getElementById('chatbot-window');
@@ -292,7 +435,7 @@
             // Botões de Ação Rápida
             chatbotMessages.innerHTML += `
                 <div class="floating-buttons">
-                    <div class="floating-btn" onclick="userInput('🔑 Problema com senha')">🔑 Senha</div>
+                    <div class="floating-btn" onclick="userInput('🔐 Problema com senha')">🔐 Senha</div>
                     <div class="floating-btn" onclick="userInput('💳 Formas de pagamento')">💳 Pagamento</div>
                     <div class="floating-btn" onclick="userInput('📦 Rastrear pedido')">📦 Rastreio</div>
                     <div class="floating-btn" onclick="userInput('🛍️ Ver produtos')">🛍️ Produtos</div>
@@ -315,7 +458,7 @@
             return "Por nada! 💜 Se precisar de mais alguma coisa, é só chamar.";
         }
         if (cleanText.includes('senha') || cleanText.includes('recuperar') || cleanText.includes('logar')) {
-            return `<strong>🔑 Problemas de Acesso?</strong><br>1. Vá até a página de <b>Login</b>.<br>2. Clique em <i>"Esqueci minha senha"</i>.<br>3. Digite seu e-mail para recuperar.`;
+            return `<strong>🔐 Problemas de Acesso?</strong><br>1. Vá até a página de <b>Login</b>.<br>2. Clique em <i>"Esqueci minha senha"</i>.<br>3. Digite seu e-mail para recuperar.`;
         }
         if (cleanText.includes('pagamento') || cleanText.includes('pix') || cleanText.includes('cartao') || cleanText.includes('boleto')) {
             return `<strong>💳 Formas de Pagamento:</strong><br>• <b>PIX:</b> Aprovação imediata.<br>• <b>Cartão:</b> Em até 12x.<br>• <b>Boleto:</b> 1 a 2 dias úteis.`;

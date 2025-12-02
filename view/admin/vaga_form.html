@@ -1,0 +1,145 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}
+    {% if vaga %}
+        {% if modo == 'visualizar' %}Visualizar Vaga{% else %}Editar Vaga{% endif %}
+    {% else %}
+        Nova Vaga
+    {% endif %}
+{% endblock %}
+
+{% block page_title %}
+    {% if vaga %}
+        {% if modo == 'visualizar' %}👁️ Visualizar Vaga{% else %}✏️ Editar Vaga{% endif %}
+    {% else %}
+        ➕ Criar Nova Vaga
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <form method="POST" 
+          action="{% if vaga %}{{ url_for('admin_editar_vaga', id_vaga=vaga.id_vaga) }}{% else %}{{ url_for('admin_nova_vaga') }}{% endif %}"
+          {% if modo == 'visualizar' %}style="pointer-events: none; opacity: 0.8;"{% endif %}>
+        
+        <div class="form-grid-responsive">
+            <div class="form-group">
+                <label for="titulo">Título da Vaga *</label>
+                <input type="text" id="titulo" name="titulo" class="form-control" 
+                       value="{{ vaga.titulo if vaga else '' }}" 
+                       {% if modo == 'visualizar' %}readonly{% else %}required{% endif %}>
+            </div>
+
+            <div class="form-group">
+                <label for="status">Status *</label>
+                <select id="status" name="status" class="form-control"
+                        {% if modo == 'visualizar' %}disabled{% else %}required{% endif %}>
+                    <option value="ativa" {% if vaga and vaga.status == 'ativa' %}selected{% endif %}>Ativa</option>
+                    <option value="pausada" {% if vaga and vaga.status == 'pausada' %}selected{% endif %}>Pausada</option>
+                    <option value="encerrada" {% if vaga and vaga.status == 'encerrada' %}selected{% endif %}>Encerrada</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="area">Área</label>
+                <input type="text" id="area" name="area" class="form-control" 
+                       value="{{ vaga.area if vaga else '' }}"
+                       placeholder="Ex: Desenvolvimento, Vendas, Marketing"
+                       {% if modo == 'visualizar' %}readonly{% endif %}>
+            </div>
+
+            <div class="form-group">
+                <label for="localizacao">Localização</label>
+                <input type="text" id="localizacao" name="localizacao" class="form-control" 
+                       value="{{ vaga.localizacao if vaga else '' }}"
+                       placeholder="Ex: Remoto, São Paulo - SP"
+                       {% if modo == 'visualizar' %}readonly{% endif %}>
+            </div>
+            
+            <div class="form-group">
+                <label for="data_fechamento">Data de Fechamento (Opcional)</label>
+                <input type="date" id="data_fechamento" name="data_fechamento" class="form-control" 
+                       value="{{ vaga.data_fechamento.strftime('%Y-%m-%d') if vaga and vaga.data_fechamento else '' }}"
+                       {% if modo == 'visualizar' %}readonly{% endif %}>
+            </div>
+            
+            <div class="form-group form-group-full-width">
+                <label for="descricao">Descrição da Vaga</label>
+                <textarea id="descricao" name="descricao" class="form-control" rows="6" 
+                          placeholder="Detalhe a função, responsabilidades e o ambiente de trabalho..."
+                          {% if modo == 'visualizar' %}readonly{% else %}required{% endif %}>{{ vaga.descricao if vaga else '' }}</textarea>
+            </div>
+            
+            <div class="form-group form-group-full-width">
+                <label for="requisitos">Requisitos e Qualificações</label>
+                <textarea id="requisitos" name="requisitos" class="form-control" rows="6" 
+                          placeholder="Liste os requisitos obrigatórios e diferenciais, um por linha..."
+                          {% if modo == 'visualizar' %}readonly{% endif %}>{{ vaga.requisitos if vaga else '' }}</textarea>
+            </div>
+        </div>
+
+        <div class="form-actions form-actions-responsive">
+            <div class="btn-group-responsive">
+                <a href="{{ url_for('admin_gerenciar_vagas') }}" class="btn btn-warning">
+                    ↩️ Voltar para Lista
+                </a>
+                {% if modo != 'visualizar' %}
+                <button type="submit" class="btn btn-primary">
+                    {% if vaga %}💾 Atualizar Vaga{% else %}✅ Criar Vaga{% endif %}
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+
+    {% if modo == 'visualizar' and vaga %}
+    <div class="system-info-grid" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);">
+        <h3 style="font-size: 1.2rem; color: var(--text-light); margin-bottom: 15px;">📊 Informações do Sistema</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; color: var(--text-light);">
+            <div>
+                <strong>ID:</strong> {{ vaga.id_vaga }}
+            </div>
+            <div>
+                <strong>Criada em:</strong> {{ vaga.data_criacao.strftime('%d/%m/%Y %H:%M') }}
+            </div>
+            {% if vaga.data_fechamento %}
+            <div>
+                <strong>Fechamento Previsto:</strong> {{ vaga.data_fechamento.strftime('%d/%m/%Y') }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .form-grid-responsive {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    
+    .form-group-full-width {
+        grid-column: 1 / -1;
+    }
+
+    .form-actions-responsive, .btn-group-responsive {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap; 
+        justify-content: flex-start;
+    }
+    
+    input:read-only, textarea:read-only, select:disabled {
+        background-color: #f5f5f5;
+        cursor: not-allowed;
+        border-color: #ddd;
+    }
+
+    @media (max-width: 600px) {
+        .form-grid-responsive {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

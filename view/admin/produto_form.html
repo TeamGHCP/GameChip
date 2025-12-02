@@ -1,92 +1,96 @@
 {% extends "admin/base.html" %}
 
-{% block title %}{{ 'Editar' if produto else 'Novo' }} Produto{% endblock %}
-{% block page_title %}{{ '✏️ Editar' if produto else '➕ Novo' }} Produto{% endblock %}
+{% block title %}{{ 'Editar' if produto else 'Novo' }} Ativo Digital{% endblock %}
+{% block page_title %}{{ '✏️ Editar' if produto else '➕ Novo' }} Ativo Digital{% endblock %}
 
 {% block content %}
 <div class="form-container">
     <form method="POST" enctype="multipart/form-data">
         <div class="form-grid">
             <div class="form-group full-width">
-                <h3 style="margin-bottom: 1rem; color: var(--primary);">📝 Informações Básicas</h3>
+                <h3 style="margin-bottom: 1rem; color: var(--primary);">📝 Informações do Cartão/Chave</h3>
             </div>
 
             <div class="form-group">
-                <label for="nome">📛 Nome do Produto *</label>
+                <label for="nome">📛 Título (Ex: Gift Card Steam R$50) *</label>
                 <input type="text" id="nome" name="nome" class="form-control" 
                        value="{{ produto.nome if produto }}" required>
             </div>
 
             <div class="form-group">
-                <label for="marca">🏷️ Marca *</label>
+                <label for="marca">🏷️ Plataforma/Marca *</label>
                 <input type="text" id="marca" name="marca" class="form-control" 
-                       value="{{ produto.marca if produto }}" required>
+                       value="{{ produto.marca if produto }}" 
+                       placeholder="Ex: Steam, PlayStation Store, Xbox, Netflix..." required>
             </div>
 
             <div class="form-group">
-                <label for="categoria">📂 Tipo *</label>
-                <input type="text" id="categoria" name="categoria" class="form-control" 
-                       value="{{ produto.categoria if produto }}" 
-                       placeholder="Ex: Notebooks, Periféricos, Hardware..." required>
+                <label for="tipo_produto">📂 Tipo de Ativo *</label>
+                <select id="tipo_produto" name="categoria" class="form-control" required>
+                    <option value="" disabled>Selecione o Tipo</option>
+                    <option value="Gift Card" {% if produto and produto.categoria == 'Gift Card' %}selected{% endif %}>💳 Gift Card</option>
+                    <option value="Game Key" {% if produto and produto.categoria == 'Game Key' %}selected{% endif %}>🔑 Chave de Jogo (Key)</option>
+                    <option value="Assinatura" {% if produto and produto.categoria == 'Assinatura' %}selected{% endif %}>⭐ Assinatura (PS Plus, Game Pass)</option>
+                    <option value="Recarga" {% if produto and produto.categoria == 'Recarga' %}selected{% endif %}>💲 Recarga/Crédito</option>
+                </select>
             </div>
 
             <div class="form-group">
-                <label for="preco">💰 Preço *</label>
+                <label for="preco">💰 Preço de Venda *</label>
                 <input type="number" id="preco" name="preco" class="form-control" step="0.01" min="0"
                        value="{{ "%.2f"|format(produto.preco) if produto }}" required>
             </div>
+            
             <div class="form-group">
-                <label for="estoque">📦 Estoque *</label>
-                <input type="number" id="estoque" name="estoque" class="form-control" min="0"
-                       value="{{ produto.estoque if produto }}" required>
+                <label for="estoque_keys">🔑 Estoque de Códigos *</label>
+                <input type="number" id="estoque_keys" name="estoque" class="form-control" min="0"
+                       value="{{ produto.estoque if produto }}" 
+                       placeholder="Contagem total de códigos ativos" required>
             </div>
 
 
             <div class="form-group full-width">
-                <h3 style="margin-bottom: 1rem; color: var(--primary);">⚙️ Configurações</h3>
+                <h3 style="margin-bottom: 1rem; color: var(--primary);">⚙️ Configurações & Descrição</h3>
             </div>
-
-            <div class="form-group">
-                <label style="display: flex; align-items: center; gap: 0.5rem;">
-                    <input type="checkbox" name="destaque" {{ 'checked' if produto and produto.destaque }}>
-                    ⭐ Produto em Destaque
-                </label>
-            </div>
-
+            
             {% if produto %}
             <div class="form-group">
                 <label style="display: flex; align-items: center; gap: 0.5rem;">
                     <input type="checkbox" name="ativo" {{ 'checked' if produto.ativo }}>
-                    ✅ Produto Ativo
+                    ✅ Ativo e Visível no Site
                 </label>
             </div>
             {% endif %}
 
             <div class="form-group full-width">
-                <label for="descricao">📄 Descrição do Produto</label>
+                <label for="descricao">📄 Descrição do Produto / Instruções de Uso</label>
                 <textarea id="descricao" name="descricao" class="form-control" 
-                          placeholder="Descreva as características, especificações e benefícios do produto...">{{ produto.descricao if produto }}</textarea>
+                          placeholder="Ex: Como ativar a chave na Steam, validade do Gift Card, regiões compatíveis, etc.">{{ produto.descricao if produto }}</textarea>
             </div>
+            
             <div class="form-group full-width">
-                <h3 style="margin-bottom: 1rem; color: var(--primary);">🖼️ Imagens do Produto</h3>
+                <h3 style="margin-bottom: 1rem; color: var(--primary);">🖼️ Imagem de Capa (Logo/Arte)</h3>
                 
                 <div class="image-upload">
                     <input type="file" id="imagens" name="imagens" multiple 
                            accept="image/*" class="form-control">
                     <p style="margin-top: 0.5rem; opacity: 0.7; font-size: 0.9rem;">
-                        📎 Selecione múltiplas imagens (PNG, JPG, JPEG, GIF, WEBP)
+                        📎 Selecione a imagem principal (PNG, JPG)
                     </p>
                 </div>
+                
                 {% if produto and produto.imagens %}
-                <div class="image-preview">
+                <div class="image-preview" style="display: flex; gap: 15px;">
                     {% for imagem in produto.imagens %}
-                    <div class="preview-item">
+                    {% if loop.index == 1 %}
+                    <div class="preview-item" style="width: 150px; height: 100px;">
                         <img src="{{ url_for('static', filename='uploads/produtos/' + imagem) }}" 
-                             alt="Imagem do produto">
+                             alt="Imagem de Capa">
                         <button type="button" class="preview-remove" 
                                 onclick="removerImagem('{{ imagem }}')">×</button>
                         <input type="hidden" name="imagens_manter" value="{{ imagem }}">
                     </div>
+                    {% endif %}
                     {% endfor %}
                 </div>
                 {% endif %}
@@ -98,7 +102,7 @@
                 ↩️ Cancelar
             </a>
             <button type="submit" class="btn btn-primary">
-                💾 {{ 'Atualizar' if produto else 'Cadastrar' }} Produto
+                💾 {{ 'Atualizar' if produto else 'Cadastrar' }} Ativo
             </button>
         </div>
     </form>
@@ -106,46 +110,61 @@
 
 <script>
     function removerImagem(imagem) {
+        // Função para marcar a imagem existente para remoção
         const previewItem = event.target.closest('.preview-item');
-        previewItem.remove();
+        previewItem.style.display = 'none'; // Esconde o item
     
         const form = document.querySelector('form');
+        // Adiciona um input oculto para o backend saber qual imagem excluir/remover
         const input = document.createElement('input');
         input.type = 'hidden';
         input.name = 'imagens_remover';
         input.value = imagem;
         form.appendChild(input);
+        
+        // Remove o input 'manter' para garantir que ela não seja salva
+        const manterInput = document.querySelector(`input[name="imagens_manter"][value="${imagem}"]`);
+        if (manterInput) manterInput.remove();
     }
     
+    // Script para preview de nova imagem (simplificado para uma única capa)
     document.getElementById('imagens').addEventListener('change', function(e) {
-        let preview = document.querySelector('.image-preview');
-        if (!preview) {
-            preview = createPreviewContainer();
+        let previewContainer = document.querySelector('.image-preview');
+        if (!previewContainer) {
+            previewContainer = createPreviewContainer();
         }
+        
+        // Limpa previews anteriores
+        previewContainer.innerHTML = ''; 
     
-        preview.querySelectorAll('.preview-item[data-novo="true"]').forEach(item => item.remove());
-    
-        Array.from(e.target.files).forEach(file => {
-            if (!file.type.startsWith('image/')) return;
-    
+        const file = e.target.files[0]; // Pega apenas o primeiro arquivo
+        
+        if (file && file.type.startsWith('image/')) {
             const reader = new FileReader();
             reader.onload = function(ev) {
                 const previewItem = document.createElement('div');
                 previewItem.className = 'preview-item';
-                previewItem.dataset.novo = "true";
+                previewItem.style.width = '150px';
+                previewItem.style.height = '100px';
                 previewItem.innerHTML = `
                     <img src="${ev.target.result}" alt="Preview">
-                    <button type="button" class="preview-remove" onclick="this.parentElement.remove()">×</button>
+                    <button type="button" class="preview-remove" onclick="this.parentElement.remove(); document.getElementById('imagens').value = '';">×</button>
                 `;
-                preview.appendChild(previewItem);
+                previewContainer.appendChild(previewItem);
+                
+                // Esconde a imagem antiga se houver
+                document.querySelectorAll('input[name="imagens_remover"]').forEach(el => el.remove());
+                document.querySelectorAll('input[name="imagens_manter"]').forEach(el => el.remove());
             };
             reader.readAsDataURL(file);
-        });
+        }
     });
     
     function createPreviewContainer() {
         const container = document.createElement('div');
         container.className = 'image-preview';
+        container.style.display = 'flex';
+        container.style.gap = '15px';
         document.querySelector('.image-upload').after(container);
         return container;
     }
@@ -153,6 +172,7 @@
     
 
 <style>
+/* Estilos de preview mantidos do seu arquivo original */
 .image-preview {
     margin-top: 1.5rem;
 }
@@ -162,11 +182,13 @@
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    /* Adicionando estilo para visualização única */
+    flex-shrink: 0; 
 }
 
 .preview-item img {
     width: 100%;
-    height: 100px;
+    height: 100%; /* Ajuste para o tamanho fixo da div */
     object-fit: cover;
 }
 

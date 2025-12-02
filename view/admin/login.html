@@ -2,179 +2,366 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Login - Admin GHCP</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="{{ url_for('static', filename='logos/favicon.ico') }}">
     <style>
+        /* ==================== 1. VARIÁVEIS DE COR E EFEITO ==================== */
         :root {
-            --primary: #0066ff;
-            --primary-dark: #0052cc;
+            --purple-vivid: #8A2BE2; /* Azul-violeta vivo */
+            --blue-vivid: #4682B4; /* Azul-aço vivo */
+            --gradient-bg: linear-gradient(145deg, #130f40 0%, #30336b 100%);
+            --gradient-primary: linear-gradient(45deg, var(--purple-vivid) 0%, var(--blue-vivid) 100%);
+            --glass-bg: rgba(255, 255, 255, 0.08); /* Mais transparente */
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-color: #f8f8ff; 
+            --input-bg: rgba(255, 255, 255, 0.98); 
+            --shadow-glass: 0 10px 40px rgba(0, 0, 0, 0.4);
+            --shadow-btn: 0 15px 35px rgba(138, 43, 226, 0.6);
+            --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             --success: #00d084;
-            --danger: #ff3366;
-            --warning: #ffb800;
-            --info: #00b8d4;
-            --dark: #1a1d29;
-            --light: #f8f9fa;
-            --border: #e2e8f0;
-            --shadow: 0 8px 30px rgba(0, 102, 255, 0.15);
+            --error: #ff3366;
         }
 
+        /* ==================== 2. ESTILOS BÁSICOS E BACKGROUND PARTÍCULAS ==================== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        html, body {
+            min-height: 100vh;
+            width: 100%;
+            overflow: hidden;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--info) 100%);
-            min-height: 100vh;
+            background: var(--gradient-bg);
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 2rem;
+            position: relative;
         }
 
+        /* EFEITO PARTÍCULAS DEGRADÊ - Posicionamento e Movimento Lateral */
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px); /* Mais desfoque para um efeito mais suave */
+            opacity: 0.65;
+            z-index: 1;
+            animation: particleMovement 25s infinite alternate ease-in-out;
+            pointer-events: none;
+        }
+
+        .particle-1 { 
+            width: 350px; 
+            height: 350px; 
+            top: 5%; 
+            left: 5%;
+            background: linear-gradient(45deg, var(--purple-vivid), #ff5a79);
+        }
+        
+        .particle-2 { 
+            width: 500px; 
+            height: 500px; 
+            bottom: 10%; 
+            right: 10%; 
+            background: linear-gradient(135deg, var(--blue-vivid), #2aafff);
+            animation-delay: -8s; 
+        }
+        
+        .particle-3 { 
+            width: 250px; 
+            height: 250px; 
+            top: 60%; 
+            left: 20%; 
+            background: linear-gradient(180deg, var(--purple-vivid), var(--blue-vivid));
+            animation-delay: -15s; 
+        }
+
+        @keyframes particleMovement {
+            0% { transform: translate(0, 0) scale(1); opacity: 0.65; }
+            50% { transform: translate(70px, -70px) scale(1.1); opacity: 0.8; }
+            100% { transform: translate(-50px, 50px) scale(0.95); opacity: 0.7; }
+        }
+
+        /* ==================== 3. LOGIN CONTAINER E GLASSMORPHISM ==================== */
         .login-container {
             width: 100%;
-            max-width: 420px;
+            max-width: 450px;
+            z-index: 10;
         }
 
         .login-box {
-            background: white;
-            padding: 3rem;
-            border-radius: 20px;
-            box-shadow: var(--shadow);
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px) saturate(180%); /* Mais desfoque no vidro */
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            padding: clamp(2rem, 8vh, 3.5rem);
+            border-radius: 35px; /* Bordas mais suaves */
+            box-shadow: var(--shadow-glass);
+            border: 1px solid var(--glass-border);
             text-align: center;
+            transition: var(--transition);
+        }
+        
+        .login-box:hover {
+            transform: scale(1.01) translateY(-8px); /* Efeito 3D mais pronunciado */
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
         }
 
+        /* ==================== 4. TIPOGRAFIA E ELEMENTOS ==================== */
         .logo {
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
         }
 
         .logo h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--info) 100%);
+            font-size: clamp(2.4rem, 6vw, 3.0rem); /* Tamanho maior */
+            font-weight: 900;
+            background: var(--gradient-primary);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             margin-bottom: 0.5rem;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.25); /* Brilho mais intenso */
+            line-height: 1.1;
         }
 
         .logo p {
-            color: var(--dark);
-            opacity: 0.7;
-            font-size: 1rem;
+            color: var(--text-color);
+            opacity: 0.8;
+            font-size: clamp(1.05rem, 2.2vw, 1.2rem);
+            font-weight: 500;
         }
-
+        
+        /* Flash Messages */
         .flash-messages {
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: left;
         }
 
         .flash {
-            padding: 1rem;
-            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            border-radius: 18px; /* Mais arredondado */
             margin-bottom: 1rem;
-            font-weight: 600;
+            font-weight: 700;
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
+            gap: 0.8rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: var(--transition);
+        }
+        
+        .flash:hover {
+            transform: scale(1.02);
         }
 
-        .flash-success {
-            background: rgba(0,208,132,0.1);
-            color: #00a56e;
-            border: 1px solid rgba(0,208,132,0.2);
+        .flash i {
+            font-size: 1.3rem;
         }
 
-        .flash-error {
-            background: rgba(255,51,102,0.1);
-            color: #e62958;
-            border: 1px solid rgba(255,51,102,0.2);
+        .flash-success { 
+            background: var(--success); 
+            color: white; 
+            border: 1px solid #00a56e; 
+        }
+        .flash-error { 
+            background: var(--error); 
+            color: white; 
+            border: 1px solid #e62958; 
+        }
+        .flash-info { 
+            background: #00b8d4; 
+            color: white; 
+            border: 1px solid #0093a8; 
         }
 
+
+        /* Formulário e Inputs */
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 3rem; /* Mais espaçamento */
             text-align: left;
+            position: relative;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: var(--dark);
+            margin-bottom: 0.8rem;
+            font-weight: 700;
+            color: var(--text-color);
+            opacity: 0.95;
+            font-size: 1.1rem;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .input-wrapper {
+            position: relative;
         }
 
         .form-control {
             width: 100%;
-            padding: 1rem;
-            border: 2px solid var(--border);
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
+            padding: 1.3rem 1.8rem; /* Padding premium */
+            padding-right: 5rem; 
+            border: 2px solid transparent;
+            border-radius: 18px;
+            font-size: 1.1rem;
+            transition: var(--transition);
+            background: var(--input-bg);
+            color: #1a1d29;
+            font-weight: 500;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
         .form-control:focus {
             outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(0,102,255,0.1);
+            border-color: var(--purple-vivid);
+            box-shadow: 0 0 0 5px rgba(138, 43, 226, 0.4),
+                        0 4px 15px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        /* Botão Toggle Senha */
+        .password-toggle {
+            position: absolute;
+            right: 1.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #1a1d29;
+            opacity: 0.7;
+            cursor: pointer;
+            font-size: 1.3rem;
+            transition: var(--transition);
+            z-index: 20;
+            padding: 0.5rem;
+            line-height: 0;
         }
 
+        .password-toggle:hover {
+            opacity: 1;
+            color: var(--purple-vivid);
+            transform: translateY(-50%) scale(1.15);
+        }
+
+        /* Botão de Login - ANIMAÇÃO E ESTILO CHAVE */
         .btn {
             width: 100%;
-            padding: 1rem;
-            background: var(--primary);
+            padding: 1.5rem;
+            background: var(--gradient-primary);
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
+            border-radius: 18px;
+            font-size: 1.25rem;
+            font-weight: 800;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: var(--transition);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
+            gap: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            box-shadow: var(--shadow-btn);
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+            z-index: 10;
+        }
+        
+        /* Efeito de Brilho no Botão */
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 40%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.4); /* Mais brilho */
+            transform: skewX(-25deg);
+            transition: all 0.8s ease;
         }
 
         .btn:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,102,255,0.3);
+            transform: translateY(-8px); /* Mais destaque no hover */
+            box-shadow: 0 25px 50px rgba(138, 43, 226, 0.8);
+            filter: brightness(1.2);
+        }
+        
+        .btn:hover::after {
+            left: 150%;
         }
 
+        .btn:active {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(138, 43, 226, 0.5);
+        }
+
+        /* Footer */
         .login-footer {
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--border);
-            color: var(--dark);
-            opacity: 0.7;
-            font-size: 0.9rem;
+            margin-top: 3.5rem;
+            padding-top: 2.5rem;
+            border-top: 1px solid var(--glass-border);
+            color: var(--text-color);
+            opacity: 0.6;
+            font-size: 0.95rem;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
-
-        .credentials {
-            background: rgba(0,102,255,0.05);
-            padding: 1rem;
-            border-radius: 8px;
-            margin-top: 1.5rem;
-            font-size: 0.8rem;
-            text-align: left;
-        }
-
-        .credentials h4 {
-            margin-bottom: 0.5rem;
-            color: var(--primary);
+        
+        /* ==================== 5. RESPONSIVIDADE ==================== */
+        @media (max-width: 500px) {
+            body {
+                padding: 1rem;
+            }
+            .login-box {
+                padding: 2.5rem 1.8rem;
+                border-radius: 25px;
+            }
+            .logo h1 {
+                font-size: 2.4rem;
+            }
+            .form-group {
+                margin-bottom: 2.5rem;
+            }
+            .form-control {
+                padding: 1.2rem;
+                padding-right: 4.5rem; 
+                border-radius: 15px;
+            }
+            .password-toggle {
+                right: 1.5rem;
+                font-size: 1.2rem;
+            }
+            .btn {
+                font-size: 1.1rem;
+                padding: 1.3rem;
+                border-radius: 15px;
+            }
+            .login-footer {
+                margin-top: 2.5rem;
+                padding-top: 1.5rem;
+            }
+            /* Reduzir o tamanho das partículas em telas pequenas */
+            .particle-1 { width: 150px; height: 150px; top: 5%; left: -20%; filter: blur(80px); }
+            .particle-2 { width: 200px; height: 200px; bottom: 0; right: -20%; filter: blur(80px); }
+            .particle-3 { display: none; }
         }
     </style>
 </head>
 <body>
+    <div class="particle particle-1"></div>
+    <div class="particle particle-2"></div>
+    <div class="particle particle-3"></div>
+    
     <div class="login-container">
         <div class="login-box">
             <div class="logo">
-                <h1>🏠 GameChip Admin</h1>
-                <p>Painel Administrativo</p>
+                <h1><i class="fas fa-gamepad"></i> GameChip Admin</h1>
+                <p>Painel Administrativo Super Premium</p>
             </div>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -182,9 +369,9 @@
                     <div class="flash-messages">
                         {% for category, message in messages %}
                             <div class="flash flash-{{ category }}">
-                                {% if category == 'success' %} ✅
-                                {% elif category == 'error' %} ❌
-                                {% else %} ⚠️
+                                {% if category == 'success' %} <i class="fas fa-check-circle"></i>
+                                {% elif category == 'error' %} <i class="fas fa-exclamation-triangle"></i>
+                                {% else %} <i class="fas fa-info-circle"></i>
                                 {% endif %}
                                 {{ message }}
                             </div>
@@ -195,20 +382,61 @@
 
             <form method="POST" action="{{ url_for('admin_login') }}">
                 <div class="form-group">
-                    <label for="email">📧 E-mail</label>
-                    <input type="email" id="email" name="email" class="form-control" placeholder="seu@email.com" required>
+                    <label for="email">E-mail</label>
+                    <div class="input-wrapper">
+                        <input type="email" id="email" name="email" class="form-control" placeholder="seu@email.com" required>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="senha">🔒 Senha</label>
-                    <input type="password" id="senha" name="senha" class="form-control" placeholder="Sua senha" required>
+                    <label for="senha">Senha</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="senha" name="senha" class="form-control" placeholder="Sua senha" required>
+                        <button type="button" class="password-toggle" id="togglePassword" aria-label="Mostrar senha">
+                            <i class="far fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn">
-                    🚀 Entrar no Painel
+                    <i class="fas fa-sign-in-alt"></i> Entrar no Painel
                 </button>
             </form>
+            
+            <div class="login-footer">
+                <p>Acesso restrito | Sua segurança é nossa prioridade.</p>
+            </div>
         </div>
     </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleButton = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('senha');
+
+            if (toggleButton && passwordInput) {
+                toggleButton.addEventListener('click', () => {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    
+                    const icon = toggleButton.querySelector('i');
+                    if (type === 'text') {
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    } else {
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                });
+            }
+        });
+        
+        // Simples correção para evitar o scroll principal em certos navegadores (mantém o efeito imersivo)
+        document.addEventListener('wheel', function(e) {
+            if (!e.target.closest('.login-box')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    </script>
 </body>
 </html>

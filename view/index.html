@@ -4,85 +4,105 @@
 
 {% block conteudo %}
 
-<div class="carousel-container">
-    
-    <div class="carousel-slide active">
-        <a href="{{ url_for('listar_produtos') }}">
-            <img src="{{ url_for('static', filename='banners/natal.jpeg') }}" alt="Natal">
-        </a>
+<div class="carousel-wrapper">
+    <div class="carousel-container">
+        
+        <div class="carousel-slide active">
+            <a href="{{ url_for('listar_produtos') }}">
+                <img src="{{ url_for('static', filename='banners/natal.jpeg') }}" alt="Natal">
+            </a>
+        </div>
+
+        <div class="carousel-slide">
+            <a href="{{ url_for('listar_produtos') }}">
+                <img src="{{ url_for('static', filename='banners/crunchyroll.jpeg') }}" alt="Crunchyroll">
+            </a>
+        </div>
+
+        <div class="carousel-slide">
+            <a href="{{ url_for('empresas_vendedoras') }}">
+                <img src="{{ url_for('static', filename='banners/google.jpeg') }}" alt="Google">
+            </a>
+        </div>
+
+        <div class="carousel-slide">
+            <a href="{{ url_for('listar_produtos') }}">
+                <img src="{{ url_for('static', filename='banners/apple.jpeg') }}" alt="Apple">
+            </a>
+        </div>
+
+        <div class="carousel-slide">
+            <a href="{{ url_for('listar_produtos') }}">
+                <img src="{{ url_for('static', filename='banners/netflix.jpeg') }}" alt="Netflix">
+            </a>
+        </div>
+
+        <div class="carousel-slide">
+            <a href="{{ url_for('listar_produtos') }}">
+                <img src="{{ url_for('static', filename='banners/nintendo.jpeg') }}" alt="Nintendo">
+            </a>
+        </div>
+
+        <div class="carousel-slide">
+            <a href="{{ url_for('listar_produtos') }}">
+                <img src="{{ url_for('static', filename='banners/playstation.jpeg') }}" alt="PlayStation">
+            </a>
+        </div>
+
+        <div class="carousel-slide">
+            <a href="{{ url_for('listar_produtos') }}">
+                <img src="{{ url_for('static', filename='banners/spotify.jpeg') }}" alt="Spotify">
+            </a>
+        </div>
+
+        <div class="carousel-slide">
+            <a href="{{ url_for('listar_produtos') }}">
+                <img src="{{ url_for('static', filename='banners/steam.jpeg') }}" alt="Steam">
+            </a>
+        </div>
+
+        <div class="carousel-slide">
+            <a href="{{ url_for('listar_produtos') }}">
+                <img src="{{ url_for('static', filename='banners/xbox.jpeg') }}" alt="Xbox">
+            </a>
+        </div>
+
+        <button class="carousel-btn prev-btn" onclick="moveSlide(-1)">&#10094;</button>
+        <button class="carousel-btn next-btn" onclick="moveSlide(1)">&#10095;</button>
+
     </div>
-
-    <div class="carousel-slide">
-        <a href="{{ url_for('listar_produtos') }}">
-            <img src="{{ url_for('static', filename='banners/crunchyroll.jpeg') }}" alt="Crunchyroll">
-        </a>
-    </div>
-
-    <div class="carousel-slide">
-        <a href="{{ url_for('empresas_vendedoras') }}">
-            <img src="{{ url_for('static', filename='banners/google.jpeg') }}" alt="Google">
-        </a>
-    </div>
-
-    <div class="carousel-slide">
-        <a href="{{ url_for('listar_produtos') }}">
-            <img src="{{ url_for('static', filename='banners/apple.jpeg') }}" alt="Apple">
-        </a>
-    </div>
-
-    <div class="carousel-slide">
-        <a href="{{ url_for('listar_produtos') }}">
-            <img src="{{ url_for('static', filename='banners/netflix.jpeg') }}" alt="Netflix">
-        </a>
-    </div>
-
-    <div class="carousel-slide">
-        <a href="{{ url_for('listar_produtos') }}">
-            <img src="{{ url_for('static', filename='banners/nintendo.jpeg') }}" alt="Nintendo">
-        </a>
-    </div>
-
-    <div class="carousel-slide">
-        <a href="{{ url_for('listar_produtos') }}">
-            <img src="{{ url_for('static', filename='banners/playstation.jpeg') }}" alt="PlayStation">
-        </a>
-    </div>
-
-    <div class="carousel-slide">
-        <a href="{{ url_for('listar_produtos') }}">
-            <img src="{{ url_for('static', filename='banners/spotify.jpeg') }}" alt="Spotify">
-        </a>
-    </div>
-
-    <div class="carousel-slide">
-        <a href="{{ url_for('listar_produtos') }}">
-            <img src="{{ url_for('static', filename='banners/steam.jpeg') }}" alt="Steam">
-        </a>
-    </div>
-
-    <div class="carousel-slide">
-        <a href="{{ url_for('listar_produtos') }}">
-            <img src="{{ url_for('static', filename='banners/xbox.jpeg') }}" alt="Xbox">
-        </a>
-    </div>
-
-    <button class="carousel-btn prev-btn" onclick="moveSlide(-1)">&#10094;</button>
-    <button class="carousel-btn next-btn" onclick="moveSlide(1)">&#10095;</button>
-
 </div>
 
 <style>
-    /* ================= CARROSSEL (SLIDER) SIMPLES ================= */
+    /* ================= CARROSSEL MODERNIZADO ================= */
 
+    /* 1. Wrapper: Centraliza tudo e impede que o banner exploda em monitores gigantes */
+    .carousel-wrapper {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        padding: 0 10px; /* Pequena margem lateral no mobile */
+        margin-bottom: 40px;
+    }
+
+    /* 2. O Container do Banner */
     .carousel-container {
         position: relative;
         width: 100%;
-        height: 500px; /* Altura do Banner */
-        border-radius: var(--radius);
+        max-width: 1200px; /* Tamanho máximo (largura de site padrão) */
+        
+        /* A MÁGICA DA PROPORÇÃO:
+           16 / 9 = Formato Widescreen (YouTube/TV). 
+           Isso garante que ele não fique "quadrado" no mobile, 
+           mas mantenha altura suficiente para ler os textos. */
+        aspect-ratio: 16 / 9; 
+
+        border-radius: 15px; /* Bordas mais arredondadas */
         overflow: hidden;
-        box-shadow: var(--shadow-lg);
-        margin-bottom: 40px;
-        background: var(--dark);
+        
+        /* Efeito de sombra/neon suave para destacar o banner */
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        background: #1a1a1a; /* Fundo escuro caso a imagem demore a carregar */
     }
 
     .carousel-slide {
@@ -92,7 +112,7 @@
         width: 100%;
         height: 100%;
         opacity: 0;
-        transition: opacity 0.5s ease-in-out;
+        transition: opacity 0.6s ease-in-out; /* Transição um pouco mais suave */
         display: flex;
         align-items: center;
         justify-content: center;
@@ -103,13 +123,15 @@
         z-index: 1;
     }
 
-    /* Imagem Padrão (Sem frescura de tema) */
+    /* 3. A Imagem */
     .carousel-slide img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        /* object-fit: cover -> Preenche tudo sem distorcer.
+           Se suas imagens tiverem texto muito nas bordas, mude para 'contain' 
+           (mas 'contain' pode deixar faixas pretas). 'cover' é mais bonito visualmente. */
+        object-fit: cover; 
         display: block;
-        cursor: pointer;
     }
 
     .carousel-slide a {
@@ -118,65 +140,69 @@
         height: 100%;
     }
 
+    /* 4. Botões de Navegação Melhorados */
     .carousel-btn {
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
-        background: rgba(0, 0, 0, 0.4);
+        background: rgba(0, 0, 0, 0.3); /* Mais transparente */
         color: white;
-        border: none;
-        padding: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.2); /* Borda sutil */
+        padding: 0;
         cursor: pointer;
-        font-size: 24px;
+        font-size: 20px;
         border-radius: 50%;
-        transition: var(--transition);
+        transition: all 0.3s ease;
         z-index: 10;
-        width: 50px;
-        height: 50px;
+        width: 45px;
+        height: 45px;
         display: flex;
         align-items: center;
         justify-content: center;
-        backdrop-filter: blur(4px);
+        backdrop-filter: blur(5px); /* Efeito vidro */
     }
 
     .carousel-btn:hover {
-        background: var(--primary);
+        background: var(--primary, #007bff); /* Usa a cor primária do seu tema ou azul padrão */
+        border-color: var(--primary, #007bff);
         transform: translateY(-50%) scale(1.1);
+        box-shadow: 0 0 15px var(--primary, #007bff); /* Brilho ao passar o mouse */
     }
 
     .prev-btn { left: 20px; }
     .next-btn { right: 20px; }
 
-    .carousel-caption {
-        position: absolute;
-        bottom: 40px;
-        left: 40px;
-        background: rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(10px);
-        padding: 20px;
-        border-radius: var(--radius);
-        color: white;
-        max-width: 400px;
-        border-left: 4px solid var(--primary);
-        pointer-events: none;
-        z-index: 2;
-    }
-
-    /* Esconde legenda no celular */
+    /* ================= MOBILE (CELULAR) ================= */
     @media (max-width: 768px) {
-        .carousel-container { height: 250px; }
-        .carousel-caption { display: none; }
-        .carousel-btn { padding: 10px; width: 35px; height: 35px; font-size: 18px; }
-}
+        .carousel-wrapper {
+            padding: 0; /* Remove padding lateral para aproveitar 100% da tela */
+        }
+        
+        .carousel-container {
+            border-radius: 0; /* No celular fica bonito ocupar de ponta a ponta sem borda arredondada */
+            max-width: 100%;
+        }
+
+        /* Botões menores no celular para não atrapalhar a imagem */
+        .carousel-btn { 
+            width: 35px; 
+            height: 35px; 
+            font-size: 16px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.5); /* Um pouco mais escuro para contraste */
+        }
+        
+        .next-btn {
+            left: auto;
+            right: 10px;
+        }
+    }
 </style>
 
 <script>
     let slideIndex = 0;
     const slides = document.querySelectorAll('.carousel-slide');
-    
-    // Configurado para 3 segundos para dar tempo de ver (mude para 1000 se quiser 1 seg)
-    const intervalTime = 3000; 
-    
+    const intervalTime = 4000; // Aumentei um pouco para dar tempo de ler (4s)
     let slideInterval;
 
     function showSlides(n) {

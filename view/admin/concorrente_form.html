@@ -23,7 +23,7 @@
 {% block content %}
 <div class="form-container">
     {% if modo == 'visualizar' %}
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
         <div>
             <h2 style="font-size: 1.8rem; font-weight: 800; color: var(--primary); margin: 0;">
                 {{ concorrente.nome }}
@@ -48,8 +48,7 @@
           action="{% if concorrente %}{{ url_for('admin_editar_concorrente', id_concorrente=concorrente.id_concorrente) }}{% else %}{{ url_for('admin_novo_concorrente') }}{% endif %}"
           {% if modo == 'visualizar' %}style="pointer-events: none; opacity: 0.8;"{% endif %}>
         
-        <div class="form-grid">
-            <!-- Informações Pessoais -->
+        <div class="form-grid-responsive">
             <div class="form-group">
                 <label for="nome">Nome Completo *</label>
                 <input type="text" id="nome" name="nome" class="form-control" 
@@ -71,7 +70,6 @@
                        {% if modo == 'visualizar' %}readonly{% endif %}>
             </div>
 
-            <!-- Informações Profissionais -->
             <div class="form-group">
                 <label for="empresa">Empresa</label>
                 <input type="text" id="empresa" name="empresa" class="form-control" 
@@ -86,7 +84,6 @@
                        {% if modo == 'visualizar' %}readonly{% endif %}>
             </div>
 
-            <!-- NOVO: Campo para Vaga -->
             <div class="form-group">
                 <label for="vaga">Vaga</label>
                 <input type="text" id="vaga" name="vaga" class="form-control" 
@@ -112,7 +109,6 @@
                 {% endif %}
             </div>
 
-            <!-- NOVO: LinkedIn -->
             <div class="form-group">
                 <label for="linkedin_url">LinkedIn</label>
                 <input type="url" id="linkedin_url" name="linkedin_url" class="form-control" 
@@ -135,14 +131,13 @@
                 <input type="hidden" name="status" value="{{ concorrente.status }}">
                 {% endif %}
             </div>
-
-            <!-- NOVO: Informações do PDF -->
+            
             {% if concorrente and concorrente.arquivo_pdf %}
-            <div class="form-group full-width" style="background: var(--success-light); padding: 15px; border-radius: var(--radius); border: 1px solid var(--success);">
+            <div class="form-group form-group-full-width" style="background: var(--success-light); padding: 15px; border-radius: var(--radius); border: 1px solid var(--success);">
                 <label style="font-weight: 600; color: var(--success); margin-bottom: 10px; display: block;">
                     📄 Currículo em PDF
                 </label>
-                <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
                     <div>
                         <strong>Arquivo:</strong> {{ concorrente.arquivo_pdf.split('_')[-1] if '_' in concorrente.arquivo_pdf else concorrente.arquivo_pdf }}
                     </div>
@@ -159,15 +154,14 @@
             </div>
             {% endif %}
 
-            <!-- Mensagens -->
-            <div class="form-group full-width">
+            <div class="form-group form-group-full-width">
                 <label for="mensagem">Mensagem do Candidato</label>
                 <textarea id="mensagem" name="mensagem" class="form-control" rows="4" 
                           placeholder="Mensagem enviada pelo candidato..."
                           {% if modo == 'visualizar' %}readonly{% endif %}>{{ concorrente.mensagem if concorrente else '' }}</textarea>
             </div>
 
-            <div class="form-group full-width">
+            <div class="form-group form-group-full-width">
                 <label for="observacoes">Observações Internas</label>
                 <textarea id="observacoes" name="observacoes" class="form-control" rows="3" 
                           placeholder="Anotações internas sobre o candidato..."
@@ -175,9 +169,9 @@
             </div>
         </div>
 
-        <div class="form-actions">
+        <div class="form-actions form-actions-responsive">
             {% if modo == 'visualizar' %}
-            <div style="display: flex; gap: 15px; justify-content: center;">
+            <div class="btn-group-responsive">
                 <a href="{{ url_for('admin_concorrentes') }}" class="btn btn-warning">
                     ↩️ Voltar para Lista
                 </a>
@@ -192,7 +186,7 @@
                 {% endif %}
             </div>
             {% else %}
-            <div style="display: flex; gap: 15px;">
+            <div class="btn-group-responsive">
                 <a href="{{ url_for('admin_concorrentes') }}" class="btn btn-warning">
                     ↩️ Cancelar
                 </a>
@@ -204,9 +198,8 @@
         </div>
     </form>
 
-    <!-- Informações do Sistema (apenas modo visualizar) -->
     {% if modo == 'visualizar' %}
-    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);">
+    <div class="system-info-grid" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);">
         <h3 style="font-size: 1.2rem; color: var(--text-light); margin-bottom: 15px;">📊 Informações do Sistema</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; color: var(--text-light);">
             <div>
@@ -234,7 +227,28 @@
 </div>
 
 <style>
-    /* Estilo para campos read-only */
+    /* 1. Estilos para Responsividade do Formulário */
+    .form-grid-responsive {
+        /* Garante que os itens se ajustem em colunas (min 300px) */
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    
+    .form-group-full-width {
+        /* Ocupa a largura total da linha */
+        grid-column: 1 / -1;
+    }
+
+    /* 2. Estilos para Botões Responsivos */
+    .btn-group-responsive {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap; /* Faz os botões quebrar a linha em telas pequenas */
+        justify-content: flex-start; /* Alinhamento dos botões no mobile */
+    }
+
+    /* 3. Estilo para campos read-only */
     input:read-only, textarea:read-only, select:disabled {
         background-color: #f5f5f5;
         cursor: not-allowed;
@@ -244,6 +258,14 @@
     .success-light {
         background-color: rgba(40, 167, 69, 0.1);
         border-color: #28a745;
+    }
+
+    /* Media Query para telas muito pequenas */
+    @media (max-width: 600px) {
+        .form-grid-responsive {
+            /* Força uma única coluna em telas muito pequenas */
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 {% endblock %}

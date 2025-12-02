@@ -27,3 +27,18 @@ class Config:
     PIX_CHAVE = os.environ.get('PIX_CHAVE', "14057629939")
     PIX_NOME = os.environ.get('PIX_NOME', "CAETANO GBUR PETRY")
     PIX_CIDADE = os.environ.get('PIX_CIDADE', "JOINVILLE")
+
+    # CONFIGURAÇÕES DE EMAIL
+    MAIL_SERVER = 'smtp.gmail.com'  # Para Gmail
+    MAIL_PORT = 587
+    MAIL_USE_TLS = True
+    MAIL_USE_SSL = False
+    MAIL_USERNAME = 'contatoghcp@gmail.com'  # Seu email
+    MAIL_PASSWORD = ' igho jvfm czce bzfb'  # Senha de app (NÃO use a senha normal)
+    MAIL_DEFAULT_SENDER = 'contatoghcp@gmail.com'
+    MAIL_MAX_EMAILS = None
+    MAIL_ASCII_ATTACHMENTS = False
+    
+    # Para Hotmail/Outlook use:
+    # MAIL_SERVER = 'smtp.office365.com'
+    # MAIL_PORT = 587

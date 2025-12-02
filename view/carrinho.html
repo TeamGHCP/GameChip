@@ -107,17 +107,6 @@
 }
 </style>
 
-<!-- 🟢 BLOCO DE MENSAGENS FLASH -->
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    <div class="flash-container">
-      {% for category, message in messages %}
-        <div class="alert alert-{{ category }}">{{ message }}</div>
-      {% endfor %}
-    </div>
-  {% endif %}
-{% endwith %}
-
 <!-- 🛒 CONTEÚDO DO CARRINHO -->
 <div class="cart-container">
     <h2 class="cart-title">🛒 Carrinho de Compras</h2>

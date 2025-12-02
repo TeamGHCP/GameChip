@@ -1,990 +1,668 @@
 {% extends 'base.html' %}
 
-{% set titulo = "Sobre a Gamechip - Nossa História e Legado Gamer" %}
+{% set titulo = "Sobre a Gamechip - Nossa História e Legado" %}
 
 {% block conteudo %}
 <style>
-    /* Estilos Específicos para a Página Sobre - VERSÃO MELHORADA */
-    .sobre-container {
+    /* ==========================================================================
+       CSS ULTRA PREMIUM - GAMECHIP EDITION (RESPONSIVO CORRIGIDO)
+       ========================================================================== */
+    
+    :root {
+        --neon-primary: var(--primary);
+        --glass-bg: rgba(20, 20, 35, 0.7);
+        --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+        --card-hover-transform: translateY(-10px);
+    }
+
+    .container-limit {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 40px 20px;
-    }
-
-    /* Hero Section Melhorada */
-    .sobre-hero {
-        text-align: center;
-        padding: 100px 0 80px;
-        position: relative;
-        overflow: hidden;
-        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-        border-radius: 0 0 30px 30px;
-        margin-bottom: 60px;
-    }
-
-    .sobre-hero::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: 
-            radial-gradient(circle at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 50%), 
-            radial-gradient(circle at 80% 20%, rgba(255,255,255,0.05) 0%, transparent 50%);
-        z-index: 1;
-    }
-
-    .hero-content {
+        padding: 0 20px; /* Mantém respiro nas laterais no mobile */
         position: relative;
         z-index: 2;
     }
 
-    .hero-content h1 {
-        font-size: 3.5rem;
-        font-weight: 800;
-        margin-bottom: 25px;
-        color: white;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        animation: fadeInDown 0.8s ease-out;
-    }
-
-    @keyframes fadeInDown {
-        from {
-            opacity: 0;
-            transform: translateY(-30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .hero-subtitle {
-        font-size: 1.3rem;
-        color: rgba(255,255,255,0.9);
-        margin-bottom: 50px;
-        font-weight: 400;
-        max-width: 800px;
-        margin-left: auto;
-        margin-right: auto;
-        line-height: 1.6;
-        animation: fadeIn 1s ease-out 0.3s both;
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
-        to {
-            opacity: 1;
-        }
-    }
-
-    .hero-stats {
-        display: flex;
-        justify-content: center;
-        gap: 80px;
-        margin-top: 50px;
-        padding: 40px;
-        border-radius: 20px;
-        background: rgba(255,255,255,0.15);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255,255,255,0.2);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        animation: fadeInUp 1s ease-out 0.5s both;
-        max-width: 900px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .stat {
-        text-align: center;
+    /* Utilitário para banner full-width (CORRIGIDO PARA MOBILE) */
+    .full-width-breakout {
+        width: 100vw;
         position: relative;
-        transition: var(--transition);
+        left: 50%;
+        right: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
     }
 
-    .stat:hover {
-        transform: scale(1.1);
+    /* ==========================================================================
+       1. HERO SECTION (A HISTÓRIA)
+       ========================================================================== */
+    .about-hero {
+        padding: 80px 0 100px;
+        position: relative;
+        text-align: center;
+        overflow: hidden; /* Evita que o brilho vaze e crie barra de rolagem */
     }
 
-    .stat:not(:last-child)::after {
+    .hero-glow-bg {
+        position: absolute;
+        top: -100px; left: 50%; transform: translateX(-50%);
+        width: 800px; height: 600px;
+        background: radial-gradient(circle, rgba(138, 43, 226, 0.15) 0%, transparent 70%);
+        pointer-events: none;
+        z-index: 0;
+        animation: pulseGlow 5s infinite alternate;
+    }
+
+    @keyframes pulseGlow {
+        0% { opacity: 0.5; transform: scale(1); }
+        100% { opacity: 0.8; transform: scale(1.1); }
+    }
+
+    .hero-badge {
+        display: inline-block;
+        padding: 8px 24px;
+        border-radius: 50px;
+        background: rgba(138, 43, 226, 0.1);
+        border: 1px solid var(--primary);
+        color: var(--primary);
+        font-weight: 800;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 3px;
+        margin-bottom: 30px;
+        box-shadow: 0 0 20px rgba(138, 43, 226, 0.4);
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 900;
+        line-height: 1.1;
+        margin-bottom: 50px;
+        color: var(--text);
+        position: relative;
+        z-index: 2;
+        padding: 0 10px; /* Proteção extra para não colar texto */
+    }
+
+    .hero-title span {
+        background: linear-gradient(135deg, var(--primary) 0%, #ff6b35 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Caixa de Texto da História */
+    .story-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: var(--glass-border);
+        border-radius: 24px;
+        padding: 60px; /* Padding original PC */
+        text-align: left;
+        position: relative;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+        max-width: 900px;
+        margin: 0 auto;
+        transform: translateY(30px);
+        opacity: 0;
+        animation: fadeInUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+
+    .story-card::before {
         content: '';
         position: absolute;
-        right: -40px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 1px;
-        height: 60%;
-        background: rgba(255,255,255,0.3);
+        top: 0; left: 0; width: 100%; height: 4px;
+        background: linear-gradient(90deg, var(--primary), #ff6b35);
+        border-radius: 24px 24px 0 0;
+    }
+
+    .story-text {
+        font-size: 1.2rem;
+        color: var(--text-light);
+        line-height: 1.8;
+    }
+
+    .story-text strong {
+        color: var(--primary);
+        font-weight: 700;
+    }
+
+    /* ==========================================================================
+       2. BANNER CINEMATOGRÁFICO PARALLAX
+       ========================================================================== */
+    .banner-parallax-container {
+        height: 450px;
+        margin-top: -60px;
+        position: relative;
+        z-index: 1;
+        overflow: hidden;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    }
+
+    .banner-img {
+        width: 100%;
+        height: 130%;
+        object-fit: cover;
+        object-position: center;
+        will-change: transform;
+        transform: translateY(-15%);
+    }
+
+    .banner-overlay {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(to bottom, #1a1d29 0%, transparent 20%, transparent 80%, #1a1d29 100%);
+        pointer-events: none;
+    }
+
+    /* ==========================================================================
+       3. ESTATÍSTICAS
+       ========================================================================== */
+    .stats-section {
+        padding: 80px 0;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 40px;
+    }
+
+    .stat-card {
+        text-align: center;
+        padding: 30px;
+        background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 20px;
+        transition: 0.4s ease;
     }
 
     .stat-number {
+        font-size: 4rem;
+        font-weight: 900;
         display: block;
-        font-size: 3rem;
-        font-weight: 800;
-        color: white;
         line-height: 1;
-        margin-bottom: 8px;
-        text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        margin-bottom: 10px;
+        background: linear-gradient(to bottom, #fff 30%, rgba(255,255,255,0.2) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
 
     .stat-label {
         font-size: 1rem;
-        color: rgba(255,255,255,0.8);
-        font-weight: 600;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    /* Seções Melhoradas */
-    .sobre-section {
-        margin: 120px 0;
-        position: relative;
-    }
-    
-    /* --- Estilo: Seção de História (Storytelling) Melhorada --- */
-    .historia-storytelling {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 60px 50px;
-        border-radius: 20px;
-        background: var(--glass);
-        backdrop-filter: blur(20px);
-        border: 1px solid var(--border);
-        box-shadow: var(--shadow-lg);
-        position: relative;
-        overflow: hidden;
-        font-size: 1.1rem;
-        line-height: 1.8;
-        color: var(--text);
-        font-weight: 400;
-        transition: var(--transition);
-    }
-
-    .historia-storytelling:hover {
-        box-shadow: 0 15px 40px rgba(0,0,0,0.1);
-        transform: translateY(-5px);
-    }
-
-    .historia-storytelling::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 5px;
-        height: 100%;
-        background: linear-gradient(to bottom, var(--primary), var(--accent));
-    }
-
-    .historia-storytelling p strong {
+        letter-spacing: 1px;
         color: var(--primary);
-        font-weight: 700;
-        background: linear-gradient(135deg, var(--primary), var(--accent));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
     }
 
-    .historia-storytelling blockquote {
-        border-left: 5px solid var(--accent);
-        padding: 25px 30px;
-        margin: 40px 0;
-        font-style: italic;
-        color: var(--text-light);
-        font-size: 1.3rem;
-        line-height: 1.6;
-        background: rgba(0,0,0,0.02);
-        border-radius: 0 10px 10px 0;
-        position: relative;
-    }
-
-    .historia-storytelling blockquote::before {
-        content: '"';
-        position: absolute;
-        top: -10px;
-        left: 10px;
-        font-size: 4rem;
-        color: var(--accent);
-        opacity: 0.2;
-        font-family: Georgia, serif;
-    }
-
-    .historia-storytelling h3 {
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: var(--primary);
-        margin-top: 50px;
-        margin-bottom: 25px;
+    /* ==========================================================================
+       4. SEÇÃO EQUIPE
+       ========================================================================== */
+    .team-header {
         text-align: center;
-        position: relative;
-        padding-bottom: 15px;
+        margin: 100px 0 60px;
     }
 
-    .historia-storytelling h3::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 80px;
-        height: 3px;
-        background: linear-gradient(to right, var(--primary), var(--accent));
-        border-radius: 2px;
-    }
-    
-    .historia-storytelling .legado-final {
-        text-align: center;
-        margin-top: 50px;
-        font-weight: 700;
-        font-size: 1.3rem;
-        color: var(--primary);
-        border-top: 1px solid var(--border);
-        padding-top: 30px;
-        background: linear-gradient(135deg, var(--primary), var(--accent));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-    /* --- FIM Estilo História Melhorada --- */
-
-    .section-header {
-        text-align: center;
-        margin-bottom: 80px;
-    }
-
-    .section-header h2 {
-        font-size: 2.5rem;
+    .team-header h2 {
+        font-size: 3rem;
         font-weight: 800;
         color: var(--text);
-        margin-bottom: 25px;
-        position: relative;
-        display: inline-block;
     }
 
-    .section-header h2::after {
-        content: '';
-        position: absolute;
-        bottom: -15px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 100px;
-        height: 4px;
-        background: linear-gradient(to right, var(--primary), var(--accent));
-        border-radius: 2px;
-    }
-
-    .section-header p {
-        font-size: 1.15rem;
-        color: var(--text-light);
-        max-width: 700px;
-        margin: 30px auto 0;
-        line-height: 1.6;
-    }
-
-    /* Diferenciais Gamer Melhorados */
-    .diferenciais-grid {
+    .team-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 35px;
-        margin-top: 50px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 30px;
+        margin-bottom: 100px;
     }
 
-    .diferencial-card {
-        padding: 45px 30px;
-        text-align: center;
+    .member-card {
+        background: var(--glass-bg);
+        border: var(--glass-border);
         border-radius: 20px;
-        background: var(--glass);
-        border: 1px solid var(--border);
-        transition: var(--transition);
+        padding: 40px 25px;
+        text-align: center;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         position: relative;
         overflow: hidden;
         display: flex;
         flex-direction: column;
         align-items: center;
+        height: 100%;
     }
 
-    .diferencial-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
+    .member-card:hover {
+        transform: translateY(-10px);
+        border-color: var(--primary);
+        box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 20px rgba(138, 43, 226, 0.2);
+    }
+
+    .member-img-box {
+        width: 130px;
+        height: 130px;
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .member-img {
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-        transition: var(--transition);
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid rgba(255,255,255,0.1);
+        transition: 0.4s ease;
     }
 
-    .diferencial-card:hover::before {
-        left: 100%;
+    .member-role {
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: #ff6b35;
+        letter-spacing: 1px;
+        margin-bottom: 5px;
+        display: block;
     }
 
-    .diferencial-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-        border-color: var(--primary);
-    }
-
-    .diferencial-icon {
-        font-size: 3rem;
-        margin-bottom: 25px;
-        display: inline-block;
-        padding: 20px;
-        border-radius: 15px;
-        background: var(--secondary);
-        border: 1px solid var(--border);
-        transition: var(--transition);
-    }
-
-    .diferencial-card:hover .diferencial-icon {
-        background: linear-gradient(135deg, var(--primary), var(--accent));
-        color: white;
-        transform: scale(1.1) rotate(5deg);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-
-    .diferencial-card h4 {
+    .member-name {
         font-size: 1.3rem;
         font-weight: 700;
         color: var(--text);
         margin-bottom: 15px;
     }
 
-    .diferencial-card p {
+    .member-desc {
+        font-size: 0.95rem;
         color: var(--text-light);
-        line-height: 1.6;
-        font-size: 1rem;
-    }
-    
-    /* Pilares Melhorados */
-    .pilares-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-        gap: 40px;
-        margin-top: 50px;
-    }
-
-    .pilar-card {
-        padding: 45px 35px;
-        border-radius: 20px;
-        background: var(--glass);
-        border: 1px solid var(--border);
-        transition: var(--transition);
-        position: relative;
-        text-align: center;
-        display: flex; 
-        flex-direction: column; 
-        align-items: center;
-        overflow: hidden;
-    }
-
-    .pilar-card::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 5px;
-        background: linear-gradient(to right, var(--primary), var(--accent));
-        transform: scaleX(0);
-        transform-origin: left;
-        transition: var(--transition);
-    }
-
-    .pilar-card:hover::after {
-        transform: scaleX(1);
-    }
-
-    .pilar-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-        border-color: var(--primary);
-    }
-
-    .pilar-icon {
-        font-size: 3rem;
-        padding: 20px;
-        border-radius: 15px;
-        background: var(--secondary);
-        border: 1px solid var(--border);
-        display: inline-block;
-        margin-bottom: 25px;
-        transition: var(--transition);
-        z-index: 1;
-    }
-
-    .pilar-card:hover .pilar-icon {
-        background: linear-gradient(135deg, var(--primary), var(--accent));
-        color: white;
-        transform: scale(1.1);
-    }
-
-    .pilar-card h3 {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--text);
-        margin: 0;
-        z-index: 1;
-    }
-    
-    .pilar-card p {
-        flex-grow: 1; 
-        line-height: 1.6;
-        z-index: 1;
-        margin-top: 15px;
-    }
-
-    .valores-list {
-        list-style: none;
-        padding: 0;
-        text-align: left;
-        width: 100%;
-        z-index: 1;
-        margin-top: 20px;
-    }
-
-    .valores-list li {
-        padding: 15px 0;
-        color: var(--text);
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        font-weight: 500;
-        font-size: 1rem;
-        border-bottom: 1px solid var(--border);
-        transition: var(--transition);
-    }
-
-    .valores-list li:hover {
-        padding-left: 10px;
-        background: rgba(0,0,0,0.02);
-        border-radius: 8px;
-    }
-
-    .valores-list li::before {
-        content: '✔';
-        color: var(--success);
-        font-weight: bold;
-        font-size: 1rem;
-        background: var(--secondary);
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        transition: var(--transition);
-    }
-
-    .valores-list li:hover::before {
-        background: var(--success);
-        color: white;
-        transform: scale(1.1);
-    }
-
-    /* Estilo Equipe Grid Melhorado */
-    .equipe-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 35px;
-        margin-top: 50px;
-    }
-
-    .membro-card {
-        text-align: center;
-        padding: 40px 30px;
-        border-radius: 20px;
-        background: var(--glass);
-        border: 1px solid var(--border);
-        box-shadow: var(--shadow);
-        transition: var(--transition);
-        position: relative;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .membro-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, var(--primary), var(--accent));
-        opacity: 0;
-        transition: var(--transition);
-        z-index: 0;
-    }
-
-    .membro-card:hover::before {
-        opacity: 0.05;
-    }
-
-    .membro-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-        border-color: var(--primary);
-    }
-
-    .membro-card > * {
-        position: relative;
-        z-index: 1;
-    }
-
-    .membro-foto {
-        width: 140px;
-        height: 140px;
-        border-radius: 50%;
-        object-fit: cover;
-        margin-bottom: 25px;
-        border: 4px solid var(--primary);
-        transition: var(--transition);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    
-    .membro-card:hover .membro-foto {
-        transform: scale(1.1);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-        border-color: var(--accent);
-    }
-
-    .membro-card h4 {
-        font-size: 1.4rem;
-        font-weight: 700;
-        color: var(--text);
-        margin-bottom: 8px;
-        transition: var(--transition);
-    }
-
-    .membro-card:hover h4 {
-        color: var(--primary);
-    }
-
-    .membro-card span {
-        display: block;
-        font-weight: 700;
-        color: var(--primary);
-        text-transform: uppercase;
-        font-size: 0.8rem;
-        letter-spacing: 0.5px;
-        margin-bottom: 15px;
-        background: rgba(0,0,0,0.05);
-        padding: 5px 15px;
-        border-radius: 20px;
-    }
-
-    .membro-card p {
-        color: var(--text-light);
-        line-height: 1.6;
-        font-size: 1rem;
-    }
-
-    /* Contato Melhorado */
-    .contato-section {
-        text-align: center;
-        padding: 70px 40px;
-        border-radius: 20px;
-        background: var(--glass);
-        border: 1px solid var(--border);
-        margin-top: 100px;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .contato-section::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 5px;
-        background: linear-gradient(to right, var(--primary), var(--accent));
-    }
-
-    .contato-section h3 {
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--text);
+        line-height: 1.5;
         margin-bottom: 20px;
+        flex-grow: 1;
     }
 
-    .contato-section p {
-        font-size: 1.1rem;
+    .member-link {
+        margin-top: auto;
+        text-decoration: none;
+        padding: 10px 25px;
+        border: 1px solid var(--border);
+        border-radius: 50px;
         color: var(--text-light);
-        max-width: 600px;
-        margin: 0 auto;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .member-link:hover {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+    }
+
+    /* ==========================================================================
+       5. SEÇÃO DE CONTATO
+       ========================================================================== */
+    .contato-section {
+        margin-top: 80px;
+        padding: 80px 20px;
+        text-align: center;
+        background: linear-gradient(135deg, rgba(138, 43, 226, 0.1) 0%, transparent 100%);
+        border: 1px solid var(--primary);
+        border-radius: 20px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 0 40px rgba(138, 43, 226, 0.15);
     }
 
     .contato-buttons {
         display: flex;
-        gap: 20px;
         justify-content: center;
-        flex-wrap: wrap;
+        gap: 20px;
         margin-top: 40px;
+        flex-wrap: wrap; /* Permite quebrar linha se necessário */
     }
 
     .contato-btn {
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 12px;
-        padding: 16px 28px;
-        background: linear-gradient(135deg, var(--primary), var(--accent));
+        padding: 16px 32px;
+        background: var(--primary);
         color: white;
         text-decoration: none;
-        border-radius: 10px;
+        border-radius: 50px;
         font-weight: 700;
-        transition: var(--transition);
-        border: 2px solid transparent;
+        transition: 0.3s;
         font-size: 1rem;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        box-shadow: 0 5px 20px rgba(138, 43, 226, 0.3);
+        min-width: 200px;
     }
 
     .contato-btn:hover {
-        background: transparent;
-        color: var(--primary);
         transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
-        border-color: var(--primary);
+        background: white;
+        color: var(--primary);
     }
 
     .contato-btn.secondary {
         background: transparent;
+        border: 2px solid var(--primary);
         color: var(--primary);
-        border-color: var(--primary);
+        box-shadow: none;
     }
 
     .contato-btn.secondary:hover {
-        background: linear-gradient(135deg, var(--primary), var(--accent));
+        background: var(--primary);
         color: white;
-        border-color: transparent;
     }
 
-    /* Elementos de Destaque Adicionais */
-    .destaque-badge {
-        position: absolute;
-        top: -10px;
-        right: 20px;
-        background: linear-gradient(135deg, var(--primary), var(--accent));
-        color: white;
-        padding: 8px 15px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        z-index: 10;
+    .section-divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        margin: 80px 0;
     }
 
-    /* Responsividade Melhorada */
-    @media (max-width: 1100px) {
-        .hero-stats {
-            gap: 50px;
-        }
-        .hero-content h1 {
-            font-size: 3rem;
-        }
-    }
+    /* ==========================================================================
+       RESPONSIVIDADE AVANÇADA (A CORREÇÃO DO "BOT" E CANTOS)
+       ========================================================================== */
     
-    @media (max-width: 900px) {
-        .pilares-grid {
-            grid-template-columns: 1fr;
-        }
+    @media (max-width: 992px) {
+        .team-grid { grid-template-columns: repeat(2, 1fr); }
+        .hero-title { font-size: 2.8rem; }
     }
-    
+
     @media (max-width: 768px) {
-        .hero-stats {
-            flex-direction: column;
-            gap: 35px;
-            padding: 30px 20px;
+        /* Correção do Banner para não quebrar lateralmente */
+        .full-width-breakout {
+            width: 100%;
+            left: 0;
+            margin-left: 0;
+            margin-right: 0;
         }
-        .stat:not(:last-child)::after {
-            display: none;
+
+        .banner-parallax-container {
+            height: 250px;
+            margin-top: 0; /* Remove a margem negativa que cortava conteúdo */
+            border-radius: 12px; /* Fica mais bonito com borda no mobile */
         }
-        .hero-content h1 {
-            font-size: 2.5rem;
+
+        /* Ajuste do Card da História (O "Canto da tela") */
+        .story-card {
+            padding: 30px 20px; /* Reduz padding gigante de 60px para 20px */
+            border-radius: 16px;
         }
-        .hero-subtitle {
-            font-size: 1.1rem;
+
+        .hero-title {
+            font-size: 2.2rem; /* Título menor para não estourar */
         }
-        .historia-storytelling {
-            padding: 40px 25px;
+
+        .story-text {
+            font-size: 1rem; /* Texto mais legível */
+            text-align: justify; /* Alinhamento melhor no mobile */
         }
-        .section-header h2 {
-            font-size: 2rem;
-        }
+
+        /* Ajuste dos Botões (Empilhar e não colar na borda) */
         .contato-buttons {
             flex-direction: column;
-            align-items: center;
-        }
-        .contato-btn {
             width: 100%;
-            max-width: 300px;
-            justify-content: center;
         }
-        .sobre-hero {
-            padding: 80px 0 60px;
+
+        .contato-btn {
+            width: 100%; /* Botão ocupa largura total */
+            margin-bottom: 10px;
         }
-        .sobre-section {
-            margin: 80px 0;
+
+        .contato-section {
+            padding: 40px 20px;
         }
     }
 
-    @media (max-width: 480px) {
-        .hero-content h1 {
-            font-size: 2rem;
+    @media (max-width: 600px) {
+        .team-grid { grid-template-columns: 1fr; }
+        .stats-grid { grid-template-columns: 1fr; gap: 30px; }
+        
+        .stat-number { font-size: 3rem; }
+        
+        .container-limit {
+            padding: 0 15px; /* Garante que nada cole 100% na borda */
         }
-        .hero-subtitle {
-            font-size: 1rem;
-        }
-        .stat-number {
-            font-size: 2.5rem;
-        }
-        .section-header h2 {
-            font-size: 1.8rem;
-        }
-        .historia-storytelling {
-            padding: 30px 20px;
-        }
-        .diferencial-card, .pilar-card, .membro-card {
-            padding: 30px 20px;
-        }
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 </style>
 
-<div class="sobre-container">
-    <section class="sobre-hero">
-        <div class="hero-content">
-            <h1>Sobre a Gamechip</h1>
-            <p class="hero-subtitle">
-                Um legado de família, transformando o sonho do fliperama em uma ponte digital para o universo gamer.
-            </p>
-            <div class="hero-stats">
-                <div class="stat">
-                    <span class="stat-number">10K+</span>
-                    <span class="stat-label">Gamers Conectados</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-number">20+</span>
-                    <span class="stat-label">Plataformas Suportadas</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-number">3 Min</span>
-                    <span class="stat-label">Tempo Médio de Entrega</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="sobre-section">
-        <div class="section-header">
-            <h2>De um Sonho Antigo a um Legado Gamer Moderno</h2>
-            <p>A Gamechip não é só uma loja. É a concretização de uma paixão de família que atravessou gerações.</p>
-        </div>
+<section class="about-hero">
+    <div class="hero-glow-bg"></div>
+    <div class="container-limit">
+        <span class="hero-badge">Since 2025</span>
+        <h1 class="hero-title">O Sonho que Virou <span>Legado</span></h1>
         
-        <div class="historia-storytelling">
-            <p>Tudo começou com a paixão do meu pai pelo universo dos jogos. O sonho dele era ter sua própria lan house, um espaço onde a comunidade gamer pudesse se reunir e se divertir—um sonho que, com o tempo, ficou apenas na memória.</p>
-            
-            <blockquote>
-                Aquele sonho de juventude, forjado na nostalgia do fliperama, acabou se tornando a inspiração para reescrevermos essa história.
-            </blockquote>
-            
-            <p>Decidi resgatar essa paixão e adaptá-la para o mundo de hoje. Assim nasceu a <strong>Gamechip</strong>: uma plataforma online moderna, ágil e focada em conectar jogadores aos seus conteúdos favoritos. De Game Pass e Gift Cards a contas premium e recargas mobile, oferecemos tudo o que o gamer precisa.</p>
-    
-            <h3>A Gamechip: Um Legado Vivo</h3>
-    
-            <p>Somos mais do que um e-commerce; somos o elo entre a nostalgia do passado e a conveniência do futuro. Cada transação e cada cliente satisfeito é a prova de que a visão do meu pai está mais viva do que nunca. Nossa missão é ser a ponte digital, oferecendo uma plataforma intuitiva, segura e com atendimento premium.</p>
-    
-            <p class="legado-final">
-                Na Gamechip, vendemos mais que produtos...<br>
-                Nós entregamos Paixão, Conexão e a Continuação de um Sonho.
-            </p>
+        <div class="story-card">
+            <div class="story-text">
+                <p>
+                    A <strong>Gamechip</strong> nasceu de um sonho antigo: o pai de um de nossos sócios queria abrir uma lan house, um espaço para reunir gamers e celebrar a paixão pelos jogos. Esse sonho ficou na memória, mas se tornou inspiração.
+                </p>
+                <br>
+                <p>
+                    Resgatamos essa ideia e a trouxemos para o presente, criando a Gamechip, uma plataforma online moderna e ágil que conecta jogadores aos seus conteúdos favoritos. Oferecemos <strong>Game Pass, gift cards, contas premium e recargas mobile</strong>, tudo em um só lugar.
+                </p>
+                <br>
+                <p>
+                    Mais do que um e-commerce, somos a ponte entre a nostalgia do passado e a conveniência do futuro, oferecendo uma experiência intuitiva, segura e com atendimento premium.
+                </p>
+            </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <section class="sobre-section">
-        <div class="section-header">
-            <h2>Nossos Diferenciais Gamers</h2>
-            <p>Vantagens exclusivas para levar seu jogo ao próximo nível</p>
-        </div>
-        
-        <div class="diferenciais-grid">
-            <div class="diferencial-card">
-                <div class="diferencial-icon">⚡</div>
-                <h4>Entrega Imediata (24/7)</h4>
-                <p>Receba seu Game Pass, Gift Card ou Recarga instantaneamente, a qualquer hora do dia ou da noite.</p>
-            </div>
-            
-            <div class="diferencial-card">
-                <div class="diferencial-icon">🛡️</div>
-                <h4>Segurança e Confiança</h4>
-                <p>Todas as chaves e códigos são 100% autênticos e verificados, garantindo a sua tranquilidade.</p>
-            </div>
-            
-            <div class="diferencial-card">
-                <div class="diferencial-icon">🎮</div>
-                <h4>Variedade de Jogos</h4>
-                <p>Temos produtos para PC, consoles (Xbox, PlayStation) e os principais jogos mobile do mercado.</p>
-            </div>
-            
-            <div class="diferencial-card">
-                <div class="diferencial-icon">💬</div>
-                <h4>Suporte Especializado</h4>
-                <p>Equipe de suporte feita por gamers, para gamers, pronta para te ajudar rapidamente.</p>
-            </div>
-        </div>
-    </section>
+<div class="full-width-breakout banner-parallax-container" id="parallaxBanner">
+    <img src="{{ url_for('static', filename='banners/bannersobre.jpeg') }}" alt="Universo Gamechip" class="banner-img">
+    <div class="banner-overlay"></div>
+</div>
 
-    <section class="sobre-section">
-        <div class="section-header">
-            <h2>Nossos Pilares</h2>
-            <p>O compromisso que transforma um sonho em realidade para a comunidade gamer</p>
+<div class="container-limit stats-section" id="statsSection">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-number" data-target="10000">0</span>
+            <span class="stat-label">Gamers Conectados</span>
         </div>
-        
-        <div class="pilares-grid">
-            <div class="pilar-card">
-                <div class="pilar-icon">🎯</div>
-                <h3>Missão</h3>
-                <p>Ser a ponte mais rápida, segura e intuitiva entre o jogador e a diversão, garantindo acesso facilitado aos melhores conteúdos e créditos do universo gamer.</p>
-            </div>
-            
-            <div class="pilar-card">
-                <div class="pilar-icon">👁️</div>
-                <h3>Visão</h3>
-                <p>Transformar a Gamechip na plataforma de recargas e gift cards preferida dos gamers brasileiros, consolidando nosso legado de confiança, agilidade e paixão pelos jogos.</p>
-            </div>
-            
-            <div class="pilar-card">
-                <div class="pilar-icon">💖</div>
-                <h3>Valores</h3>
-                <ul class="valores-list">
-                    <li>Paixão por Jogos (Game DNA)</li>
-                    <li>Agilidade e Entrega Imediata</li>
-                    <li>Transparência e Confiança</li>
-                    <li>Legado e Atendimento Humanizado</li>
-                    <li>Inovação Digital</li>
-                </ul>
-            </div>
+        <div class="stat-card">
+            <span class="stat-number" data-target="25">0</span>
+            <span class="stat-label">Plataformas</span>
         </div>
-    </section>
-    
-    <section class="sobre-section">
-        <div class="section-header">
-            <h2>Conheça a Equipe</h2>
-            <p>Pessoas apaixonadas que tornaram o sonho do fliperama uma realidade digital.</p>
+        <div class="stat-card">
+            <span class="stat-number" data-target="3">0</span>
+            <span class="stat-label">Min p/ Entrega</span>
         </div>
-        
-        <div class="equipe-grid">
-            <div class="membro-card">
-                <a href="https://github.com/guiarthur09" target="_blank" rel="noopener noreferrer" title="GitHub de Guilherme Silveira">
-                    <img src="/static/equipe/guilherme.png" alt="Foto de Guilherme Silveira" class="membro-foto" onerror="this.onerror=null; this.src='https://via.placeholder.com/150/0066ff/FFFFFF?text=GS'">
-                </a>
-                <span>Fundador & CEO</span>
-                <h4>Guilherme Silveira</h4>
-                <p>O visionário por trás do legado, transformando a inspiração familiar em um negócio digital.</p>
-            </div>
-            
-            <div class="membro-card">
-                <a href="https://github.com/PietroTamanini" target="_blank" rel="noopener noreferrer" title="GitHub de Pietro Tamanini">
-                    <img src="/static/equipe/pietro.png" alt="Foto de Pietro Tamanini" class="membro-foto" onerror="this.onerror=null; this.src='https://via.placeholder.com/150/ff6b35/FFFFFF?text=PT'">
-                </a>
-                <span>CTO & Tech Lead</span>
-                <h4>Pietro Tamanini</h4>
-                <p>Garante que nossa plataforma seja rápida, segura e intuitiva para todos os gamers.</p>
-            </div>
-            
-            <div class="membro-card">
-                <a href="https://github.com/caetanopetry" target="_blank" rel="noopener noreferrer" title="GitHub de Caetano Petry">
-                    <img src="/static/equipe/caetano.png" alt="Foto de Caetano Petry" class="membro-foto" onerror="this.onerror=null; this.src='https://via.placeholder.com/150/0066ff/FFFFFF?text=CP'">
-                </a>
-                <span>Gerente Administrativo</span>
-                <h4>Caetano Petry</h4>
-                <p>Lidera a parte administrativa da empresa, garantindo a prestação de contas certas.</p>
-            </div>
-            
-            <div class="membro-card">
-                <a href="https://github.com/henriquenau13" target="_blank" rel="noopener noreferrer" title="GitHub de Henrique Nau">
-                    <img src="/static/equipe/henrique.png" alt="Foto de Henrique Nau" class="membro-foto" onerror="this.onerror=null; this.src='https://via.placeholder.com/150/ff6b35/FFFFFF?text=HN'">
-                </a>
-                <span>Gerente de Suporte</span>
-                <h4>Henrique Nau</h4>
-                <p>Lidera a equipe de suporte, garantindo um atendimento humanizado e rápido.</p>
-            </div>
+    </div>
+</div>
 
-    
-            <div class="membro-card">
-                <a href="https://github.com/eduardo-047" target="_blank" rel="noopener noreferrer" title="GitHub de Eduardo Ribeiro">
-                    <img src="/static/equipe/eduardo.png" alt="Foto de Eduardo Ribeiro" class="membro-foto" onerror="this.onerror=null; this.src='https://via.placeholder.com/150/808080/FFFFFF?text=ER'">
-                </a>
-                <span>Designer UX/UI</span>
-                <h4>Eduardo Ribeiro</h4>
-                <p>Cria experiências visuais incríveis que tornam nossa plataforma intuitiva e atrativa.</p>
-            </div>
-    
-            <!-- membros da adm-->
-            <div class="membro-card">
-                <a href="#" target="_blank" rel="noopener noreferrer" title="Perfil de Isabel">
-                    <img src="/static/equipe/isabel.jpg" alt="Foto de Biisabet" class="membro-foto" onerror="this.onerror=null; this.src='https://via.placeholder.com/150/8e44ad/FFFFFF?text=BB'">
-                </a>
-                <span>Head de Marketing</span>
-                <h4>Isabel Cortez</h4>
-                <p>Responsável por conectar a Gamechip com a comunidade gamer brasileira.</p>
-            </div>
-    
-            <div class="membro-card">
-                <a href="#" target="_blank" rel="noopener noreferrer" title="Perfil de Yasmin">
-                    <img src="/static/equipe/yasmin.jpg" alt="Foto de Yasmin" class="membro-foto" onerror="this.onerror=null; this.src='https://via.placeholder.com/150/27ae60/FFFFFF?text=BS'">
-                </a>
-                <span>Analista de Comunidade</span>
-                <h4>Yasmin Santos</h4>
-                <p>Conecta-se com nossa comunidade gamer, entendendo necessidades e feedbacks.</p>
-            </div>
-    
-            <div class="membro-card">
-                <a href="#" target="_blank" rel="noopener noreferrer" title="Perfil de Arthur">
-                    <img src="/static/equipe/arthur.jpg" alt="Foto de Arthur" class="membro-foto" onerror="this.onerror=null; this.src='https://via.placeholder.com/150/e74c3c/FFFFFF?text=AH'">
-                </a>
-                <span>Especialista em Produtos</span>
-                <h4>Arthur Roberto Gomes</h4>
-                <p>Analisa e seleciona os melhores produtos e games para nossa plataforma.</p>
-            </div>
+<div class="section-divider"></div>
 
-            <div class="membro-card">
-                <a href="#" target="_blank" rel="noopener noreferrer" title="Perfil de Maia">
-                    <img src="/static/equipe/maria.jpeg" alt="Foto de Arthur" class="membro-foto" onerror="this.onerror=null; this.src='https://via.placeholder.com/150/e74c3c/FFFFFF?text=AH'">
-                </a>
-                <span>Especialista em Produtos</span>
-                <h4>Maria Eduarda Girola</h4>
-                <p>Analisa e seleciona os melhores produtos e games para nossa plataforma.</p>
+<div class="container-limit">
+    <div class="team-header">
+        <h2>Equipe Gamechip</h2>
+        <p style="color:var(--text-light); margin-top:10px;">Quem faz o jogo acontecer.</p>
+    </div>
+
+    <div class="team-grid">
+        <div class="member-card">
+            <div class="member-img-box">
+                <img src="{{ url_for('static', filename='equipe/guilherme.png') }}" onerror="this.src='https://ui-avatars.com/api/?name=Guilherme+Silveira&background=0066ff&color=fff'" class="member-img">
             </div>
+            <span class="member-role">CEO & Founder</span>
+            <h3 class="member-name">Guilherme Silveira</h3>
+            <p class="member-desc">O visionário por trás do legado, transformando a inspiração familiar em um negócio digital robusto.</p>
+            <a href="https://github.com/guiarthur09" target="_blank" class="member-link">
+                <span>Github</span> ↗
+            </a>
         </div>
-    </section>
 
+        <div class="member-card">
+            <div class="member-img-box">
+                <img src="{{ url_for('static', filename='equipe/pietro.png') }}" onerror="this.src='https://ui-avatars.com/api/?name=Pietro+Tamanini&background=ff6b35&color=fff'" class="member-img">
+            </div>
+            <span class="member-role">CTO & Tech Lead</span>
+            <h3 class="member-name">Pietro Tamanini</h3>
+            <p class="member-desc">Garante que nossa plataforma seja rápida, segura e intuitiva para todos os gamers.</p>
+            <a href="https://github.com/PietroTamanini" target="_blank" class="member-link">
+                <span>Github</span> ↗
+            </a>
+        </div>
+
+        <div class="member-card">
+            <div class="member-img-box">
+                <img src="{{ url_for('static', filename='equipe/caetano.png') }}" onerror="this.src='https://ui-avatars.com/api/?name=Caetano+Petry&background=0066ff&color=fff'" class="member-img">
+            </div>
+            <span class="member-role">Admin Lead</span>
+            <h3 class="member-name">Caetano Petry</h3>
+            <p class="member-desc">Lidera a parte administrativa da empresa, garantindo a prestação de contas exatas.</p>
+            <a href="https://github.com/caetanopetry" target="_blank" class="member-link">
+                <span>Github</span> ↗
+            </a>
+        </div>
+
+        <div class="member-card">
+            <div class="member-img-box">
+                <img src="{{ url_for('static', filename='equipe/henrique.png') }}" onerror="this.src='https://ui-avatars.com/api/?name=Henrique+Nau&background=ff6b35&color=fff'" class="member-img">
+            </div>
+            <span class="member-role">Support Lead</span>
+            <h3 class="member-name">Henrique Nau</h3>
+            <p class="member-desc">Lidera a equipe de suporte, garantindo um atendimento humanizado e rápido.</p>
+            <a href="https://github.com/henriquenau13" target="_blank" class="member-link">
+                <span>Github</span> ↗
+            </a>
+        </div>
+
+        <div class="member-card">
+            <div class="member-img-box">
+                <img src="{{ url_for('static', filename='equipe/eduardo.png') }}" onerror="this.src='https://ui-avatars.com/api/?name=Eduardo+Ribeiro&background=0066ff&color=fff'" class="member-img">
+            </div>
+            <span class="member-role">UX/UI Design</span>
+            <h3 class="member-name">Eduardo Ribeiro</h3>
+            <p class="member-desc">Cria experiências visuais incríveis que tornam nossa plataforma intuitiva e atrativa.</p>
+            <a href="https://github.com/eduardo-047" target="_blank" class="member-link">
+                <span>Github</span> ↗
+            </a>
+        </div>
+
+        <div class="member-card">
+            <div class="member-img-box">
+                <img src="{{ url_for('static', filename='equipe/isabel.jpg') }}" onerror="this.src='https://ui-avatars.com/api/?name=Isabel+Cortez&background=8e44ad&color=fff'" class="member-img">
+            </div>
+            <span class="member-role">Head de Marketing</span>
+            <h3 class="member-name">Isabel Cortez</h3>
+            <p class="member-desc">Responsável por conectar a Gamechip com a comunidade gamer brasileira através de estratégias criativas.</p>
+        </div>
+
+        <div class="member-card">
+            <div class="member-img-box">
+                <img src="{{ url_for('static', filename='equipe/yasmin.jpg') }}" onerror="this.src='https://ui-avatars.com/api/?name=Yasmin+Santos&background=27ae60&color=fff'" class="member-img">
+            </div>
+            <span class="member-role">Analista Comunidade</span>
+            <h3 class="member-name">Yasmin Santos</h3>
+            <p class="member-desc">Conecta-se diariamente com nossa comunidade gamer, entendendo necessidades e feedbacks.</p>
+        </div>
+
+        <div class="member-card">
+            <div class="member-img-box">
+                <img src="{{ url_for('static', filename='equipe/arthur.jpg') }}" onerror="this.src='https://ui-avatars.com/api/?name=Arthur+Gomes&background=e74c3c&color=fff'" class="member-img">
+            </div>
+            <span class="member-role">Product Specialist</span>
+            <h3 class="member-name">Arthur Gomes</h3>
+            <p class="member-desc">Analisa e seleciona os melhores produtos e games para manter nosso catálogo sempre atualizado.</p>
+        </div>
+
+        <div class="member-card">
+            <div class="member-img-box">
+                <img src="{{ url_for('static', filename='equipe/maria.jpeg') }}" onerror="this.src='https://ui-avatars.com/api/?name=Maria+Eduarda&background=e74c3c&color=fff'" class="member-img">
+            </div>
+            <span class="member-role">Product Specialist</span>
+            <h3 class="member-name">Maria Eduarda</h3>
+            <p class="member-desc">Especialista em identificar tendências e garantir que os lançamentos cheguem primeiro aqui.</p>
+        </div>
+    </div>
+</div>
+
+<div class="container-limit">
     <section class="contato-section">
-        <h3>📧 Pronto para Jogar?</h3>
-        <p>Entre em contato com nossa equipe de suporte gamer!</p>
+        <h2 style="font-size: 2.5rem; margin-bottom: 15px; color: var(--text);">Pronto para o Jogo?</h2>
+        <p style="color: var(--text-light); max-width: 600px; margin: 0 auto;">
+            Nossa equipe está pronta para te atender. Entre em contato pelos canais oficiais.
+        </p>
+        
         <div class="contato-buttons">
-            <a href="mailto:contato@gamechip.com.br" class="contato-btn">
-                📩 E-mail: contatogamechip@ghcp.com.br
+            <a href="mailto:contatogamechip@ghcp.com.br" class="contato-btn">
+                📩 Enviar E-mail
             </a>
             <a href="https://wa.me/47992913723" class="contato-btn secondary">
-                💬 WhatsApp: (47) 99291-3723
+                💬 WhatsApp (47) 99291-3723
             </a>
         </div>
     </section>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Efeito Parallax
+        const bannerImg = document.querySelector('.banner-img');
+        // Só ativa parallax em telas maiores para economizar bateria e processamento no mobile
+        if(bannerImg && window.innerWidth > 768) {
+            window.addEventListener('scroll', () => {
+                const scrollY = window.scrollY;
+                const bannerOffset = document.getElementById('parallaxBanner').offsetTop;
+                if (scrollY < bannerOffset + 600) {
+                    bannerImg.style.transform = `translateY(${ (scrollY - bannerOffset) * 0.15 - 15 }%)`;
+                }
+            });
+        }
+
+        // Contador de Estatísticas
+        const statsSection = document.getElementById('statsSection');
+        let counted = false;
+
+        const startCounting = (entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !counted) {
+                    const counters = document.querySelectorAll('.stat-number');
+                    counters.forEach(counter => {
+                        const target = +counter.getAttribute('data-target');
+                        const duration = 2000; 
+                        const increment = target / (duration / 16); 
+                        
+                        let current = 0;
+                        const updateCounter = () => {
+                            current += increment;
+                            if (current < target) {
+                                let display = Math.ceil(current);
+                                if(target > 1000) display = display + "+";
+                                counter.innerText = display;
+                                requestAnimationFrame(updateCounter);
+                            } else {
+                                let suffix = target === 3 ? ' Min' : (target > 1000 ? 'K+' : '+');
+                                counter.innerText = target + suffix;
+                            }
+                        };
+                        updateCounter();
+                    });
+                    counted = true;
+                    observer.unobserve(statsSection);
+                }
+            });
+        };
+
+        const observer = new IntersectionObserver(startCounting, { threshold: 0.5 });
+        if(statsSection) observer.observe(statsSection);
+    });
+</script>
+
 {% endblock %}

@@ -1,0 +1,136 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Gerenciar Vagas{% endblock %}
+
+{% block page_title %}📋 Gerenciar Vagas{% endblock %}
+
+{% block content %}
+<div class="table-header">
+    <h3>Lista de Vagas</h3>
+    <div class="table-actions">
+        <a href="{{ url_for('admin_concorrentes') }}" class="btn btn-primary">
+            ← Voltar para Candidatos
+        </a>
+    </div>
+</div>
+
+<div class="data-table">
+    <table>
+        <thead>
+            <tr>
+                <th>Título</th>
+                <th>Tipo</th>
+                <th>Status</th>
+                <th>Publicação</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vaga in vagas %}
+            <tr>
+                <td>
+                    <strong>{{ vaga.titulo }}</strong>
+                    <br>
+                    <small style="color: var(--text-light);">{{ vaga.slug }}</small>
+                </td>
+                <td>
+                    <span style="
+                        background: var(--primary-light);
+                        color: white;
+                        padding: 3px 10px;
+                        border-radius: 4px;
+                        font-size: 0.9rem;
+                    ">
+                        {{ vaga.tipo }}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge 
+                        {% if vaga.status == 'aberta' %}badge-success
+                        {% elif vaga.status == 'pausada' %}badge-warning
+                        {% elif vaga.status == 'encerrada' %}badge-danger
+                        {% else %}badge-info{% endif %}">
+                        {{ vaga.status|title }}
+                    </span>
+                </td>
+                <td>
+                    {{ vaga.data_publicacao.strftime('%d/%m/%Y') if vaga.data_publicacao else 'N/A' }}
+                </td>
+                <td>
+                    <div style="display: flex; gap: 8px;">
+                        <a href="/vaga/{{ vaga.slug }}" 
+                           target="_blank"
+                           class="btn btn-sm btn-info" title="Ver no site">
+                            👁️ Ver
+                        </a>
+                        <a href="#" 
+                           class="btn btn-sm btn-warning" title="Editar" onclick="alert('Funcionalidade em desenvolvimento')">
+                            ✏️
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-light);">
+                    📝 Nenhuma vaga cadastrada ainda.
+                    <br>
+                    <small>As vagas são gerenciadas diretamente no banco de dados.</small>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div style="margin-top: 30px; background: var(--glass); padding: 20px; border-radius: var(--radius);">
+    <h3 style="color: var(--primary); margin-bottom: 15px;">💡 Informações</h3>
+    <p style="color: var(--text); line-height: 1.6;">
+        As vagas são gerenciadas diretamente no banco de dados (tabela <code>vagas</code>).<br>
+        Para adicionar ou editar vagas, execute os comandos SQL diretamente no MySQL Workbench.
+    </p>
+    
+    <h4 style="color: var(--text); margin-top: 20px; margin-bottom: 10px;">SQL de exemplo:</h4>
+    <pre style="
+        background: #1e1e1e; 
+        color: #d4d4d4; 
+        padding: 15px; 
+        border-radius: 6px; 
+        overflow-x: auto;
+        font-size: 0.9rem;
+        border-left: 4px solid var(--primary);
+    ">
+-- Adicionar nova vaga
+INSERT INTO vagas (titulo, slug, descricao, requisitos, tipo, status) 
+VALUES (
+    'Nome da Vaga',
+    'slug-da-vaga',
+    '&lt;h3&gt;Descrição&lt;/h3&gt;&lt;p&gt;Conteúdo em HTML...&lt;/p&gt;',
+    '&lt;h3&gt;Requisitos&lt;/h3&gt;&lt;ul&gt;&lt;li&gt;Item 1&lt;/li&gt;&lt;/ul&gt;',
+    'CLT',
+    'aberta'
+);
+
+-- Atualizar status
+UPDATE vagas SET status = 'pausada' WHERE id_vaga = 1;
+
+-- Listar vagas
+SELECT * FROM vagas ORDER BY data_publicacao DESC;
+    </pre>
+</div>
+
+<style>
+    .badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .badge-success { background: var(--success); color: white; }
+    .badge-warning { background: var(--warning); color: white; }
+    .badge-danger { background: var(--danger); color: white; }
+    .badge-info { background: var(--info); color: white; }
+</style>
+{% endblock %}

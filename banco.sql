@@ -1,32 +1,76 @@
-create database loja_informatica;
+-- ==============================================================================
+-- 1. CONFIGURAÇÃO INICIAL
+-- ==============================================================================
+CREATE DATABASE IF NOT EXISTS loja_informatica;
 USE loja_informatica;
 
--- Remover tabelas existentes (em ordem correta para evitar problemas de FK)
+-- ==============================================================================
+-- 2. REMOÇÃO DE OBJETOS EXISTENTES (ORDEM REVERSA PARA FOREIGN KEYS)
+-- ==============================================================================
+
+-- Remover TRIGGERS (para permitir alterações nas tabelas)
+DROP TRIGGER IF EXISTS after_cliente_senha_update;
+DROP TRIGGER IF EXISTS after_pedido_insert;
+DROP TRIGGER IF EXISTS after_pedido_cancel;
+DROP TRIGGER IF EXISTS after_funcionario_login;
+
+-- Remover STORED PROCEDURES
+DROP PROCEDURE IF EXISTS sp_estatisticas_vendas;
+DROP PROCEDURE IF EXISTS sp_aumento_preco_categoria;
+
+-- Remover FUNCTIONS
+DROP FUNCTION IF EXISTS fn_calcular_idade;
+DROP FUNCTION IF EXISTS fn_verificar_estoque;
+
+-- Remover VIEWS
+DROP VIEW IF EXISTS view_vendas;
+DROP VIEW IF EXISTS view_produtos_mais_vendidos;
+DROP VIEW IF EXISTS view_clientes_ativos;
+DROP VIEW IF EXISTS view_estoque_baixo;
+DROP VIEW IF EXISTS view_relatorios_mensais;
+DROP VIEW IF EXISTS view_estoque_critico;
+
+-- Remover tabelas (da dependente para a principal)
 DROP TABLE IF EXISTS produtos_empresa;
-DROP TABLE IF EXISTS combos;
-DROP TABLE IF EXISTS combos_produto;
-DROP TABLE IF EXISTS combo;
-DROP TABLE IF EXISTS combo_produto;
-DROP TABLE IF EXISTS produtos_empresa;
+DROP TABLE IF EXISTS seguidores;
+DROP TABLE IF EXISTS logs_sistema;
 DROP TABLE IF EXISTS avaliacoes_empresas;
+DROP TABLE IF EXISTS avaliacoes;
+DROP TABLE IF EXISTS ofertas;
+DROP TABLE IF EXISTS cupons;
+DROP TABLE IF EXISTS historico_senhas;
+DROP TABLE IF EXISTS carrinho_abandonado;
+DROP TABLE IF EXISTS preferencias;
 DROP TABLE IF EXISTS itens_pedido;
 DROP TABLE IF EXISTS pedidos;
-DROP TABLE IF EXISTS avaliacoes;
-DROP TABLE IF EXISTS preferencias;
 DROP TABLE IF EXISTS enderecos;
-DROP TABLE IF EXISTS carrinho_abandonado;
-DROP TABLE IF EXISTS historico_senhas;
-DROP TABLE IF EXISTS clientes;
-DROP TABLE IF EXISTS logs_sistema;
-DROP TABLE IF EXISTS diagnosticos;
-DROP TABLE IF EXISTS funcionarios;
-DROP TABLE IF EXISTS cupons;
-DROP TABLE IF EXISTS ofertas;
-DROP TABLE IF EXISTS pagamentos;
-DROP TABLE IF EXISTS empresas;
-DROP TABLE IF EXISTS produto;
 DROP TABLE IF EXISTS concorrentes;
+DROP TABLE IF EXISTS vagas; -- Tabela de vagas
+DROP TABLE IF EXISTS produto;
+DROP TABLE IF EXISTS clientes;
+DROP TABLE IF EXISTS funcionarios;
+DROP TABLE IF EXISTS empresas;
+DROP TABLE IF EXISTS diagnosticos;
 DROP TABLE IF EXISTS suporte;
+DROP TABLE IF EXISTS pagamentos;
+
+-- ==============================================================================
+-- 3. CRIAÇÃO DE TABELAS
+-- ==============================================================================
+
+-- Tabela funcionarios (Criada cedo para FKs em logs_sistema, diagnosticos)
+CREATE TABLE funcionarios (
+    id_funcionario INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    senha VARCHAR(255) NOT NULL,
+    cargo ENUM('admin', 'gerente', 'vendedor', 'suporte') DEFAULT 'vendedor',
+    ativo BOOLEAN DEFAULT TRUE,
+    data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ultimo_login TIMESTAMP NULL,
+    INDEX idx_email (email),
+    INDEX idx_cargo (cargo)
+);
 
 -- Tabela produto
 CREATE TABLE produto (
@@ -95,28 +139,25 @@ CREATE TABLE concorrentes (
     nome VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
     telefone VARCHAR(20),
+    arquivo_pdf VARCHAR(255), -- Adicionada aqui diretamente para evitar ALTER TABLE
+    linkedin_url VARCHAR(500), -- Adicionada aqui diretamente
     empresa VARCHAR(255) NOT NULL,
+    vaga VARCHAR(255), -- Adicionada aqui diretamente
     cargo VARCHAR(100),
     interesse VARCHAR(100),
     mensagem TEXT,
     status ENUM('pendente', 'contatado', 'em_negociacao', 'contratado', 'recusado') DEFAULT 'pendente',
     observacoes TEXT,
     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_candidatura TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Adicionada aqui diretamente
     INDEX idx_nome (nome),
     INDEX idx_empresa (empresa),
     INDEX idx_status (status),
     INDEX idx_data_cadastro (data_cadastro)
 );
 
--- Adicione estas colunas à tabela existente:
-ALTER TABLE concorrentes
-ADD COLUMN vaga VARCHAR(255) AFTER empresa,
-ADD COLUMN arquivo_pdf VARCHAR(255) AFTER telefone,
-ADD COLUMN linkedin_url VARCHAR(500) AFTER arquivo_pdf,
-ADD COLUMN data_candidatura TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER data_cadastro;
-
--- Crie uma tabela para as vagas (opcional, mas útil):
-CREATE TABLE IF NOT EXISTS vagas (
+-- Tabela vagas (Estrutura completa para gerenciamento)
+CREATE TABLE vagas (
     id_vaga INT AUTO_INCREMENT PRIMARY KEY,
     titulo VARCHAR(255) NOT NULL,
     slug VARCHAR(100) UNIQUE NOT NULL,
@@ -130,20 +171,6 @@ CREATE TABLE IF NOT EXISTS vagas (
     INDEX idx_status (status),
     INDEX idx_tipo (tipo)
 );
-
--- Insira as vagas que você listou:
-INSERT INTO vagas (titulo, slug, descricao, requisitos, tipo) VALUES
-('Estagiário(a) de Marketing Digital', 'estagiario-marketing-digital', 'Descrição detalhada da vaga de Estagiário de Marketing Digital...', 'Requisitos para Estagiário de Marketing Digital...', 'Estágio'),
-('Designer de Mídias Digitais (Freelancer/Estágio)', 'designer-midias-digitais', 'Descrição detalhada da vaga...', 'Requisitos para Designer...', 'Freelancer'),
-('Desenvolvedor(a) Web Front-End', 'desenvolvedor-front-end', 'Descrição detalhada da vaga...', 'Requisitos para Front-End...', 'CLT'),
-('Desenvolvedor(a) Back-End (Python/Flask)', 'desenvolvedor-back-end-python', 'Descrição detalhada da vaga...', 'Requisitos para Back-End Python...', 'CLT'),
-('Suporte ao Cliente (Produtos Digitais)', 'suporte-cliente-produtos-digitais', 'Descrição detalhada da vaga...', 'Requisitos para Suporte...', 'CLT'),
-('Analista de Produtos Digitais (Games & Gift Cards)', 'analista-produtos-digitais', 'Descrição detalhada da vaga...', 'Requisitos para Analista...', 'CLT'),
-('Gestor(a) de E-commerce', 'gestor-ecommerce', 'Descrição detalhada da vaga...', 'Requisitos para Gestor E-commerce...', 'CLT'),
-('Social Media (TikTok / Instagram)', 'social-media-tiktok-instagram', 'Descrição detalhada da vaga...', 'Requisitos para Social Media...', 'CLT'),
-('Editor(a) de Vídeo (Shorts, Reels, TikTok)', 'editor-video-shorts-reels', 'Descrição detalhada da vaga...', 'Requisitos para Editor de Vídeo...', 'CLT'),
-('Redator(a) Publicitário(a) / Copywriter', 'redator-publicitario-copywriter', 'Descrição detalhada da vaga...', 'Requisitos para Redator...', 'CLT');
-
 
 -- Tabela enderecos
 CREATE TABLE enderecos (
@@ -197,16 +224,13 @@ CREATE TABLE itens_pedido (
     INDEX idx_produto (id_produto)
 );
 
+-- Tabela seguidores
 CREATE TABLE seguidores (
     id_seguidor INT AUTO_INCREMENT PRIMARY KEY,
     id_cliente INT NOT NULL,
     id_empresa INT NOT NULL,
     data_seguimento DATETIME DEFAULT CURRENT_TIMESTAMP,
-
-    -- Garante que um cliente siga uma empresa apenas uma vez
     UNIQUE KEY uk_cliente_empresa (id_cliente, id_empresa),
-
-    -- Chaves Estrangeiras para integridade
     FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente) ON DELETE CASCADE,
     FOREIGN KEY (id_empresa) REFERENCES empresas(id_empresa) ON DELETE CASCADE
 );
@@ -317,22 +341,6 @@ CREATE TABLE ofertas (
     INDEX idx_validade (validade)
 );
 
--- Tabela funcionarios
-CREATE TABLE funcionarios (
-    id_funcionario INT PRIMARY KEY AUTO_INCREMENT,
-    nome VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    senha VARCHAR(255) NOT NULL,
-    cargo ENUM('admin', 'gerente', 'vendedor', 'suporte') DEFAULT 'vendedor',
-    ativo BOOLEAN DEFAULT TRUE,
-    data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ultimo_login TIMESTAMP NULL,
-    INDEX idx_email (email),
-    INDEX idx_cargo (cargo)
-);
-
-
-
 -- Tabela logs_sistema
 CREATE TABLE logs_sistema (
     id_log INT PRIMARY KEY AUTO_INCREMENT,
@@ -360,7 +368,24 @@ CREATE TABLE suporte (
     INDEX idx_status (status)
 );
 
--- Produtos de empresas vendedoras
+-- Tabela diagnosticos
+CREATE TABLE diagnosticos (
+    id_diagnostico INT PRIMARY KEY AUTO_INCREMENT,
+    nome_cliente VARCHAR(255) NOT NULL,
+    telefone VARCHAR(20),
+    problema TEXT NOT NULL,
+    data_entrada TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('recebido', 'em_analise', 'pronto', 'concluido') DEFAULT 'recebido',
+    tecnico_responsavel INT,
+    relatorio_final TEXT,
+    pecas_defeito TEXT,
+    orcamento DECIMAL(10, 2) DEFAULT 0,
+    observacoes TEXT,
+    data_conclusao TIMESTAMP NULL,
+    FOREIGN KEY (tecnico_responsavel) REFERENCES funcionarios(id_funcionario) ON DELETE SET NULL
+);
+
+-- Tabela produtos_empresa
 CREATE TABLE produtos_empresa (
     id_produto_empresa INT PRIMARY KEY AUTO_INCREMENT,
     id_empresa INT NOT NULL,
@@ -374,9 +399,7 @@ CREATE TABLE produtos_empresa (
     UNIQUE KEY unique_produto_empresa (id_empresa, id_produto)
 );
 
-
-
--- PRO PIX FUNCIONAR
+-- Tabela pagamentos (PRO PIX FUNCIONAR)
 CREATE TABLE pagamentos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100),
@@ -387,9 +410,31 @@ CREATE TABLE pagamentos (
     data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- VIEWS
 
-DROP VIEW IF EXISTS view_vendas;
+ALTER TABLE clientes 
+ADD COLUMN ultima_alteracao_senha TIMESTAMP NULL DEFAULT NULL AFTER senha;
+
+-- ==============================================================================
+-- 4. INSERÇÃO DE DADOS INICIAIS (VAGAS)
+-- ==============================================================================
+
+INSERT INTO vagas (titulo, slug, descricao, requisitos, tipo) VALUES
+('Estagiário(a) de Marketing Digital', 'estagiario-marketing-digital', 'Descrição detalhada da vaga de Estagiário de Marketing Digital...', 'Requisitos para Estagiário de Marketing Digital...', 'Estágio'),
+('Designer de Mídias Digitais (Freelancer/Estágio)', 'designer-midias-digitais', 'Descrição detalhada da vaga...', 'Requisitos para Designer...', 'Freelancer'),
+('Desenvolvedor(a) Web Front-End', 'desenvolvedor-front-end', 'Descrição detalhada da vaga...', 'Requisitos para Front-End...', 'CLT'),
+('Desenvolvedor(a) Back-End (Python/Flask)', 'desenvolvedor-back-end-python', 'Descrição detalhada da vaga...', 'Requisitos para Back-End Python...', 'CLT'),
+('Suporte ao Cliente (Produtos Digitais)', 'suporte-cliente-produtos-digitais', 'Descrição detalhada da vaga...', 'Requisitos para Suporte...', 'CLT'),
+('Analista de Produtos Digitais (Games & Gift Cards)', 'analista-produtos-digitais', 'Descrição detalhada da vaga...', 'Requisitos para Analista...', 'CLT'),
+('Gestor(a) de E-commerce', 'gestor-ecommerce', 'Descrição detalhada da vaga...', 'Requisitos para Gestor E-commerce...', 'CLT'),
+('Social Media (TikTok / Instagram)', 'social-media-tiktok-instagram', 'Descrição detalhada da vaga...', 'Requisitos para Social Media...', 'CLT'),
+('Editor(a) de Vídeo (Shorts, Reels, TikTok)', 'editor-video-shorts-reels', 'Descrição detalhada da vaga...', 'Requisitos para Editor de Vídeo...', 'CLT'),
+('Redator(a) Publicitário(a) / Copywriter', 'redator-publicitario-copywriter', 'Descrição detalhada da vaga...', 'Requisitos para Redator...', 'CLT');
+
+
+-- ==============================================================================
+-- 5. CRIAÇÃO DE VIEWS
+-- ==============================================================================
+
 CREATE VIEW view_vendas AS
 SELECT 
     p.id_pedido,
@@ -403,7 +448,6 @@ JOIN clientes c ON p.id_cliente = c.id_cliente
 LEFT JOIN itens_pedido ip ON p.id_pedido = ip.id_pedido
 GROUP BY p.id_pedido;
 
-DROP VIEW IF EXISTS view_produtos_mais_vendidos;
 CREATE VIEW view_produtos_mais_vendidos AS
 SELECT 
     p.id_produto,
@@ -418,7 +462,6 @@ LEFT JOIN pedidos ped ON ip.id_pedido = ped.id_pedido AND ped.status != 'cancela
 GROUP BY p.id_produto
 ORDER BY total_vendido DESC;
 
-DROP VIEW IF EXISTS view_clientes_ativos;
 CREATE VIEW view_clientes_ativos AS
 SELECT 
     c.id_cliente,
@@ -432,7 +475,6 @@ LEFT JOIN pedidos p ON c.id_cliente = p.id_cliente AND p.status != 'cancelado'
 GROUP BY c.id_cliente
 ORDER BY total_gasto DESC;
 
-DROP VIEW IF EXISTS view_estoque_baixo;
 CREATE VIEW view_estoque_baixo AS
 SELECT 
     id_produto,
@@ -444,7 +486,6 @@ FROM produto
 WHERE estoque <= 5 AND ativo = TRUE
 ORDER BY estoque ASC;
 
-DROP VIEW IF EXISTS view_relatorios_mensais;
 CREATE VIEW view_relatorios_mensais AS
 SELECT 
     YEAR(data_pedido) as ano,
@@ -459,7 +500,6 @@ WHERE data_pedido IS NOT NULL
 GROUP BY YEAR(data_pedido), MONTH(data_pedido)
 ORDER BY ano DESC, mes DESC;
 
-DROP VIEW IF EXISTS view_estoque_critico;
 CREATE VIEW view_estoque_critico AS
 SELECT 
     p.id_produto,
@@ -478,7 +518,10 @@ WHERE p.estoque <= 10 AND p.ativo = TRUE
 GROUP BY p.id_produto
 ORDER BY p.estoque ASC;
 
--- TRIGGERS
+-- ==============================================================================
+-- 6. CRIAÇÃO DE TRIGGERS
+-- ==============================================================================
+
 DELIMITER //
 
 CREATE TRIGGER after_cliente_senha_update
@@ -524,13 +567,10 @@ END//
 
 DELIMITER ;
 
+-- ==============================================================================
+-- 7. CRIAÇÃO DE STORED PROCEDURES
+-- ==============================================================================
 
-
-
-
-
-
--- STORED PROCEDURES
 DELIMITER //
 
 CREATE PROCEDURE sp_estatisticas_vendas(IN data_inicio DATE, IN data_fim DATE)
@@ -554,7 +594,10 @@ END//
 
 DELIMITER ;
 
--- FUNCTIONS
+-- ==============================================================================
+-- 8. CRIAÇÃO DE FUNCTIONS
+-- ==============================================================================
+
 DELIMITER //
 
 CREATE FUNCTION fn_calcular_idade(data_nascimento DATE)
@@ -577,18 +620,23 @@ END//
 
 DELIMITER ;
 
--- ÍNDICES ADICIONAIS
-CREATE INDEX idx_produto_preco ON produto(preco);
-CREATE INDEX idx_produto_estoque ON produto(estoque);
-CREATE INDEX idx_pedidos_data_status ON pedidos(data_pedido, status);
-CREATE INDEX idx_clientes_data_cadastro ON clientes(data_cadastro);
-CREATE INDEX idx_itens_pedido_preco ON itens_pedido(preco_unitario);
-CREATE INDEX idx_produtos_empresa_empresa ON produtos_empresa(id_empresa);
-CREATE INDEX idx_produtos_empresa_produto ON produtos_empresa(id_produto);
+-- ==============================================================================
+-- 9. ÍNDICES ADICIONAIS (JÁ INCLUÍDOS NA CRIAÇÃO, MAS REPETIDOS AQUI)
+-- ==============================================================================
+-- Estes são redundantes, mas manteremos o seu comando para garantir a criação se a tabela existir.
+
+CREATE INDEX IF NOT EXISTS idx_produto_preco ON produto(preco);
+CREATE INDEX IF NOT EXISTS idx_produto_estoque ON produto(estoque);
+CREATE INDEX IF NOT EXISTS idx_pedidos_data_status ON pedidos(data_pedido, status);
+CREATE INDEX IF NOT EXISTS idx_clientes_data_cadastro ON clientes(data_cadastro);
+CREATE INDEX IF NOT EXISTS idx_itens_pedido_preco ON itens_pedido(preco_unitario);
+CREATE INDEX IF NOT EXISTS idx_produtos_empresa_empresa ON produtos_empresa(id_empresa);
+CREATE INDEX IF NOT EXISTS idx_produtos_empresa_produto ON produtos_empresa(id_produto);
 
 
+-- ==============================================================================
+-- 10. CONFIRMAÇÃO
+-- ==============================================================================
 
-
-
--- CONFIRMAÇÃO
-SELECT '✅ Banco de dados limpo criado com sucesso!' as Status;
+SELECT '✅ Banco de dados limpo criado e corrigido com sucesso!' as Status;
+                                

@@ -3,86 +3,452 @@
 {% block title %}Minha Conta{% endblock %}
 
 {% block conteudo %}
+<style>
+    /* ==========================================================================
+       CSS ESPECÍFICO MINHA CONTA (PREMIUM & RESPONSIVO)
+       ========================================================================== */
+    
+    /* Container Principal */
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    /* Header da Página */
+    .page-header {
+        margin-bottom: 30px;
+        background: var(--glass);
+        padding: 30px;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .header-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        color: white;
+        box-shadow: 0 10px 20px rgba(var(--brilho-rgb), 0.3);
+        flex-shrink: 0;
+    }
+
+    .header-content h1 {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 5px;
+        background: linear-gradient(90deg, var(--text) 0%, var(--primary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* GRID PRINCIPAL (Layout Desktop) */
+    .account-grid {
+        display: grid;
+        grid-template-columns: 320px 1fr; /* Coluna fixa menu + Conteúdo fluído */
+        gap: 30px;
+        align-items: start;
+    }
+
+    /* --- LADO ESQUERDO (PERFIL E MENU) --- */
+    .account-left {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        position: sticky;
+        top: 100px; /* Segue o scroll no desktop */
+        z-index: 10;
+    }
+
+    /* Cartão de Perfil */
+    .profile-card {
+        background: var(--glass);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 30px;
+        text-align: center;
+        box-shadow: var(--shadow);
+    }
+
+    .avatar {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        border-radius: 50%;
+        margin: 0 auto 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        font-weight: 800;
+        color: white;
+        border: 4px solid rgba(255,255,255,0.1);
+        box-shadow: 0 0 20px rgba(var(--brilho-rgb), 0.4);
+    }
+
+    .profile-info h2 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+        color: var(--text);
+    }
+
+    .user-email {
+        color: var(--text-light);
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+        word-break: break-all;
+    }
+
+    .badge-vip {
+        background: linear-gradient(135deg, #ffd700, #ffaa00);
+        color: #000;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 800;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+    }
+
+    .profile-stats {
+        display: flex;
+        justify-content: space-around;
+        padding-top: 20px;
+        border-top: 1px solid var(--border);
+        margin-top: 20px;
+    }
+
+    .stat-item { text-align: center; }
+    .stat-number { display: block; font-weight: 800; font-size: 1.1rem; color: var(--primary); }
+    .stat-label { font-size: 0.75rem; color: var(--text-light); text-transform: uppercase; }
+
+    /* Menu de Navegação */
+    .sidebar-menu {
+        background: var(--glass);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 15px;
+        box-shadow: var(--shadow-sm);
+        overflow: hidden; /* Importante para bordas arredondadas */
+    }
+
+    .account-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 12px 20px;
+        border-radius: 12px;
+        text-decoration: none;
+        color: var(--text-light);
+        font-weight: 600;
+        transition: 0.3s;
+        border: 1px solid transparent;
+        white-space: nowrap; /* Impede quebra de linha no mobile */
+    }
+
+    .nav-item:hover {
+        background: rgba(var(--brilho-rgb), 0.05);
+        color: var(--primary);
+    }
+
+    .nav-item.active {
+        background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        box-shadow: 0 5px 15px rgba(var(--brilho-rgb), 0.3);
+    }
+
+    .nav-icon { font-size: 1.2rem; }
+
+    .sidebar-footer {
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid var(--border);
+    }
+
+    .btn-logout {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        padding: 12px;
+        border-radius: 12px;
+        background: rgba(255, 59, 48, 0.1);
+        color: #ff3b30;
+        text-decoration: none;
+        font-weight: 700;
+        transition: 0.3s;
+    }
+
+    .btn-logout:hover {
+        background: #ff3b30;
+        color: white;
+    }
+
+    /* --- LADO DIREITO (CONTEÚDO) --- */
+    .account-content {
+        min-height: 500px;
+    }
+
+    .content-section {
+        display: none;
+        animation: fadeIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .content-section.active { display: block; }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+        background: var(--glass);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: var(--shadow);
+        position: relative;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 20px;
+    }
+
+    .card-header h2 {
+        font-size: 1.5rem;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* Formulários */
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    /* Cards de Lista (Endereço, Pedido) */
+    .list-card {
+        background: var(--secondary);
+        border: 1px solid var(--border);
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 15px;
+        transition: 0.3s;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .list-card:hover {
+        border-color: var(--primary);
+        transform: translateY(-2px);
+    }
+
+    .list-info h3 { margin-bottom: 5px; color: var(--text); }
+    .list-info p { color: var(--text-light); margin: 2px 0; font-size: 0.9rem; }
+
+    .list-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    /* Badges */
+    .badge { padding: 5px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; display: inline-block;}
+    .badge-success { background: rgba(0, 208, 132, 0.15); color: #00d084; }
+    .badge-warning { background: rgba(255, 184, 0, 0.15); color: #ffb800; }
+    .badge-danger { background: rgba(255, 59, 48, 0.15); color: #ff3b30; }
+    .badge-info { background: rgba(0, 184, 212, 0.15); color: #00b8d4; }
+
+    .empty-state { text-align: center; padding: 40px; color: var(--text-light); }
+
+    /* ==========================================================================
+       RESPONSIVIDADE EXTREMA (MOBILE FIRST MINDSET)
+       ========================================================================== */
+    @media (max-width: 968px) {
+        .container {
+            padding: 15px; /* Menos padding lateral */
+        }
+
+        .header-content h1 {
+            font-size: 1.5rem;
+        }
+
+        /* 1. LAYOUT EM COLUNA ÚNICA */
+        .account-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        /* 2. HEADER MAIS COMPACTO */
+        .page-header {
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .header-icon { width: 50px; height: 50px; font-size: 24px; }
+
+        /* 3. PERFIL ADAPTADO */
+        .account-left {
+            position: static; /* Remove sticky */
+            top: auto;
+        }
+        
+        .profile-card {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            text-align: left;
+        }
+        .avatar {
+            width: 70px; height: 70px; font-size: 28px; margin: 0;
+        }
+        .profile-stats { display: none; } /* Esconde stats no card para limpar o visual */
+
+        /* 4. MENU DE NAVEGAÇÃO HORIZONTAL (ESTILO APP) */
+        .sidebar-menu {
+            position: sticky;
+            top: 70px; /* Cola abaixo da navbar */
+            z-index: 99;
+            margin: 0 -15px; /* Estoura as margens do container para ir de ponta a ponta */
+            border-radius: 0;
+            border-left: none; 
+            border-right: none;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            padding: 10px 15px;
+        }
+
+        .account-nav {
+            flex-direction: row;
+            overflow-x: auto; /* Permite scroll horizontal */
+            padding-bottom: 5px; /* Espaço para scrollbar invisível */
+            scrollbar-width: none; /* Firefox */
+        }
+        .account-nav::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
+
+        .nav-item {
+            flex-shrink: 0; /* Impede encolhimento */
+            background: var(--secondary);
+            border: 1px solid var(--border);
+            padding: 10px 16px;
+            font-size: 0.9rem;
+        }
+        
+        .sidebar-footer { display: none; } /* Botão sair já existe no topo */
+
+        /* 5. FORMULÁRIOS EMPILHADOS */
+        .form-row {
+            grid-template-columns: 1fr; /* Um campo por linha */
+            gap: 15px;
+        }
+
+        /* 6. CARDS DE LISTA VERTICALIZADOS */
+        .list-card {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        
+        .list-actions, .order-actions {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            border-top: 1px solid var(--border);
+            padding-top: 10px;
+            margin-top: 5px;
+        }
+
+        .card { padding: 20px; }
+        
+        .card-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        .card-header button, .card-header a {
+            width: 100%; /* Botões full width */
+            text-align: center;
+        }
+    }
+</style>
+
 <div class="container">
     <div class="page-header">
+        <div class="header-icon">👤</div>
         <div class="header-content">
-            <div class="header-icon">👤</div>
-            <div>
-                <h1>Minha Conta</h1>
-                <p>Gerencie suas informações pessoais e preferências</p>
-            </div>
+            <h1>Minha Conta</h1>
+            <p>Gerencie seus dados e pedidos.</p>
         </div>
     </div>
 
     <div class="account-grid">
         <div class="account-left">
             <div class="profile-card">
-                <div class="profile-header">
-                    <div class="avatar">
-                        <span>{{ usuario.nome[0].upper() if usuario.nome else 'U' }}</span>
-                    </div>
-                    <div class="profile-info">
-                        <h2>{{ usuario.nome }}</h2>
-                        <p class="user-email">{{ usuario.email }}</p>
-                        <span class="badge badge-success">Conta Ativa</span>
-                    </div>
+                <div class="avatar">
+                    <span>{{ usuario.nome[0].upper() if usuario.nome else 'U' }}</span>
                 </div>
-                
+                <div class="profile-info">
+                    <h2>{{ usuario.nome }}</h2>
+                    <p class="user-email">{{ usuario.email }}</p>
+                    <span class="badge-vip">Membro VIP</span>
+                </div>
                 <div class="profile-stats">
                     <div class="stat-item">
-                        <div class="stat-icon">📦</div>
-                        <div class="stat-info">
-                            <span class="stat-number">{{ total_pedidos or 0 }}</span>
-                            <span class="stat-label">Pedidos</span>
-                        </div>
+                        <span class="stat-number">{{ total_pedidos or 0 }}</span>
+                        <span class="stat-label">Pedidos</span>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-icon">⭐</div>
-                        <div class="stat-info">
-                            <span class="stat-number">{{ avaliacoes or 0 }}</span>
-                            <span class="stat-label">Avaliações</span>
-                        </div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-icon">💳</div>
-                        <div class="stat-info">
-                            <span class="stat-number">R$ {{ total_gasto|default('0,00') }}</span>
-                            <span class="stat-label">Total Gasto</span>
-                        </div>
+                        <span class="stat-number">R$ {{ total_gasto|default('0,00') }}</span>
+                        <span class="stat-label">Gasto</span>
                     </div>
                 </div>
             </div>
 
             <div class="sidebar-menu">
-                <h3>Navegação</h3>
                 <nav class="account-nav">
                     <a href="#dados-pessoais" class="nav-item active" data-section="dados-pessoais">
-                        <span class="nav-icon">📋</span>
-                        <span>Dados Pessoais</span>
+                        <span class="nav-icon">📋</span> <span>Dados</span>
                     </a>
                     <a href="#endereco" class="nav-item" data-section="endereco">
-                        <span class="nav-icon">📍</span>
-                        <span>Endereços</span>
-                    </a>
-                    <a href="#seguranca" class="nav-item" data-section="seguranca">
-                        <span class="nav-icon">🔒</span>
-                        <span>Segurança</span>
+                        <span class="nav-icon">📍</span> <span>Endereços</span>
                     </a>
                     <a href="#pedidos" class="nav-item" data-section="pedidos">
-                        <span class="nav-icon">📦</span>
-                        <span>Meus Pedidos</span>
+                        <span class="nav-icon">📦</span> <span>Pedidos</span>
                     </a>
-                    <a href="#preferencias" class="nav-item" data-section="preferencias">
-                        <span class="nav-icon">⚙️</span>
-                        <span>Preferências</span>
+                    <a href="#seguranca" class="nav-item" data-section="seguranca">
+                        <span class="nav-icon">🔒</span> <span>Segurança</span>
                     </a>
                 </nav>
-                
                 <div class="sidebar-footer">
-                    <a href="/logout" class="btn-logout">
-                        <span>🚪</span>
-                        <span>Sair da Conta</span>
-                    </a>
+                    <a href="/logout" class="btn-logout"><span>🚪</span> Sair da Conta</a>
                 </div>
             </div>
         </div>
@@ -92,59 +458,33 @@
             <div class="content-section active" id="dados-pessoais">
                 <div class="card">
                     <div class="card-header">
-                        <h2>📋 Dados Pessoais</h2>
-                        <button class="btn btn-sm" onclick="toggleEdit('form-dados')">
-                            <span>✏️</span> Editar
-                        </button>
+                        <h2>📋 Meus Dados</h2>
+                        <button class="btn btn-sm btn-outline" onclick="toggleEdit('form-dados')">✏️ Editar</button>
                     </div>
-                    
-                    <form id="form-dados" class="account-form" method="POST" action="/atualizar_dados">
+                    <form id="form-dados" method="POST" action="/atualizar_dados">
                         <div class="form-row">
                             <div class="form-group">
-                                <label>Nome Completo *</label>
+                                <label>Nome Completo</label>
                                 <input type="text" name="nome" class="form-control" value="{{ usuario.nome }}" readonly>
                             </div>
-                            
                             <div class="form-group">
-                                <label>CPF *</label>
+                                <label>CPF</label>
                                 <input type="text" name="cpf" class="form-control" value="{{ usuario.cpf }}" readonly>
                             </div>
                         </div>
-                        
                         <div class="form-row">
                             <div class="form-group">
-                                <label>E-mail *</label>
+                                <label>E-mail</label>
                                 <input type="email" name="email" class="form-control" value="{{ usuario.email }}" readonly>
                             </div>
-                            
                             <div class="form-group">
-                                <label>Telefone *</label>
+                                <label>Telefone</label>
                                 <input type="tel" name="telefone" class="form-control" value="{{ usuario.telefone }}" readonly>
                             </div>
                         </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Data de Nascimento</label>
-                                <input type="date" name="data_nascimento" class="form-control" value="{{ usuario.data_nascimento }}" readonly>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>Gênero</label>
-                                <select name="genero" class="form-control" disabled>
-                                    <option value="">Selecione</option>
-                                    <option value="M" {% if usuario.genero == 'M' %}selected{% endif %}>Masculino</option>
-                                    <option value="F" {% if usuario.genero == 'F' %}selected{% endif %}>Feminino</option>
-                                    <option value="O" {% if usuario.genero == 'O' %}selected{% endif %}>Outro</option>
-                                </select>
-                            </div>
-                        </div>
-                        
                         <div class="form-actions" style="display: none;">
                             <button type="button" class="btn btn-outline" onclick="cancelEdit('form-dados')">Cancelar</button>
-                            <button type="submit" class="btn btn-success">
-                                <span>💾</span> Salvar Alterações
-                            </button>
+                            <button type="submit" class="btn btn-success">Salvar Alterações</button>
                         </div>
                     </form>
                 </div>
@@ -153,55 +493,75 @@
             <div class="content-section" id="endereco">
                 <div class="card">
                     <div class="card-header">
-                        <h2>📍 Meus Endereços</h2>
-                        <button class="btn btn-sm" onclick="showModal('modalNovoEndereco')">
-                            <span>➕</span> Adicionar
-                        </button>
+                        <h2>📍 Endereços</h2>
+                        <button class="btn btn-sm" onclick="showModal('modalNovoEndereco')">➕ Novo Endereço</button>
                     </div>
                     
-                    <div class="address-list">
-                        {% if enderecos %}
-                            {% for endereco in enderecos %}
-                            <div class="address-card">
-                                <div class="address-header">
-                                    <h3>{{ endereco.tipo }}</h3>
-                                    {% if endereco.principal %}
-                                    <span class="badge badge-info">Principal</span>
-                                    {% endif %}
-                                </div>
-                                <div class="address-content">
-                                    <p><strong>{{ endereco.destinatario }}</strong></p>
-                                    <p>{{ endereco.rua }}, {{ endereco.numero }}</p>
-                                    {% if endereco.complemento %}
-                                    <p>{{ endereco.complemento }}</p>
-                                    {% endif %}
-                                    <p>{{ endereco.bairro }} - {{ endereco.cidade }}/{{ endereco.estado }}</p>
-                                    <p>CEP: {{ endereco.cep }}</p>
-                                </div>
-                                <div class="address-actions">
-                                    <form action="{{ url_for('excluir_endereco', id_endereco=endereco.id_endereco) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza?');">
-                                        <button class="btn-icon" title="Excluir">🗑️</button>
-                                    </form>
-                                    
-                                    {% if not endereco.principal %}
-                                    <form action="{{ url_for('definir_endereco_principal', id_endereco=endereco.id_endereco) }}" method="POST" style="display:inline;">
-                                        <button class="btn-icon" title="Tornar principal">⭐</button>
-                                    </form>
-                                    {% endif %}
-                                </div>
+                    {% if enderecos %}
+                        {% for endereco in enderecos %}
+                        <div class="list-card address-card">
+                            <div class="list-info">
+                                <h3>
+                                    {{ endereco.tipo }} 
+                                    {% if endereco.principal %}<span class="badge badge-info">Principal</span>{% endif %}
+                                </h3>
+                                <p><strong>{{ endereco.destinatario }}</strong></p>
+                                <p>{{ endereco.rua }}, {{ endereco.numero }}</p>
+                                <p>{{ endereco.bairro }} - {{ endereco.cidade }}/{{ endereco.estado }}</p>
+                                <p>CEP: {{ endereco.cep }}</p>
                             </div>
-                            {% endfor %}
-                        {% else %}
-                        <div class="empty-state">
-                            <div class="empty-icon">📍</div>
-                            <h3>Nenhum endereço cadastrado</h3>
-                            <p>Adicione um endereço para facilitar suas compras</p>
-                            <button class="btn" onclick="showModal('modalNovoEndereco')">
-                                <span>➕</span> Adicionar Endereço
-                            </button>
+                            <div class="list-actions">
+                                <form action="{{ url_for('excluir_endereco', id_endereco=endereco.id_endereco) }}" method="POST" onsubmit="return confirm('Excluir?')">
+                                    <button class="btn-icon" title="Excluir">🗑️</button>
+                                </form>
+                                {% if not endereco.principal %}
+                                <form action="{{ url_for('definir_endereco_principal', id_endereco=endereco.id_endereco) }}" method="POST">
+                                    <button class="btn-icon" title="Definir Principal">⭐</button>
+                                </form>
+                                {% endif %}
+                            </div>
                         </div>
-                        {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <div style="font-size:40px; margin-bottom:10px;">📍</div>
+                            <p>Nenhum endereço cadastrado.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="content-section" id="pedidos">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>📦 Pedidos Recentes</h2>
                     </div>
+                    
+                    {% if pedidos %}
+                        {% for pedido in pedidos[:5] %}
+                        <div class="list-card order-item">
+                            <div class="list-info">
+                                <h3>Pedido #{{ pedido.id_pedido }}</h3>
+                                <p>Data: {{ pedido.data_pedido.strftime('%d/%m/%Y') }}</p>
+                                <p>Status: 
+                                    <span class="badge badge-{{ 'success' if pedido.status in ['concluido','entregue'] else 'warning' }}">
+                                        {{ pedido.status|capitalize }}
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="order-actions list-actions" style="justify-content: space-between; width:100%; align-items:center;">
+                                <strong style="font-size:1.1rem; color:var(--primary);">R$ {{ "%.2f"|format(pedido.total)|replace('.', ',') }}</strong>
+                                <a href="{{ url_for('detalhes_pedido', id_pedido=pedido.id_pedido) }}" class="btn btn-sm btn-outline">Detalhes</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <div style="font-size:40px; margin-bottom:10px;">🛒</div>
+                            <h3>Você ainda não fez compras</h3>
+                            <a href="{{ url_for('listar_produtos') }}" class="btn" style="margin-top:15px;">Ir para a Loja</a>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -210,154 +570,15 @@
                     <div class="card-header">
                         <h2>🔒 Segurança</h2>
                     </div>
-                    
-                    <div class="security-section">
-                        <div class="security-item">
-                            <div class="security-info">
-                                <h3>🔑 Alterar Senha</h3>
-                                <p>Recomendamos trocar sua senha regularmente</p>
-                                <p class="text-muted">Última alteração: {{ ultima_alteracao|default('Nunca') }}</p>
-                            </div>
+                    <div class="list-card">
+                        <div class="list-info">
+                            <h3>Alterar Senha</h3>
+                            <p>Mantenha sua conta segura alterando sua senha periodicamente.</p>
+                        </div>
+                        <div class="list-actions">
                             <button class="btn btn-outline" onclick="showModal('modalSenha')">Alterar</button>
                         </div>
-                        
-                        <div class="security-item">
-                            <div class="security-info">
-                                <h3>📧 Verificação de E-mail</h3>
-                                <p>Seu e-mail está verificado</p>
-                                <span class="badge badge-success">✓ Verificado</span>
-                            </div>
-                        </div>
-                        
-                        <div class="security-item">
-                            <div class="security-info">
-                                <h3>📱 Autenticação em Dois Fatores</h3>
-                                <p>Adicione uma camada extra de segurança</p>
-                                <span class="badge badge-warning">Desativado</span>
-                            </div>
-                            <button class="btn btn-outline">Ativar (Em Breve!)</button>
-                        </div>
-                        
-                        <div class="security-item">
-                            <div class="security-info">
-                                <h3>🖥️ Dispositivos Conectados</h3>
-                                <p>Gerencie os dispositivos com acesso à sua conta</p>
-                            </div>
-                            <button class="btn btn-outline">Ver Dispositivos (Em Breve!)</button>
-                        </div>
                     </div>
-                </div>
-            </div>
-
-            <div class="content-section" id="pedidos">
-                <div class="card">
-                    <div class="card-header">
-                        <h2>📦 Histórico de Pedidos</h2>
-                        <a href="{{ url_for('meus_pedidos') }}" class="btn btn-sm">Ver Todos</a>
-                    </div>
-                    
-                    <div class="orders-list">
-                        {% if pedidos %}
-                            {% for pedido in pedidos[:5] %}
-                            <div class="order-item">
-                                <div class="order-info">
-                                    <div class="order-number">
-                                        <strong>Pedido #{{ pedido.id_pedido }}</strong>
-                                        <span class="order-date">{{ pedido.data_pedido.strftime('%d/%m/%Y') }}</span>
-                                    </div>
-                                    <div class="order-status">
-                                        {% if pedido.status == 'pendente' %}
-                                            <span class="badge badge-warning">Pendente</span>
-                                        {% elif pedido.status in ['concluido', 'entregue'] %}
-                                            <span class="badge badge-success">Concluído</span>
-                                        {% elif pedido.status == 'cancelado' %}
-                                            <span class="badge badge-danger">Cancelado</span>
-                                        {% else %}
-                                            <span class="badge badge-info">{{ pedido.status }}</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="order-details">
-                                    <p>R$ {{ "%.2f"|format(pedido.total)|replace('.', ',') }}</p>
-                                </div>
-                                <a href="{{ url_for('detalhes_pedido', id_pedido=pedido.id_pedido) }}" class="btn btn-sm btn-outline">Detalhes</a>
-                            </div>
-                            {% endfor %}
-                        {% else %}
-                        <div class="empty-state">
-                            <div class="empty-icon">📦</div>
-                            <h3>Nenhum pedido realizado</h3>
-                            <p>Comece a comprar agora mesmo!</p>
-                            <a href="{{ url_for('listar_produtos') }}" class="btn">
-                                <span>🛍️</span> Ir para Loja
-                            </a>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <div class="content-section" id="preferencias">
-                <div class="card">
-                    <div class="card-header">
-                        <h2>⚙️ Preferências</h2>
-                    </div>
-                    
-                    <form class="preferences-form" method="POST" action="{{ url_for('atualizar_preferencias') }}">
-                        <div class="preference-item">
-                            <div class="preference-info">
-                                <h3>📧 Notificações por E-mail</h3>
-                                <p>Receba atualizações sobre seus pedidos e promoções</p>
-                            </div>
-                            <label class="toggle">
-                                <input type="checkbox" name="email_notificacoes" 
-                                       {% if preferencias and preferencias.email_notificacoes %}checked{% endif %}>
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                        
-                        <div class="preference-item">
-                            <div class="preference-info">
-                                <h3>📱 Notificações SMS</h3>
-                                <p>Receba SMS sobre entregas e novidades</p>
-                            </div>
-                            <label class="toggle">
-                                <input type="checkbox" name="sms_notificacoes" 
-                                       {% if preferencias and preferencias.sms_notificacoes %}checked{% endif %}>
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                        
-                        <div class="preference-item">
-                            <div class="preference-info">
-                                <h3>🎁 Ofertas Personalizadas</h3>
-                                <p>Receba descontos baseados no seu histórico de compras</p>
-                            </div>
-                            <label class="toggle">
-                                <input type="checkbox" name="ofertas_personalizadas" 
-                                       {% if preferencias and preferencias.ofertas_personalizadas %}checked{% endif %}>
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                        
-                        <div class="preference-item">
-                            <div class="preference-info">
-                                <h3>🌙 Tema Escuro</h3>
-                                <p>Alternar visual do site para modo noturno</p>
-                            </div>
-                            <label class="toggle">
-                                <input type="checkbox" name="tema_escuro" id="temaPref" 
-                                       {% if preferencias and preferencias.tema_escuro %}checked{% endif %}>
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                        
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-success">
-                                <span>💾</span> Salvar Preferências
-                            </button>
-                        </div>
-                    </form>
                 </div>
             </div>
 
@@ -368,315 +589,99 @@
 <div class="modal" id="modalSenha">
     <div class="modal-content">
         <div class="modal-header">
-            <h2>🔑 Alterar Senha</h2>
+            <h2>🔑 Nova Senha</h2>
             <button class="modal-close" onclick="closeModal('modalSenha')">✕</button>
         </div>
         <form method="POST" action="/alterar_senha">
-            <div class="form-group">
-                <label>Senha Atual *</label>
-                <input type="password" name="senha_atual" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label>Nova Senha *</label>
-                <input type="password" name="nova_senha" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label>Confirmar Nova Senha *</label>
-                <input type="password" name="confirmar_senha" class="form-control" required>
-            </div>
-            <div class="form-actions">
-                <button type="button" class="btn btn-outline" onclick="closeModal('modalSenha')">Cancelar</button>
-                <button type="submit" class="btn btn-success">Confirmar</button>
-            </div>
+            <div class="form-group"><label>Senha Atual</label><input type="password" name="senha_atual" class="form-control" required></div>
+            <div class="form-group"><label>Nova Senha</label><input type="password" name="nova_senha" class="form-control" required></div>
+            <div class="form-group"><label>Confirmar</label><input type="password" name="confirmar_senha" class="form-control" required></div>
+            <button type="submit" class="btn btn-success" style="width:100%">Salvar</button>
         </form>
     </div>
 </div>
 
 <div class="modal" id="modalNovoEndereco">
-    <div class="modal-content modal-large">
+    <div class="modal-content">
         <div class="modal-header">
-            <h2>📍 Adicionar Endereço</h2>
+            <h2>📍 Novo Endereço</h2>
             <button class="modal-close" onclick="closeModal('modalNovoEndereco')">✕</button>
         </div>
         <form method="POST" action="/adicionar_endereco">
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Tipo de Endereço *</label>
-                    <select name="tipo" class="form-control" required>
-                        <option value="">Selecione</option>
-                        <option value="Casa">Casa</option>
-                        <option value="Trabalho">Trabalho</option>
-                        <option value="Outro">Outro</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Destinatário *</label>
-                    <input type="text" name="destinatario" class="form-control" value="{{ usuario.nome }}" required>
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label>CEP *</label>
-                    <input type="text" name="cep" class="form-control" maxlength="9" required>
-                </div>
-                <div class="form-group">
-                    <label>Estado *</label>
-                    <select name="estado" class="form-control" required>
-                        <option value="">Selecione</option>
-                        <option value="AC">Acre</option>
-                        <option value="AL">Alagoas</option>
-                        <option value="AP">Amapá</option>
-                        <option value="AM">Amazonas</option>
-                        <option value="BA">Bahia</option>
-                        <option value="CE">Ceará</option>
-                        <option value="DF">Distrito Federal</option>
-                        <option value="ES">Espírito Santo</option>
-                        <option value="GO">Goiás</option>
-                        <option value="MA">Maranhão</option>
-                        <option value="MT">Mato Grosso</option>
-                        <option value="MS">Mato Grosso do Sul</option>
-                        <option value="MG">Minas Gerais</option>
-                        <option value="PA">Pará</option>
-                        <option value="PB">Paraíba</option>
-                        <option value="PR">Paraná</option>
-                        <option value="PE">Pernambuco</option>
-                        <option value="PI">Piauí</option>
-                        <option value="RJ">Rio de Janeiro</option>
-                        <option value="RN">Rio Grande do Norte</option>
-                        <option value="RS">Rio Grande do Sul</option>
-                        <option value="RO">Rondônia</option>
-                        <option value="RR">Roraima</option>
-                        <option value="SC">Santa Catarina</option>
-                        <option value="SP">São Paulo</option>
-                        <option value="SE">Sergipe</option>
-                        <option value="TO">Tocantins</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Cidade *</label>
-                    <input type="text" name="cidade" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label>Bairro *</label>
-                    <input type="text" name="bairro" class="form-control" required>
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Rua *</label>
-                    <input type="text" name="rua" class="form-control" required>
-                </div>
-                <div class="form-group" style="max-width: 150px;">
-                    <label>Número *</label>
-                    <input type="text" name="numero" class="form-control" required>
-                </div>
-            </div>
-            
             <div class="form-group">
-                <label>Complemento</label>
-                <input type="text" name="complemento" class="form-control" placeholder="Apto, Bloco, etc.">
+                <label>Tipo</label>
+                <select name="tipo" class="form-control"><option value="Casa">Casa</option><option value="Trabalho">Trabalho</option></select>
             </div>
-            
-            <div class="form-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" name="principal">
-                    <span>Definir como endereço principal</span>
-                </label>
+            <div class="form-row">
+                <div class="form-group"><label>CEP</label><input type="text" name="cep" class="form-control" required></div>
+                <div class="form-group"><label>Estado</label><input type="text" name="estado" class="form-control" required></div>
             </div>
-            
-            <div class="form-actions">
-                <button type="button" class="btn btn-outline" onclick="closeModal('modalNovoEndereco')">Cancelar</button>
-                <button type="submit" class="btn btn-success">Salvar Endereço</button>
+            <div class="form-group"><label>Cidade</label><input type="text" name="cidade" class="form-control" required></div>
+            <div class="form-group"><label>Bairro</label><input type="text" name="bairro" class="form-control" required></div>
+            <div class="form-row">
+                <div class="form-group"><label>Rua</label><input type="text" name="rua" class="form-control" required></div>
+                <div class="form-group"><label>Número</label><input type="text" name="numero" class="form-control" required></div>
             </div>
+            <div class="form-group"><label>Destinatário</label><input type="text" name="destinatario" class="form-control" value="{{ usuario.nome }}"></div>
+            <button type="submit" class="btn btn-success" style="width:100%">Salvar</button>
         </form>
     </div>
 </div>
 
-<style>
-    /* Estilos originais mantidos */
-    .page-header { margin-bottom: 40px; }
-    .header-content { display: flex; align-items: center; gap: 20px; }
-    .header-icon { width: 70px; height: 70px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 36px; box-shadow: var(--shadow); }
-    .header-content h1 { font-size: 32px; font-weight: 800; background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 5px; }
-    .header-content p { color: var(--text-light); font-size: 16px; }
-
-    .account-grid { display: grid; grid-template-columns: 320px 1fr; gap: 30px; align-items: start; }
-    .account-left { display: flex; flex-direction: column; gap: 20px; position: sticky; top: 20px; }
-
-    .profile-card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 25px; box-shadow: var(--shadow-sm); }
-    .dark-theme .profile-card { background: var(--dark); }
-
-    .profile-header { text-align: center; margin-bottom: 25px; }
-    .avatar { width: 90px; height: 90px; background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; color: white; margin: 0 auto 15px; box-shadow: var(--shadow); }
-    .profile-info h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
-    .user-email { color: var(--text-light); font-size: 14px; margin-bottom: 12px; }
-
-    .profile-stats { display: grid; gap: 12px; padding-top: 20px; border-top: 2px solid var(--border); }
-    .stat-item { display: flex; align-items: center; gap: 12px; padding: 10px; background: var(--secondary); border-radius: 8px; }
-    .stat-icon { font-size: 24px; }
-    .stat-info { display: flex; flex-direction: column; }
-    .stat-number { font-size: 16px; font-weight: 700; color: var(--primary); }
-    .stat-label { font-size: 12px; color: var(--text-light); }
-
-    .sidebar-menu { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-sm); }
-    .dark-theme .sidebar-menu { background: var(--dark); }
-    .sidebar-menu h3 { font-size: 14px; font-weight: 700; color: var(--text-light); text-transform: uppercase; margin-bottom: 15px; letter-spacing: 0.5px; }
-
-    .account-nav { display: flex; flex-direction: column; gap: 5px; }
-    .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 10px; text-decoration: none; color: var(--text); font-weight: 600; font-size: 14px; transition: var(--transition); }
-    .nav-item:hover { background: var(--secondary); }
-    .nav-item.active { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; }
-    .nav-icon { font-size: 18px; }
-
-    .sidebar-footer { margin-top: 20px; padding-top: 20px; border-top: 2px solid var(--border); }
-    .btn-logout { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 12px; background: var(--danger); color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; text-decoration: none; transition: var(--transition); }
-    .btn-logout:hover { background: #e62958; transform: translateY(-2px); box-shadow: var(--shadow); }
-
-    .account-content { min-height: 600px; }
-    .content-section { display: none; }
-    .content-section.active { display: block; animation: fadeIn 0.4s ease; }
-
-    .account-form { padding-top: 20px; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .form-group { margin-bottom: 20px; }
-    .form-actions { display: flex; gap: 15px; justify-content: flex-end; margin-top: 30px; padding-top: 20px; border-top: 2px solid var(--border); }
-
-    .address-list { display: grid; gap: 20px; margin-top: 20px; }
-    .address-card { background: var(--secondary); border: 2px solid var(--border); border-radius: 12px; padding: 20px; transition: var(--transition); }
-    .address-card:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
-    .address-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-    .address-header h3 { font-size: 16px; font-weight: 700; color: var(--primary); }
-    .address-content { margin-bottom: 15px; color: var(--text); line-height: 1.8; }
-    .address-content p { margin-bottom: 4px; }
-    .address-actions { display: flex; gap: 10px; padding-top: 15px; border-top: 1px solid var(--border); }
-
-    .btn-icon { background: none; border: 2px solid var(--border); width: 40px; height: 40px; border-radius: 8px; cursor: pointer; font-size: 16px; transition: var(--transition); }
-    .btn-icon:hover { background: var(--primary); border-color: var(--primary); transform: translateY(-2px); }
-
-    .security-section { display: grid; gap: 20px; margin-top: 20px; }
-    .security-item, .preference-item { display: flex; justify-content: space-between; align-items: center; padding: 25px; background: var(--secondary); border-radius: 12px; border: 2px solid var(--border); margin-bottom: 15px; }
-    .security-info h3, .preference-info h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
-    .security-info p, .preference-info p { color: var(--text-light); font-size: 14px; margin-bottom: 5px; }
-    .text-muted { font-size: 12px; color: var(--text-light); }
-
-    .orders-list { display: grid; gap: 15px; margin-top: 20px; }
-    .order-item { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: var(--secondary); border-radius: 12px; border: 2px solid var(--border); transition: var(--transition); }
-    .order-item:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
-    .order-info { flex: 1; }
-    .order-number { display: flex; align-items: center; gap: 15px; margin-bottom: 8px; }
-    .order-number strong { font-size: 16px; color: var(--text); }
-    .order-date { font-size: 13px; color: var(--text-light); }
-    .order-details { color: var(--text-light); font-size: 14px; }
-
-    .preferences-form { margin-top: 20px; }
-
-    .toggle { position: relative; display: inline-block; width: 60px; height: 34px; }
-    .toggle input { opacity: 0; width: 0; height: 0; }
-    .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border); transition: var(--transition); border-radius: 34px; }
-    .toggle-slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: var(--transition); border-radius: 50%; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); }
-    input:checked + .toggle-slider { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); }
-    input:checked + .toggle-slider:before { transform: translateX(26px); }
-
-    .empty-state { text-align: center; padding: 60px 20px; }
-    .empty-icon { font-size: 80px; margin-bottom: 20px; opacity: 0.5; }
-    .empty-state h3 { font-size: 24px; font-weight: 700; margin-bottom: 10px; color: var(--text); }
-    .empty-state p { color: var(--text-light); margin-bottom: 25px; font-size: 16px; }
-
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); z-index: 2000; align-items: center; justify-content: center; animation: fadeIn 0.3s ease; }
-    .modal.active { display: flex; }
-    .modal-content { background: white; border-radius: var(--radius); padding: 30px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); animation: slideUp 0.3s ease; }
-    .dark-theme .modal-content { background: var(--dark); }
-    .modal-large { max-width: 700px; }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 2px solid var(--border); }
-    .modal-header h2 { font-size: 24px; font-weight: 800; background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .modal-close { background: none; border: none; font-size: 28px; color: var(--text-light); cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
-    .modal-close:hover { background: var(--danger); color: white; transform: rotate(90deg); }
-    .checkbox-label { display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600; }
-    .checkbox-label input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; }
-
-    /* RESPONSIVIDADE */
-    @media (max-width: 1024px) { .account-grid { grid-template-columns: 280px 1fr; gap: 20px; } }
-    @media (max-width: 968px) { .account-grid { grid-template-columns: 1fr; gap: 20px; } .account-left { position: static; flex-direction: row; gap: 20px; } .profile-card { flex: 1; } .sidebar-menu { flex: 1; } .account-nav { flex-direction: column; } }
-    @media (max-width: 768px) { .account-left { flex-direction: column; } .form-row { grid-template-columns: 1fr; } .order-item, .security-item, .preference-item { flex-direction: column; align-items: flex-start; gap: 15px; } }
-    @media (max-width: 640px) { .header-content { flex-direction: column; text-align: center; } .profile-stats { grid-template-columns: 1fr; } .account-nav { flex-direction: row; overflow-x: auto; gap: 10px; padding-bottom: 10px; } .nav-item { white-space: nowrap; } .modal-content { width: 95%; padding: 20px; } }
-</style>
-
 <script>
+    // Lógica de Abas (Funciona com Clique e Touch)
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', function(e) {
             e.preventDefault();
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
             document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
+            
             this.classList.add('active');
             const sectionId = this.getAttribute('data-section');
             document.getElementById(sectionId).classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Scroll suave para o conteúdo no mobile para não ficar escondido pelo menu
+            if(window.innerWidth <= 968) {
+                const content = document.querySelector('.account-content');
+                // Ajuste de offset (-140px) considera altura da navbar + menu sticky
+                const y = content.getBoundingClientRect().top + window.pageYOffset - 140; 
+                window.scrollTo({top: y, behavior: 'smooth'});
+            } else {
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            }
         });
     });
 
+    // Funções de Edição e Modal
     function toggleEdit(formId) {
         const form = document.getElementById(formId);
-        const inputs = form.querySelectorAll('input, select');
+        const inputs = form.querySelectorAll('input');
         const actions = form.querySelector('.form-actions');
         inputs.forEach(input => {
-            if (input.hasAttribute('readonly')) input.removeAttribute('readonly');
-            else if (input.hasAttribute('disabled')) input.removeAttribute('disabled');
-            else {
-                if (input.tagName === 'SELECT') input.setAttribute('disabled', 'disabled');
+            if(input.name !== 'email' && input.name !== 'cpf') {
+                if(input.hasAttribute('readonly')) input.removeAttribute('readonly');
                 else input.setAttribute('readonly', 'readonly');
             }
         });
-        if (actions) actions.style.display = actions.style.display === 'none' ? 'flex' : 'none';
+        actions.style.display = actions.style.display === 'none' ? 'flex' : 'none';
     }
 
     function cancelEdit(formId) {
-        const form = document.getElementById(formId);
-        form.reset();
+        document.getElementById(formId).reset();
         toggleEdit(formId);
     }
 
-    function showModal(modalId) {
-        document.getElementById(modalId).classList.add('active');
-        document.body.style.overflow = 'hidden';
+    function showModal(id) { 
+        document.getElementById(id).classList.add('active'); 
+        document.body.style.overflow = 'hidden'; // Trava scroll do fundo
     }
-
-    function closeModal(modalId) {
-        document.getElementById(modalId).classList.remove('active');
-        document.body.style.overflow = 'auto';
+    function closeModal(id) { 
+        document.getElementById(id).classList.remove('active'); 
+        document.body.style.overflow = 'auto'; // Destrava scroll
     }
-
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('click', function(e) {
-            if (e.target === this) closeModal(this.id);
-        });
-    });
-
-    // CORREÇÃO: JavaScript do tema apenas muda visualmente, não força o estado do checkbox
-    const temaPref = document.getElementById('temaPref');
-    if (temaPref) {
-        temaPref.addEventListener('change', function() {
-            if(this.checked) {
-                document.documentElement.classList.add('dark-theme');
-                sessionStorage.setItem('theme', 'dark');
-            } else {
-                document.documentElement.classList.remove('dark-theme');
-                sessionStorage.setItem('theme', 'light');
-            }
-        });
+    
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal')) event.target.classList.remove('active');
     }
-
-    // Scripts de máscaras, CEP e confirmação
-    document.querySelectorAll('input[name="cep"]').forEach(input => { input.addEventListener('input', function(e) { let value = e.target.value.replace(/\D/g, ''); if (value.length > 5) { value = value.slice(0, 5) + '-' + value.slice(5, 8); } e.target.value = value; }); });
-    document.querySelectorAll('input[name="telefone"]').forEach(input => { input.addEventListener('input', function(e) { let value = e.target.value.replace(/\D/g, ''); if (value.length > 10) { value = '(' + value.slice(0, 2) + ') ' + value.slice(2, 7) + '-' + value.slice(7, 11); } else if (value.length > 6) { value = '(' + value.slice(0, 2) + ') ' + value.slice(2, 6) + '-' + value.slice(6, 10); } else if (value.length > 2) { value = '(' + value.slice(0, 2) + ') ' + value.slice(2); } e.target.value = value; }); });
-    document.querySelectorAll('input[name="cpf"]').forEach(input => { input.addEventListener('input', function(e) { let value = e.target.value.replace(/\D/g, ''); if (value.length > 9) { value = value.slice(0, 3) + '.' + value.slice(3, 6) + '.' + value.slice(6, 9) + '-' + value.slice(9, 11); } else if (value.length > 6) { value = value.slice(0, 3) + '.' + value.slice(3, 6) + '.' + value.slice(6); } else if (value.length > 3) { value = value.slice(0, 3) + '.' + value.slice(3); } e.target.value = value; }); });
-    document.querySelectorAll('input[name="cep"]').forEach(input => { input.addEventListener('blur', function() { const cep = this.value.replace(/\D/g, ''); if (cep.length === 8) { console.log('Buscando CEP:', cep); } }); });
-    document.querySelectorAll('.address-actions button[title="Excluir"]').forEach(btn => { btn.addEventListener('click', function() { if (confirm('Tem certeza que deseja excluir este endereço?')) { console.log('Endereço excluído'); } }); });
-    document.querySelector('#modalSenha form')?.addEventListener('submit', function(e) { const novaSenha = this.querySelector('input[name="nova_senha"]').value; const confirmarSenha = this.querySelector('input[name="confirmar_senha"]').value; if (novaSenha !== confirmarSenha) { e.preventDefault(); alert('As senhas não coincidem!'); } else if (novaSenha.length < 6) { e.preventDefault(); alert('A senha deve ter no mínimo 6 caracteres!'); } });
 </script>
 {% endblock %}
