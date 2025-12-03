@@ -110,15 +110,26 @@ def configure_carrinho_routes(app):
 
     @app.route('/finalizar-carrinho', methods=['GET', 'POST'])
     def finalizar_carrinho():
+        # 🔍 DEBUG 1: Verificar sessão
+        print(f"\n🔍 DEBUG SESSÃO COMPLETA:")
+        for key, value in session.items():
+            print(f"  {key}: {value}")
+        
+        print(f"\n🔍 DEBUG: Chegou na rota finalizar_carrinho")
+        
+        # Verificar se usuário está logado
         if 'usuario_id' not in session:
             flash('⚠️ Faça login para finalizar sua compra.', 'warning')
+            print(f"🔍 DEBUG: usuario_id NÃO encontrado na sessão - Redirecionando para login")
             return redirect(url_for('login', next=url_for('finalizar_carrinho')))
-
+        
         produtos_carrinho = session.get('carrinho', [])
+        print(f"🔍 DEBUG: Produtos no carrinho = {len(produtos_carrinho)} itens")
         
         if not produtos_carrinho and request.method == 'GET':
-             return render_template('carrinho.html', produtos_carrinho=[], total_itens=0, total_preco=0)
-
+            print(f"🔍 DEBUG: Carrinho vazio no GET - Mostrando carrinho vazio")
+            return render_template('carrinho.html', produtos_carrinho=[], total_itens=0, total_preco=0)
+        
         for produto in produtos_carrinho:
             if 'imagem' in produto and ('imagens' not in produto or not produto['imagens']):
                 produto['imagens'] = [produto['imagem']]
@@ -126,22 +137,75 @@ def configure_carrinho_routes(app):
                 produto['imagens'] = []
         
         total_geral = sum(item['preco'] * item['quantidade'] for item in produtos_carrinho)
-        session['chegou_finalizar_carrinho'] = True
-
+        session['chegou_finalizar-carrinho'] = True
+        
+        print(f"🔍 DEBUG: Total geral = R$ {total_geral:.2f}")
+        
         if request.method == 'POST':
             nome = request.form.get('nome')
             email = request.form.get('email')
             endereco = request.form.get('endereco')
             pagamento = request.form.get('pagamento')
-
+            
+            print(f"🔍 DEBUG: Formulário recebido:")
+            print(f"  Nome: {nome}")
+            print(f"  Email: {email}")
+            print(f"  Endereço: {endereco}")
+            print(f"  Pagamento: {pagamento}")
+            
             if not produtos_carrinho:
                 flash('⚠️ Seu carrinho está vazio ou já foi processado.', 'warning')
                 return redirect(url_for('carrinho'))
-
+            
             try:
                 conn = get_db_connection()
+                if not conn:
+                    flash('❌ Erro ao conectar ao banco de dados.', 'error')
+                    return redirect(url_for('carrinho'))
+                
                 cursor = conn.cursor(dictionary=True)
-
+                
+                # 🔍 DEBUG 2: Verificar o ID do usuário
+                usuario_id = session['usuario_id']
+                print(f"\n🔍 DEBUG: Buscando cliente no banco:")
+                print(f"  usuario_id da sessão: {usuario_id} (tipo: {type(usuario_id)})")
+                print(f"  usuario_nome da sessão: {session.get('usuario_nome')}")
+                
+                # 🔍 DEBUG 3: Verificar se há clientes na tabela
+                cursor.execute("SELECT COUNT(*) as total FROM clientes")
+                total_clientes = cursor.fetchone()['total']
+                print(f"🔍 DEBUG: Total de clientes na tabela: {total_clientes}")
+                
+                # 🔍 DEBUG 4: Verificar cliente específico
+                cursor.execute("SELECT id_cliente, nome, email, ativo FROM clientes WHERE id_cliente = %s", (usuario_id,))
+                cliente = cursor.fetchone()
+                
+                if not cliente:
+                    print(f"❌ DEBUG: NENHUM cliente encontrado com id_cliente = {usuario_id}")
+                    print(f"🔍 DEBUG: Verificando todos os clientes disponíveis...")
+                    
+                    cursor.execute("SELECT id_cliente, nome, email FROM clientes LIMIT 5")
+                    todos_clientes = cursor.fetchall()
+                    print(f"🔍 DEBUG: Primeiros 5 clientes no banco:")
+                    for c in todos_clientes:
+                        print(f"  ID: {c['id_cliente']}, Nome: {c['nome']}, Email: {c['email']}")
+                    
+                    flash('❌ Erro: Cadastro de cliente não encontrado. Entre em contato com o suporte.', 'error')
+                    return redirect(url_for('carrinho'))
+                
+                print(f"✅ DEBUG: Cliente encontrado:")
+                print(f"  ID: {cliente['id_cliente']}")
+                print(f"  Nome: {cliente['nome']}")
+                print(f"  Email: {cliente['email']}")
+                print(f"  Ativo: {cliente['ativo']}")
+                
+                if not cliente['ativo']:
+                    print(f"⚠️ DEBUG: Cliente está INATIVO")
+                    flash('❌ Sua conta está desativada. Entre em contato com o suporte.', 'error')
+                    return redirect(url_for('carrinho'))
+                
+                # Verificar estoque
+                print(f"\n🔍 DEBUG: Verificando estoque...")
                 for item in produtos_carrinho:
                     cursor.execute("SELECT nome, estoque FROM produto WHERE id_produto = %s", (item['id_produto'],))
                     produto_db = cursor.fetchone()
@@ -151,13 +215,19 @@ def configure_carrinho_routes(app):
                     if produto_db['estoque'] < item['quantidade']:
                         flash(f"⚠️ Estoque insuficiente de '{produto_db['nome']}'.", 'warning')
                         return redirect(url_for('carrinho'))
-
+                    print(f"  ✅ {produto_db['nome']}: {produto_db['estoque']} em estoque, precisa de {item['quantidade']}")
+                
+                # INSERIR PEDIDO
+                print(f"\n🔍 DEBUG: Inserindo pedido...")
                 cursor.execute("""
                     INSERT INTO pedidos (id_cliente, total, forma_pagamento, status, data_pedido)
                     VALUES (%s, %s, %s, %s, NOW())
-                """, (session['usuario_id'], total_geral, pagamento, 'pendente'))
+                """, (cliente['id_cliente'], total_geral, pagamento, 'pendente'))
                 pedido_id = cursor.lastrowid
-
+                print(f"✅ DEBUG: Pedido criado com ID: {pedido_id}")
+                
+                # Inserir itens do pedido
+                print(f"🔍 DEBUG: Inserindo itens do pedido...")
                 for item in produtos_carrinho:
                     cursor.execute("""
                         INSERT INTO itens_pedido (id_pedido, id_produto, quantidade, preco_unitario)
@@ -166,41 +236,50 @@ def configure_carrinho_routes(app):
                     cursor.execute("""
                         UPDATE produto SET estoque = estoque - %s WHERE id_produto = %s
                     """, (item['quantidade'], item['id_produto']))
-
+                    print(f"  ✅ {item['nome']}: {item['quantidade']}x R$ {item['preco']:.2f}")
+                
+                # Registrar pagamento
                 cursor.execute("""
                     INSERT INTO pagamentos (nome, email, endereco, metodo, valor)
                     VALUES (%s, %s, %s, %s, %s)
                 """, (nome, email, endereco, pagamento, total_geral))
-
+                
                 conn.commit()
-
+                print(f"✅ DEBUG: Transação confirmada no banco")
+                
+                # Limpar carrinho
                 session.pop('carrinho', None)
                 session.modified = True
-
+                print(f"✅ DEBUG: Carrinho limpo da sessão")
+                
                 if pagamento == 'pix':
                     qr_base64, copia_cola = gerar_qrcode_pix(total_geral)
-                    flash('🎉 Compra realizada! Escaneie o QR Code para pagar.', 'success')
-                    return render_template(
-                        'compra-sucedida.html',
-                        valor=total_geral,
-                        qr_base64=qr_base64,
-                        copia_cola=copia_cola,
-                        pedido_id=pedido_id
-                    )
+                    return render_template('gerar_pix.html', valor=total_geral, qr_base64=qr_base64, copia_cola=copia_cola)
                 else:
-                    flash('💳 Pagamento por cartão/boleto ainda não implementado.', 'info')
-                    return redirect(url_for('inicio'))
-
+                    flash(f'🎉 Compra #{pedido_id} realizada com sucesso!', 'success')
+                    print(f"✅ DEBUG: Redirecionando para meus_pedidos")
+                    return redirect(url_for('meus_pedidos'))
+                
             except mysql.connector.Error as err:
-                conn.rollback()
+                print(f"❌ DEBUG: Erro MySQL: {err}")
+                if 'conn' in locals() and conn.is_connected():
+                    conn.rollback()
+                    print(f"❌ DEBUG: Rollback realizado")
                 flash(f'❌ Erro ao finalizar compra: {err}', 'error')
                 return redirect(url_for('carrinho'))
+            except Exception as err:
+                print(f"❌ DEBUG: Erro geral: {err}")
+                flash(f'❌ Erro inesperado: {err}', 'error')
+                return redirect(url_for('carrinho'))
             finally:
-                if conn and conn.is_connected():
+                if 'conn' in locals() and conn and conn.is_connected():
                     cursor.close()
                     conn.close()
-
-        return render_template('finalizar-carrinho.html',
+                    print(f"✅ DEBUG: Conexão com banco fechada")
+        
+        # GET request: mostrar formulário de finalização
+        print(f"🔍 DEBUG: Renderizando template finalizar-carrinho.html")
+        return render_template('finalizar-carrinho.html', 
                             produtos_carrinho=produtos_carrinho,
                             total_geral=total_geral)
 
