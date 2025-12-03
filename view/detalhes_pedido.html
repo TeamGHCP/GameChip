@@ -79,7 +79,7 @@
 
         {% if pedido.status in ['concluido', 'entregue'] %}
         <div style="margin-top: 30px; text-align: center;">
-            <a href="{{ url_for('avaliacao.minhas_avaliacoes_pendentes') }}" class="btn" style="background: linear-gradient(135deg, #ffb800 0%, #ff9900 100%); padding: 15px 30px;">
+            <a href="{{ url_for('minhas_avaliacoes_pendentes') }}" class="btn" style="background: linear-gradient(135deg, #ffb800 0%, #ff9900 100%); padding: 15px 30px;">
                 ⭐ Avaliar Produtos Comprados
             </a>
         </div>

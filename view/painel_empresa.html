@@ -246,47 +246,52 @@
 
         <!-- ABA: CONFIGURAÇÕES -->
         <div id="aba-configuracoes" class="aba-painel">
-            <div class="configuracoes-section">
-                <div class="section-header">
-                    <h2>Configurações da Loja</h2>
-                    <p>Gerencie as informações da sua empresa</p>
+    <div class="configuracoes-section">
+        <div class="section-header">
+            <h2>Configurações da Loja</h2>
+            <p>Gerencie as informações da sua empresa</p>
+        </div>
+
+        <div class="configuracoes-grid">
+            <div class="config-card">
+                <h3>📝 Informações Básicas</h3>
+                <div class="config-content">
+                    <p><strong>Razão Social:</strong> {{ empresa.razao_social }}</p>
+                    <p><strong>Nome Fantasia:</strong> {{ empresa.nome_fantasia }}</p>
+                    <p><strong>CNPJ:</strong> {{ empresa.cnpj }}</p>
+                    <p><strong>Email:</strong> {{ empresa.email }}</p>
+                    <p><strong>Telefone:</strong> {{ empresa.telefone or 'Não informado' }}</p>
+                    <button class="btn btn-secondary" onclick="abrirModal('modalEditarInfo')">
+                        ✏️ Editar Informações
+                    </button>
                 </div>
+            </div>
 
-                <div class="configuracoes-grid">
-                    <div class="config-card">
-                        <h3>📝 Informações Básicas</h3>
-                        <div class="config-content">
-                            <p><strong>Razão Social:</strong> {{ empresa.razao_social }}</p>
-                            <p><strong>CNPJ:</strong> {{ empresa.cnpj }}</p>
-                            <p><strong>Email:</strong> {{ empresa.email }}</p>
-                            <p><strong>Telefone:</strong> {{ empresa.telefone or 'Não informado' }}</p>
-                            <button class="btn btn-secondary">Editar Informações</button>
-                        </div>
-                    </div>
+            <div class="config-card">
+                <h3>🎯 Tipo de Empresa</h3>
+                <div class="config-content">
+                    <p><strong>Atual:</strong> 
+                        {% if empresa.tipo_empresa == 'vendedor' %}
+                            Apenas Vendedor
+                        {% elif empresa.tipo_empresa == 'comprador' %}
+                            Apenas Comprador
+                        {% else %}
+                            Vendedor e Comprador
+                        {% endif %}
+                    </p>
+                    <button class="btn btn-secondary" onclick="abrirModal('modalAlterarTipo')">
+                        🔄 Alterar Tipo
+                    </button>
+                </div>
+            </div>
 
-                    <div class="config-card">
-                        <h3>🎯 Tipo de Empresa</h3>
-                        <div class="config-content">
-                            <p><strong>Atual:</strong> 
-                                {% if empresa.tipo_empresa == 'vendedor' %}
-                                    Apenas Vendedor
-                                {% elif empresa.tipo_empresa == 'comprador' %}
-                                    Apenas Comprador
-                                {% else %}
-                                    Vendedor e Comprador
-                                {% endif %}
-                            </p>
-                            <button class="btn btn-secondary">Alterar Tipo</button>
-                        </div>
-                    </div>
-
-                    <div class="config-card">
-                        <h3>🔒 Segurança</h3>
-                        <div class="config-content">
-                            <p>Altere sua senha e configure a segurança da conta</p>
-                            <button class="btn btn-secondary">Alterar Senha</button>
-                        </div>
-                    </div>
+            <div class="config-card">
+                <h3>🔒 Segurança</h3>
+                <div class="config-content">
+                    <p>Altere sua senha e configure a segurança da conta</p>
+                    <button class="btn btn-secondary" onclick="abrirModal('modalAlterarSenha')">
+                        🔑 Alterar Senha
+                    </button>
                 </div>
             </div>
         </div>
@@ -348,6 +353,91 @@
                 </div>
             </form>
         </div>
+    </div>
+</div>
+
+<div id="modalEditarInfo" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📝 Editar Dados da Empresa</h3>
+            <button class="modal-close" onclick="fecharModal('modalEditarInfo')">✕</button>
+        </div>
+        <form action="{{ url_for('atualizar_dados_empresa') }}" method="POST">
+            <div class="form-group">
+                <label>Nome Fantasia</label>
+                <input type="text" name="nome_fantasia" value="{{ empresa.nome_fantasia }}" required>
+            </div>
+            <div class="form-group">
+                <label>Razão Social</label>
+                <input type="text" name="razao_social" value="{{ empresa.razao_social }}" required>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" value="{{ empresa.email }}" required>
+            </div>
+            <div class="form-group">
+                <label>Telefone</label>
+                <input type="text" name="telefone" value="{{ empresa.telefone }}" required>
+            </div>
+            <div class="form-group">
+                <label>CNPJ (Somente leitura)</label>
+                <input type="text" value="{{ empresa.cnpj }}" readonly style="background: rgba(0,0,0,0.1);">
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="fecharModal('modalEditarInfo')">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modalAlterarTipo" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>🎯 Alterar Tipo de Negócio</h3>
+            <button class="modal-close" onclick="fecharModal('modalAlterarTipo')">✕</button>
+        </div>
+        <form action="{{ url_for('alterar_tipo_empresa') }}" method="POST">
+            <div class="form-group">
+                <label>Selecione o novo tipo:</label>
+                <select name="tipo_empresa" required>
+                    <option value="comprador" {% if empresa.tipo_empresa == 'comprador' %}selected{% endif %}>Apenas Comprador (Comprar produtos)</option>
+                    <option value="vendedor" {% if empresa.tipo_empresa == 'vendedor' %}selected{% endif %}>Apenas Vendedor (Vender produtos)</option>
+                    <option value="ambos" {% if empresa.tipo_empresa == 'ambos' %}selected{% endif %}>Ambos (Comprar e Vender)</option>
+                </select>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="fecharModal('modalAlterarTipo')">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Atualizar Tipo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modalAlterarSenha" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>🔒 Alterar Senha</h3>
+            <button class="modal-close" onclick="fecharModal('modalAlterarSenha')">✕</button>
+        </div>
+        <form action="{{ url_for('alterar_senha_empresa') }}" method="POST">
+            <div class="form-group">
+                <label>Senha Atual</label>
+                <input type="password" name="senha_atual" required>
+            </div>
+            <div class="form-group">
+                <label>Nova Senha</label>
+                <input type="password" name="nova_senha" required minlength="6">
+            </div>
+            <div class="form-group">
+                <label>Confirmar Nova Senha</label>
+                <input type="password" name="confirmar_senha" required minlength="6">
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="fecharModal('modalAlterarSenha')">Cancelar</button>
+                <button type="submit" class="btn btn-success">Confirmar Alteração</button>
+            </div>
+        </form>
     </div>
 </div>
 

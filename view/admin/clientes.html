@@ -4,11 +4,103 @@
 {% block page_title %}👥 Gerenciar Clientes{% endblock %}
 
 {% block content %}
+
+<style>
+    /* --- Estilos para Responsividade --- */
+    @media (max-width: 992px) {
+        .table-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        
+        .table-actions {
+            width: 100%;
+        }
+
+        .search-form {
+            flex-direction: column;
+            width: 100%;
+            gap: 10px !important;
+        }
+
+        .search-form input {
+            width: 100% !important;
+        }
+
+        .search-form button, 
+        .search-form a {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 768px) {
+        /* Transforma a tabela em Cards no Mobile */
+        table, thead, tbody, th, td, tr { 
+            display: block; 
+        }
+        
+        /* Esconde o cabeçalho da tabela */
+        thead tr { 
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+        }
+        
+        tr { 
+            margin-bottom: 15px; 
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--glass); /* Mantém o estilo glass se definido, ou secondary */
+            box-shadow: var(--shadow-sm);
+            padding: 10px;
+        }
+        
+        td { 
+            border: none;
+            border-bottom: 1px solid var(--border); 
+            position: relative;
+            padding: 12px 10px 12px 50%; 
+            text-align: right;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        td:last-child { 
+            border-bottom: none; 
+            justify-content: flex-end;
+        }
+        
+        /* Cria o label fake baseado no data-label */
+        td::before { 
+            content: attr(data-label);
+            position: absolute;
+            left: 10px;
+            width: 45%;
+            padding-right: 10px;
+            white-space: nowrap;
+            text-align: left;
+            font-weight: 700;
+            color: var(--text-light);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        /* Ajustes de conteúdo interno das células */
+        td > div {
+            text-align: right;
+            width: 100%;
+        }
+    }
+</style>
+
 <div class="data-table">
     <div class="table-header">
         <h3>Lista de Clientes</h3>
         <div class="table-actions">
-            <form method="GET" style="display: flex; gap: 1rem;">
+            <form method="GET" class="search-form" style="display: flex; gap: 1rem;">
                 <input type="text" name="busca" value="{{ request.args.get('busca', '') }}" 
                        class="form-control" placeholder="Buscar cliente..." style="width: 300px;">
                 <button type="submit" class="btn btn-primary">🔍 Buscar</button>
@@ -34,33 +126,35 @@
         <tbody>
             {% for cliente in clientes %}
             <tr>
-                <td><strong>#{{ cliente.id_cliente }}</strong></td>
-                <td>
-                    <div>
+                <td data-label="ID"><strong>#{{ cliente.id_cliente }}</strong></td>
+                <td data-label="Cliente">
+                    <div style="display: flex; flex-direction: column; align-items: flex-end;">
                         <strong>{{ cliente.nome }}</strong>
                         {% if cliente.genero %}
-                        <span style="opacity: 0.7; font-size: 0.9rem;">
-                            ({{ 'Masculino' if cliente.genero == 'M' else 'Feminino' if cliente.genero == 'F' else 'Outro' }})
+                        <span style="opacity: 0.7; font-size: 0.85rem;">
+                            ({{ 'Masc.' if cliente.genero == 'M' else 'Fem.' if cliente.genero == 'F' else 'Outro' }})
                         </span>
                         {% endif %}
                     </div>
                 </td>
-                <td>
-                    <div>{{ cliente.email }}</div>
-                    {% if cliente.telefone %}
-                    <div style="font-size: 0.9rem; opacity: 0.7;">{{ cliente.telefone }}</div>
-                    {% endif %}
+                <td data-label="Contato">
+                    <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                        <div style="word-break: break-all;">{{ cliente.email }}</div>
+                        {% if cliente.telefone %}
+                        <div style="font-size: 0.9rem; opacity: 0.7;">{{ cliente.telefone }}</div>
+                        {% endif %}
+                    </div>
                 </td>
-                <td>{{ cliente.cpf }}</td>
-                <td>{{ cliente.data_cadastro.strftime('%d/%m/%Y') }}</td>
-                <td>
+                <td data-label="CPF">{{ cliente.cpf }}</td>
+                <td data-label="Data">{{ cliente.data_cadastro.strftime('%d/%m/%Y') }}</td>
+                <td data-label="Status">
                     <span class="badge {% if cliente.ativo %}badge-success{% else %}badge-danger{% endif %}">
                         {{ 'Ativo' if cliente.ativo else 'Inativo' }}
                     </span>
                 </td>
-                <td>
+                <td data-label="Ações">
                     <a href="{{ url_for('admin_detalhes_cliente', id_cliente=cliente.id_cliente) }}" 
-                       class="btn btn-sm btn-primary">
+                       class="btn btn-sm btn-primary" style="width: auto;">
                         👁️ Detalhes
                     </a>
                 </td>

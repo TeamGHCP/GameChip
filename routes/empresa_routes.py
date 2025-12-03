@@ -342,6 +342,101 @@ def configure_empresa_routes(app):
             if conn and conn.is_connected():
                 cursor.close()
                 conn.close()
+                
+    @app.route('/empresa/atualizar_dados', methods=['POST'])
+    @login_required
+    def atualizar_dados_empresa():
+        if 'empresa_id' not in session:
+            return redirect(url_for('login'))
+            
+        nome_fantasia = request.form.get('nome_fantasia')
+        razao_social = request.form.get('razao_social')
+        email = request.form.get('email')
+        telefone = request.form.get('telefone')
+        
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE empresas 
+                SET nome_fantasia = %s, razao_social = %s, email = %s, telefone = %s
+                WHERE id_empresa = %s
+            """, (nome_fantasia, razao_social, email, telefone, session['empresa_id']))
+            conn.commit()
+            
+            # Atualiza sessão
+            session['empresa_nome'] = nome_fantasia or razao_social
+            
+            flash('✅ Dados atualizados com sucesso!', 'success')
+        except Exception as e:
+            flash(f'❌ Erro ao atualizar: {e}', 'error')
+        finally:
+            if conn: conn.close()
+            
+        return redirect(url_for('painel_empresa'))
+    
+    @app.route('/empresa/alterar_tipo', methods=['POST'])
+    @login_required
+    def alterar_tipo_empresa():
+        if 'empresa_id' not in session:
+            return redirect(url_for('login'))
+            
+        novo_tipo = request.form.get('tipo_empresa')
+        
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("UPDATE empresas SET tipo_empresa = %s WHERE id_empresa = %s", 
+                         (novo_tipo, session['empresa_id']))
+            conn.commit()
+            session['empresa_tipo'] = novo_tipo
+            flash('✅ Tipo de empresa atualizado!', 'success')
+        except Exception as e:
+            flash(f'❌ Erro: {e}', 'error')
+        finally:
+            if conn: conn.close()
+            
+        return redirect(url_for('painel_empresa'))
+    
+    @app.route('/empresa/alterar_senha', methods=['POST'])
+    @login_required
+    def alterar_senha_empresa():
+        if 'empresa_id' not in session:
+            return redirect(url_for('login'))
+            
+        senha_atual = request.form.get('senha_atual')
+        nova_senha = request.form.get('nova_senha')
+        confirmar_senha = request.form.get('confirmar_senha')
+        
+        if nova_senha != confirmar_senha:
+            flash('❌ As novas senhas não coincidem.', 'error')
+            return redirect(url_for('painel_empresa'))
+            
+        from werkzeug.security import generate_password_hash, check_password_hash
+        
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            
+            cursor.execute("SELECT senha FROM empresas WHERE id_empresa = %s", (session['empresa_id'],))
+            empresa = cursor.fetchone()
+            
+            if not empresa or not check_password_hash(empresa['senha'], senha_atual):
+                flash('❌ Senha atual incorreta.', 'error')
+                return redirect(url_for('painel_empresa'))
+                
+            nova_hash = generate_password_hash(nova_senha)
+            cursor.execute("UPDATE empresas SET senha = %s WHERE id_empresa = %s", 
+                         (nova_hash, session['empresa_id']))
+            conn.commit()
+            
+            flash('🔒 Senha alterada com sucesso!', 'success')
+        except Exception as e:
+            flash(f'❌ Erro ao alterar senha: {e}', 'error')
+        finally:
+            if conn: conn.close()
+            
+        return redirect(url_for('painel_empresa'))
 
     @app.route('/empresa/atualizar-produto/<int:id_produto_empresa>', methods=['POST'])
     @login_required

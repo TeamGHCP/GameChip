@@ -1,85 +1,323 @@
 {% extends 'base.html' %}
 
-{% block menu %}
-    <li><a href="{{ url_for('inicio') }}" class="nav-link">Início</a></li>
-    <li><a href="{{ url_for('listar_produtos') }}" class="nav-link">Produtos</a></li>
-    <li><a href="{{ url_for('suporte') }}" class="nav-link">Suporte</a></li>
-
-{% endblock %}
+{% set titulo = "Central de Garantia - Produtos Digitais" %}
 
 {% block conteudo %}
 <style>
-    .garantia-container {
-        max-width: 900px;
+    /* ==========================================================================
+       CENTRAL DE GARANTIA DIGITAL - PREMIUM UI
+       ========================================================================== */
+    
+    :root {
+        --neon-green: #00d084;       /* Sucesso/Coberto */
+        --neon-red: #ff3366;         /* Erro/Não Coberto */
+        --glass-bg: rgba(20, 20, 35, 0.6);
+        --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+        --card-hover: translateY(-5px);
+    }
+
+    .container-limit {
+        max-width: 1100px;
         margin: 0 auto;
-        background: var(--glass);
-        padding: 30px 40px;
-        border-radius: var(--radius);
-        box-shadow: var(--shadow-sm);
-        border: 1px solid var(--border);
+        padding: 0 20px;
+        position: relative;
+        z-index: 2;
     }
-    .garantia-container h1 {
-        color: var(--primary);
+
+    /* --- Hero Section --- */
+    .warranty-hero {
         text-align: center;
-        font-size: 2.5em;
-        font-weight: 800;
-        margin-bottom: 30px;
+        padding: 80px 0 60px;
+        position: relative;
     }
-    .garantia-container h2 {
-        color: var(--text);
-        font-size: 1.6em;
-        font-weight: 700;
-        border-bottom: 2px solid var(--border);
-        padding-bottom: 10px;
-        margin-top: 30px;
+
+    .warranty-title {
+        font-size: 3.5rem;
+        font-weight: 900;
         margin-bottom: 20px;
+        color: #fff;
+        text-shadow: 0 0 20px rgba(0, 102, 255, 0.4);
     }
-    .garantia-container p, 
-    .garantia-container li {
-        line-height: 1.8;
+
+    .warranty-title span {
+        background: linear-gradient(135deg, var(--primary) 0%, #00d084 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .warranty-subtitle {
+        font-size: 1.2rem;
         color: var(--text-light);
-        margin-bottom: 12px;
+        max-width: 700px;
+        margin: 0 auto;
+        line-height: 1.6;
     }
-    .garantia-container ul {
-        padding-left: 25px;
+
+    /* --- Cards de Informação --- */
+    .policy-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 30px;
+        margin-bottom: 60px;
     }
-    .garantia-container a {
-        color: var(--primary);
-        font-weight: 600;
+
+    .policy-card {
+        background: var(--glass-bg);
+        border: var(--glass-border);
+        border-radius: 20px;
+        padding: 40px;
+        backdrop-filter: blur(15px);
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .policy-card:hover {
+        transform: var(--card-hover);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        border-color: rgba(255,255,255,0.15);
+    }
+
+    .policy-card h3 {
+        font-size: 1.8rem;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* Estilização das Listas */
+    .check-list, .cross-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .check-list li, .cross-list li {
+        padding: 12px 0;
+        font-size: 1.05rem;
+        color: #cbd5e1;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .check-list li:last-child, .cross-list li:last-child {
+        border-bottom: none;
+    }
+
+    .check-list li::before {
+        content: '✓';
+        font-weight: 900;
+        color: var(--neon-green);
+        background: rgba(0, 208, 132, 0.1);
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .cross-list li::before {
+        content: '✕';
+        font-weight: 900;
+        color: var(--neon-red);
+        background: rgba(255, 51, 102, 0.1);
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    /* Card de Prazo (Destaque) */
+    .term-card {
+        grid-column: 1 / -1;
+        text-align: center;
+        background: linear-gradient(135deg, rgba(0, 102, 255, 0.1) 0%, rgba(20, 20, 35, 0.8) 100%);
+        border: 1px solid var(--primary);
+    }
+
+    .term-badge {
+        display: inline-block;
+        background: var(--primary);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+        box-shadow: 0 0 15px rgba(0, 102, 255, 0.4);
+    }
+
+    /* --- Como Acionar (Timeline) --- */
+    .steps-section {
+        padding: 40px 0 80px;
+    }
+
+    .step-container {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        margin-top: 40px;
+    }
+
+    .step-box {
+        flex: 1;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.05);
+        padding: 30px 20px;
+        border-radius: 16px;
+        text-align: center;
+        transition: 0.3s;
+    }
+
+    .step-box:hover {
+        background: rgba(255,255,255,0.05);
+        transform: translateY(-5px);
+    }
+
+    .step-icon {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+        display: block;
+    }
+
+    .step-title {
+        font-size: 1.2rem;
+        color: #fff;
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+
+    .step-desc {
+        font-size: 0.95rem;
+        color: var(--text-light);
+    }
+
+    /* CTA Final */
+    .cta-box {
+        text-align: center;
+        margin-top: 40px;
+    }
+
+    .btn-support {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 18px 40px;
+        background: linear-gradient(90deg, var(--primary) 0%, #0099ff 100%);
+        color: white;
         text-decoration: none;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        box-shadow: 0 10px 30px rgba(0, 102, 255, 0.3);
+        transition: 0.3s;
     }
-    .garantia-container a:hover {
-        text-decoration: underline;
+
+    .btn-support:hover {
+        transform: scale(1.05);
+        box-shadow: 0 15px 40px rgba(0, 102, 255, 0.5);
+    }
+
+    /* --- Animação de Entrada --- */
+    .reveal-up {
+        opacity: 0;
+        transform: translateY(30px);
+        animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+
+    @keyframes fadeUp {
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+        .policy-grid { grid-template-columns: 1fr; }
+        .step-container { flex-direction: column; }
+        .warranty-title { font-size: 2.5rem; }
     }
 </style>
 
-<div class="garantia-container">
-    <h1>Central de Garantia</h1>
+<section class="warranty-hero reveal-up">
+    <div class="container-limit">
+        <h1 class="warranty-title">Garantia & <span>Segurança Digital</span></h1>
+        <p class="warranty-subtitle">
+            Na Gamechip, jogamos limpo. Conheça nossa política de proteção para Gift Cards, Chaves de Ativação e Créditos de Jogos.
+        </p>
+    </div>
+</section>
 
-    <p>Na Loja GAME CHIP, temos um compromisso com a qualidade e a sua satisfação. Todos os nossos produtos passam por um rigoroso controle de qualidade. Abaixo, detalhamos nossa política de garantia para que você saiba exatamente como proceder caso precise de suporte.</p>
+<div class="container-limit reveal-up" style="animation-delay: 0.2s;">
+    <div class="policy-grid">
+        <div class="policy-card term-card">
+            <span class="term-badge">Produto Digital</span>
+            <h3>⏳ Política de Resgate</h3>
+            <p style="font-size: 1.1rem; color: #cbd5e1;">
+                Garantimos a validade e funcionalidade de todas as chaves e códigos (Keys/Gift Cards) no ato do envio.
+            </p>
+            <p style="margin-top: 15px; font-size: 0.9rem; color: var(--text-light);">
+                <strong>Atenção:</strong> Por se tratar de um produto digital de consumo imediato, após a visualização ou desbloqueio da chave em nosso site/e-mail, não é possível realizar devolução por arrependimento, conforme jurisprudência aplicável a bens digitais consumíveis.
+            </p>
+        </div>
 
-    <h2>Prazo da Garantia</h2>
-    <p>Todos os produtos comercializados em nossa loja possuem uma <strong>garantia mínima de 90 (noventa) dias</strong> (garantia legal) contra defeitos de fabricação, a contar da data de recebimento do produto.</p>
-    <p>Muitos de nossos produtos também possuem uma garantia estendida diretamente com o fabricante, cujo prazo pode ser consultado na página de cada produto.</p>
+        <div class="policy-card">
+            <h3 style="color: var(--neon-green);">🛡️ O que a Garantia Cobre?</h3>
+            <ul class="check-list">
+                <li>Código inválido ou inexistente no momento do resgate.</li>
+                <li>Código já utilizado antes da data da sua compra.</li>
+                <li>Chave incorreta (diferente do produto adquirido).</li>
+                <li>Problemas técnicos na entrega automática do e-mail.</li>
+                <li>Bloqueio regional não informado na descrição do produto.</li>
+            </ul>
+        </div>
 
-    <h2>O que a Garantia Cobre?</h2>
-    <ul>
-        <li>Defeitos de fabricação ou vícios de material.</li>
-        <li>Problemas de funcionamento que não foram causados por mau uso.</li>
-        <li>Componentes que apresentem falhas dentro do período de garantia.</li>
-    </ul>
+        <div class="policy-card">
+            <h3 style="color: var(--neon-red);">⚠️ O que NÃO Cobre?</h3>
+            <ul class="cross-list">
+                <li>Compra errada (ex: comprou Gift Card Xbox mas queria PlayStation) após visualizar o código.</li>
+                <li>Incompatibilidade do hardware do cliente para rodar o jogo.</li>
+                <li>Banimentos por conduta do usuário dentro do jogo/plataforma.</li>
+                <li>Tentativa de resgate em região diferente da especificada (ex: Key BR em conta USA).</li>
+                <li>Perda ou compartilhamento do código com terceiros após o recebimento.</li>
+            </ul>
+        </div>
+    </div>
+</div>
 
-    <h2>O que a Garantia NÃO Cobre?</h2>
-    <ul>
-        <li>Danos causados por mau uso, como quedas, contato com líquidos ou picos de energia.</li>
-        <li>Danos causados por instalação ou configuração incorreta.</li>
-        <li>Desgaste natural de peças e componentes.</li>
-        <li>Produtos com lacre de garantia violado.</li>
-    </ul>
+<div class="container-limit steps-section reveal-up" style="animation-delay: 0.4s;">
+    <h2 style="text-align: center; font-size: 2rem; margin-bottom: 10px; color: #fff;">Teve Problema com o Código?</h2>
+    <p style="text-align: center; color: var(--text-light);">Resolvemos rapidamente em 3 passos.</p>
 
-    <h2>Como Acionar sua Garantia?</h2>
-    <p>Se o seu produto apresentou algum problema e está dentro do prazo de garantia, o primeiro passo é entrar em contato com a nossa equipe.</p>
-    <p>Por favor, acesse nossa <strong><a href="{{ url_for('contato') }}">Página de Suporte</a></strong> e envie uma mensagem detalhando o ocorrido. Não se esqueça de informar o número do seu pedido para agilizar o atendimento.</p>
+    <div class="step-container">
+        <div class="step-box">
+            <span class="step-icon">📸</span>
+            <h4 class="step-title">1. Tire Prints</h4>
+            <p class="step-desc">Tire um print ou foto do erro apresentado na plataforma (Steam, Xbox, PSN, etc) ao tentar resgatar o código.</p>
+        </div>
+        <div class="step-box">
+            <span class="step-icon">💬</span>
+            <h4 class="step-title">2. Abra um Ticket</h4>
+            <p class="step-desc">Entre em contato com nosso suporte informando o número do pedido e anexando as evidências do erro.</p>
+        </div>
+        <div class="step-box">
+            <span class="step-icon">🔄</span>
+            <h4 class="step-title">3. Análise e Troca</h4>
+            <p class="step-desc">Verificamos o status da chave junto ao fornecedor. Confirmado o erro, enviamos um código novo imediatamente.</p>
+        </div>
+    </div>
+
+    <div class="cta-box">
+        <a href="{{ url_for('contato') }}" class="btn-support">
+            📩 Acionar Suporte Agora
+        </a>
+    </div>
 </div>
 
 {% endblock %}
