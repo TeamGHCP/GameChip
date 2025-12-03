@@ -8,7 +8,7 @@ class Config:
     # Database Configuration - Usar variáveis de ambiente em produção
     DB_CONFIG = {
         'host': os.environ.get('DB_HOST', 'localhost'),
-        'port': os.environ.get('DB_PORT', '3307'),
+        'port': os.environ.get('DB_PORT', '3306'),
         'user': os.environ.get('DB_USER', 'root'),
         'password': os.environ.get('DB_PASSWORD', ''),
         'database': os.environ.get('DB_NAME', 'loja_informatica')

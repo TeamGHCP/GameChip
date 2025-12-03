@@ -131,15 +131,12 @@ def configure_produto_routes(app):
             if not media_avaliacoes:
                 media_avaliacoes = {'media': 0, 'total_avaliacoes': 0, 'cinco_estrelas': 0, 'quatro_estrelas': 0, 'tres_estrelas': 0, 'duas_estrelas': 0, 'uma_estrela': 0}
             
-            # 4. 🔥 VERIFICAÇÃO DO USUÁRIO LOGADO (NOVO)
+            # 4. Verifica usuário logado
             comprou = False
             minha_avaliacao = None
             
             if 'usuario_id' in session:
-                # Verifica se comprou
                 comprou = usuario_comprou_produto(session['usuario_id'], id_produto)
-                
-                # Verifica se já avaliou
                 cursor.execute("""
                     SELECT * FROM avaliacoes 
                     WHERE id_cliente = %s AND id_produto = %s
@@ -165,7 +162,6 @@ def configure_produto_routes(app):
     @app.route('/avaliar-produto/<int:id_produto>', methods=['POST'])
     @login_required
     def avaliar_produto(id_produto):
-        # 1. Verifica se está logado e se comprou
         if 'usuario_id' not in session:
             return redirect(url_for('login'))
 
@@ -173,7 +169,6 @@ def configure_produto_routes(app):
             flash('❌ Você precisa comprar este produto para avaliar.', 'error')
             return redirect(url_for('detalhes_produto', id_produto=id_produto))
         
-        # 2. Pega dados do form
         nota = request.form.get('nota', type=int)
         titulo = request.form.get('titulo', '').strip()
         comentario = request.form.get('comentario', '').strip()
@@ -186,13 +181,11 @@ def configure_produto_routes(app):
             conn = get_db_connection()
             cursor = conn.cursor()
             
-            # 3. 🔥 VERIFICA SE É INSERT OU UPDATE (NOVO)
             cursor.execute("SELECT id_avaliacao FROM avaliacoes WHERE id_cliente = %s AND id_produto = %s", 
                          (session['usuario_id'], id_produto))
             existente = cursor.fetchone()
             
             if existente:
-                # ATUALIZAR
                 cursor.execute("""
                     UPDATE avaliacoes 
                     SET nota = %s, titulo = %s, comentario = %s, data_avaliacao = NOW()
@@ -200,7 +193,6 @@ def configure_produto_routes(app):
                 """, (nota, titulo, comentario, existente[0]))
                 flash('✅ Avaliação atualizada com sucesso!', 'success')
             else:
-                # INSERIR
                 cursor.execute("""
                     INSERT INTO avaliacoes (id_cliente, id_produto, nota, titulo, comentario, tipo_avaliador, aprovado)
                     VALUES (%s, %s, %s, %s, %s, 'cliente', TRUE)
@@ -216,7 +208,6 @@ def configure_produto_routes(app):
         
         return redirect(url_for('detalhes_produto', id_produto=id_produto))
 
-    # 🔥 NOVA ROTA: EXCLUIR AVALIAÇÃO
     @app.route('/excluir-avaliacao/<int:id_avaliacao>', methods=['POST'])
     @login_required
     def excluir_avaliacao(id_avaliacao):
@@ -224,7 +215,6 @@ def configure_produto_routes(app):
             conn = get_db_connection()
             cursor = conn.cursor()
             
-            # Garante que só o dono pode excluir
             cursor.execute("DELETE FROM avaliacoes WHERE id_avaliacao = %s AND id_cliente = %s", 
                          (id_avaliacao, session['usuario_id']))
             conn.commit()
@@ -239,12 +229,14 @@ def configure_produto_routes(app):
         finally:
             if conn and conn.is_connected(): cursor.close(); conn.close()
             
-        # Retorna para a página anterior (página do produto)
         return redirect(request.referrer)
 
+    # --- A CORREÇÃO ESTÁ AQUI EMBAIXO ---
+    # Mudamos o nome da função de 'minhas_avaliacoes_pendentes' para 'redirecionar_avaliacoes_pendentes'
+    # para não conflitar com a rota que já existe no avaliacao_routes.py
     @app.route('/minhas-avaliacoes-pendentes')
     @login_required
-    def minhas_avaliacoes_pendentes():
+    def redirecionar_avaliacoes_pendentes():
         return redirect(url_for('avaliacao.minhas_avaliacoes_pendentes'))
 
     @app.route('/categorias')
