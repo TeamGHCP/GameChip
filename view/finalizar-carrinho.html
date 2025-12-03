@@ -143,6 +143,10 @@
 <div class="checkout-container">
     <h2>💳 Finalizar Compra</h2>
     
+    <div class="status-pendente">
+        ⏳ Aguardando Pagamento
+    </div>
+
     <div class="info-box">
         <strong>📦 Itens do seu pedido:</strong>
         <ul style="margin: 10px 0; padding-left: 20px;">
@@ -150,14 +154,9 @@
             <li>{{ produto.nome }} - {{ produto.quantidade }}x - R$ {{ "%.2f"|format(produto.preco * produto.quantidade) }}</li>
             {% endfor %}
         </ul>
-        <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid var(--primary); font-size: 1.2em;">
-            <strong>Total: R$ {{ "%.2f"|format(total_geral) }}</strong>
-        </div>
     </div>
 
-    <form id="checkout-form" method="POST" action="{{ url_for('processar_checkout') }}">
-        <input type="hidden" name="total_geral" value="{{ total_geral }}">
-        
+    <form method="POST" action="{{ url_for('finalizar_carrinho') }}">
         <label>Nome Completo</label>
         <input type="text" name="nome" value="{{ session['usuario_nome'] if session.get('usuario_nome') else '' }}" required>
 
@@ -171,37 +170,78 @@
         <select id="pagamento" name="pagamento" required>
             <option value="">Selecione</option>
             <option value="pix">PIX</option>
-            <option value="cartao">Cartão de Crédito/Débito</option>
-            <option value="boleto">Boleto Bancário</option>
+            <option value="cartao">Cartão</option>
+            <option value="boleto">Boleto</option>
         </select>
         
-        <!-- BLOCO CARTÃO (mostra detalhes mas será redirecionado) -->
         <div id="cartao-info" class="hidden payment-details-box cartao-box">
-            <h4>💳 Pagamento com Cartão</h4>
-            <p>Você será redirecionado para uma página segura de pagamento com cartão.</p>
-            <p style="color: var(--success); font-weight: 600;">✅ Processamento 100% seguro</p>
+            <h4>💳 Informações do Cartão</h4>
+            
+            <div class="form-group">
+                <div class="credit-card-preview">
+                    <p id="card-number-display">XXXX XXXX XXXX XXXX</p>
+                    <div style="display: flex; justify-content: space-between; margin-top: 15px;">
+                        <span id="card-name-display">NOME NO CARTÃO</span>
+                        <span id="card-expiry-display">MM/AA</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Número do Cartão</label>
+                <input type="text" id="card-number" name="card_number" placeholder="XXXX XXXX XXXX XXXX" maxlength="19">
+            </div>
+
+            <div class="form-group">
+                <label>Nome no Cartão</label>
+                <input type="text" id="card-name" name="card_name" placeholder="Nome Completo">
+            </div>
+
+            <div style="display: flex; gap: 15px;">
+                <div class="form-group" style="flex: 2;">
+                    <label>Validade (MM/AA)</label>
+                    <input type="text" id="card-expiry" name="card_expiry" placeholder="MM/AA" maxlength="5">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>CVV</label>
+                    <input type="text" name="card_cvv" placeholder="XXX" maxlength="4">
+                </div>
+            </div>
+
+            <label>Tipo de Cartão</label>
+            <select id="tipo-cartao" name="tipo_cartao">
+                <option value="">Selecione</option>
+                <option value="credito">Crédito</option>
+                <option value="debito">Débito</option>
+            </select>
+
+            <div id="credito-info" class="hidden" style="margin-top: 15px;">
+                <label>Parcelamento</label>
+                <select id="parcelas" name="parcelas">
+                    <option value="">Selecione</option>
+                </select>
+                <p id="valor-parcela" style="font-weight:600; color:var(--primary); margin-top: 8px;"></p>
+            </div>
         </div>
 
-        <!-- BLOCO BOLETO (mostra detalhes mas será redirecionado) -->
         <div id="boleto-info" class="hidden payment-details-box boleto-box">
             <h4>📄 Pagamento via Boleto Bancário</h4>
-            <p>Seu boleto será gerado no valor de <strong>R$ {{ "%.2f"|format(total_geral) }}</strong>.</p>
-            <p style="color: var(--danger); font-weight: 600;">⚠️ Vencimento em 3 dias úteis</p>
+            <div class="boleto-info">
+                <p>Seu boleto será gerado no valor de **R$ {{ "%.2f"|format(total_geral) }}**.</p>
+                <p>O prazo de **compensação é de 1 a 2 dias úteis** após o pagamento. Você será notificado por e-mail.</p>
+                <p style="color:var(--danger); font-weight: 700;">⚠️ Atenção: Não pague após a data de vencimento (2 dias).</p>
+            </div>
+            <div class="form-group" style="margin-top: 20px;">
+                <label>CPF para Emissão do Boleto</label>
+                <input type="text" name="cpf_boleto" placeholder="000.000.000-00" required>
+            </div>
         </div>
 
-        <!-- BLOCO PIX (mantém igual) -->
-        <div id="pix-info" class="hidden payment-details-box" style="border-left: 4px solid var(--success);">
-            <h4>💸 Pagamento via PIX</h4>
-            <p>Após confirmar, você verá um QR Code para pagamento instantâneo.</p>
-            <p style="color: var(--success); font-weight: 600;">⚡ Pagamento instantâneo</p>
-        </div>
-
-        <button type="submit" class="btn-finalizar" id="submit-btn">
-            {% if pagamento == 'pix' %}💸 Pagar com PIX
-            {% elif pagamento == 'cartao' %}💳 Pagar com Cartão
-            {% elif pagamento == 'boleto' %}📄 Gerar Boleto
-            {% else %}💰 Continuar com Pagamento{% endif %}
-        </button>
+        <p>Total a Pagar: 
+            <strong id="total">R$ {{ "%.2f"|format(total_geral) }}</strong>
+        </p>
+        
+        <button type="submit" class="btn-finalizar">💰 Confirmar Compra</button>
         
         {% if session.get('chegou_finalizar_carrinho') %}
         <a href="{{ url_for('avaliacao.minhas_avaliacoes_pendentes') }}" class="btn-avaliar">
@@ -218,106 +258,231 @@
     const pagamento = document.getElementById('pagamento');
     const cartaoInfo = document.getElementById('cartao-info');
     const boletoInfo = document.getElementById('boleto-info');
-    const pixInfo = document.getElementById('pix-info');
-    const submitBtn = document.getElementById('submit-btn');
-    const form = document.getElementById('checkout-form');
+    const tipoCartao = document.getElementById('tipo-cartao');
+    const creditoInfo = document.getElementById('credito-info');
+    const parcelasSelect = document.getElementById('parcelas');
+    const valorParcela = document.getElementById('valor-parcela');
+    const total = parseFloat("{{ total_geral }}");
+    const cardNumberInput = document.getElementById('card-number');
+    const cardNameInput = document.getElementById('card-name');
+    const cardExpiryInput = document.getElementById('card-expiry');
+    const cardNumberDisplay = document.getElementById('card-number-display');
+    const cardNameDisplay = document.getElementById('card-name-display');
+    const cardExpiryDisplay = document.getElementById('card-expiry-display');
+    const form = document.querySelector('form');
 
     // ============================================================
-    //               2. ALTERAR TEXTO DO BOTÃO DINAMICAMENTE
+    //               2. REMOVER REQUIRED DINÂMICAMENTE
     // ============================================================
-    pagamento.addEventListener('change', () => {
-        // Esconde todos os blocos primeiro
-        cartaoInfo.classList.add('hidden');
-        boletoInfo.classList.add('hidden');
-        pixInfo.classList.add('hidden');
+    // Remove o atributo 'required' dos campos de pagamento específicos
+    // Eles serão validados apenas se o método for selecionado
+    function configurarCamposObrigatorios() {
+        // Campos do cartão
+        const camposCartao = [
+            'card_number', 'card_name', 'card_expiry', 'card_cvv', 
+            'tipo_cartao', 'parcelas'
+        ];
         
-        // Exibe o bloco correspondente e atualiza o botão
-        if (pagamento.value === 'cartao') {
-            cartaoInfo.classList.remove('hidden');
-            submitBtn.innerHTML = '💳 Ir para Pagamento com Cartão';
-        } else if (pagamento.value === 'boleto') {
-            boletoInfo.classList.remove('hidden');
-            submitBtn.innerHTML = '📄 Gerar Boleto';
-        } else if (pagamento.value === 'pix') {
-            pixInfo.classList.remove('hidden');
-            submitBtn.innerHTML = '💸 Continuar com PIX';
-        } else {
-            submitBtn.innerHTML = '💰 Continuar com Pagamento';
-        }
-    });
+        // Campos do boleto
+        const camposBoleto = ['cpf_boleto'];
+        
+        // Remover required de todos os campos de pagamento
+        camposCartao.forEach(name => {
+            const campo = form.querySelector(`[name="${name}"]`);
+            if (campo) campo.removeAttribute('required');
+        });
+        
+        camposBoleto.forEach(name => {
+            const campo = form.querySelector(`[name="${name}"]`);
+            if (campo) campo.removeAttribute('required');
+        });
+    }
+
+    // Executar ao carregar a página
+    configurarCamposObrigatorios();
 
     // ============================================================
     //               3. VALIDAÇÃO DO FORMULÁRIO
     // ============================================================
     form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
         const metodo = pagamento.value;
         
         if (!metodo) {
+            e.preventDefault();
             alert('⚠️ Selecione uma forma de pagamento!');
             pagamento.focus();
             return;
         }
         
-        // Validação básica dos campos obrigatórios
-        const nome = form.querySelector('[name="nome"]').value.trim();
-        const email = form.querySelector('[name="email"]').value.trim();
-        const endereco = form.querySelector('[name="endereco"]').value.trim();
+        let isValid = true;
+        let errorMessage = '';
         
-        if (!nome) {
-            alert('❌ Preencha seu nome completo!');
-            form.querySelector('[name="nome"]').focus();
-            return;
-        }
-        
-        if (!email || !email.includes('@')) {
-            alert('❌ Preencha um email válido!');
-            form.querySelector('[name="email"]').focus();
-            return;
-        }
-        
-        if (!endereco) {
-            alert('❌ Preencha o endereço de entrega!');
-            form.querySelector('[name="endereco"]').focus();
-            return;
-        }
-        
-        // Mostrar loading no botão
-        submitBtn.innerHTML = '⏳ Processando...';
-        submitBtn.disabled = true;
-        
-        // Criar FormData para enviar
-        const formData = new FormData(form);
-        
-        // Enviar para o servidor
-        fetch("{{ url_for('processar_checkout') }}", {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                // Redirecionar conforme o método de pagamento
-                if (metodo === 'pix') {
-                    window.location.href = "{{ url_for('finalizar_carrinho') }}";
-                } else if (metodo === 'cartao') {
-                    window.location.href = "/pagamento-cartao?pedido_id=" + data.pedido_id;
-                } else if (metodo === 'boleto') {
-                    window.location.href = "/boleto?pedido_id=" + data.pedido_id;
+        // Validação específica para cartão
+        if (metodo === 'cartao') {
+            const cardNumber = cardNumberInput.value.replace(/\s/g, '');
+            const cardName = cardNameInput.value.trim();
+            const cardExpiry = cardExpiryInput.value;
+            const cardCvv = form.querySelector('[name="card_cvv"]').value;
+            const tipoCartaoValue = tipoCartao.value;
+            
+            if (cardNumber.length < 16) {
+                isValid = false;
+                errorMessage = '❌ Número do cartão inválido!';
+                cardNumberInput.focus();
+            } else if (!cardName) {
+                isValid = false;
+                errorMessage = '❌ Preencha o nome no cartão!';
+                cardNameInput.focus();
+            } else if (!/^\d{2}\/\d{2}$/.test(cardExpiry)) {
+                isValid = false;
+                errorMessage = '❌ Data de validade inválida! Use MM/AA';
+                cardExpiryInput.focus();
+            } else if (!cardCvv || cardCvv.length < 3) {
+                isValid = false;
+                errorMessage = '❌ CVV inválido!';
+                form.querySelector('[name="card_cvv"]').focus();
+            } else if (!tipoCartaoValue) {
+                isValid = false;
+                errorMessage = '❌ Selecione o tipo do cartão!';
+                tipoCartao.focus();
+            } else if (tipoCartaoValue === 'credito') {
+                const parcelas = parcelasSelect.value;
+                if (!parcelas) {
+                    isValid = false;
+                    errorMessage = '❌ Selecione o número de parcelas!';
+                    parcelasSelect.focus();
                 }
-            } else {
-                alert('❌ Erro: ' + data.message);
-                submitBtn.innerHTML = '💰 Tentar Novamente';
-                submitBtn.disabled = false;
             }
-        })
-        .catch(error => {
-            console.error('Erro:', error);
-            alert('❌ Erro ao processar. Tente novamente.');
-            submitBtn.innerHTML = '💰 Tentar Novamente';
-            submitBtn.disabled = false;
-        });
+        }
+        
+        // Validação para boleto
+        if (metodo === 'boleto') {
+            const cpfInput = form.querySelector('[name="cpf_boleto"]');
+            const cpf = cpfInput.value;
+            const cpfNumeros = cpf.replace(/\D/g, '');
+            
+            if (!cpfNumeros || cpfNumeros.length !== 11) {
+                isValid = false;
+                errorMessage = '❌ CPF inválido para o boleto!';
+                cpfInput.focus();
+            }
+        }
+        
+        // Se houver erro, mostrar e cancelar envio
+        if (!isValid) {
+            e.preventDefault();
+            alert(errorMessage);
+            return;
+        }
+        
+        // Se tudo estiver ok, mostrar loading no botão
+        const btn = form.querySelector('button[type="submit"]');
+        btn.innerHTML = '⏳ Processando...';
+        btn.disabled = true;
+        
+        // Adicionar um pequeno delay para mostrar o loading
+        setTimeout(() => {
+            // Permitir que o formulário seja enviado
+        }, 100);
+    });
+
+    // ============================================================
+    //               4. LÓGICA DE EXIBIÇÃO DA FORMA DE PAGAMENTO
+    // ============================================================
+    pagamento.addEventListener('change', () => {
+        // Esconde todos os blocos primeiro
+        cartaoInfo.classList.add('hidden');
+        boletoInfo.classList.add('hidden');
+        
+        // Exibe o bloco correspondente
+        if (pagamento.value === 'cartao') {
+            cartaoInfo.classList.remove('hidden');
+        } else if (pagamento.value === 'boleto') {
+            boletoInfo.classList.remove('hidden');
+        }
+    });
+
+    // ============================================================
+    //               5. LÓGICA DO CARTÃO: PARCELAMENTO
+    // ============================================================
+    tipoCartao.addEventListener('change', () => {
+        // Mostra o bloco de parcelas apenas se for 'credito'
+        creditoInfo.classList.toggle('hidden', tipoCartao.value !== 'credito');
+        
+        // Se for crédito, preenche as opções de parcelas
+        if (tipoCartao.value === 'credito') {
+            preencherParcelas();
+        } else {
+            // Limpa o parcelamento se não for crédito
+            parcelasSelect.innerHTML = '<option value="">Selecione</option>';
+            valorParcela.textContent = '';
+        }
+    });
+
+    function preencherParcelas() {
+        parcelasSelect.innerHTML = '<option value="">Selecione</option>';
+        for (let i = 1; i <= 6; i++) {
+            // Até 6x sem juros
+            const valor = (total / i).toFixed(2);
+            parcelasSelect.innerHTML += `<option value="${i}">${i}x de R$ ${valor} (Sem Juros)</option>`;
+        }
+        for (let i = 7; i <= 12; i++) {
+            // De 7 a 12x com juros
+            const totalComJuros = (total * 1.05).toFixed(2); // Exemplo: 5% de juros total
+            const valor = (totalComJuros / i).toFixed(2);
+            parcelasSelect.innerHTML += `<option value="${i}">${i}x de R$ ${valor} (Juros de 5%)</option>`;
+        }
+    }
+
+    parcelasSelect.addEventListener('change', () => {
+        const parcelas = parseInt(parcelasSelect.value);
+        if (isNaN(parcelas) || parcelas === 0) {
+            valorParcela.textContent = '';
+            return;
+        }
+
+        let totalComJuros = total;
+        let jurosTexto = '(Sem Juros)';
+        
+        if (parcelas > 6) {
+            totalComJuros *= 1.05; // 5% de juros total
+            jurosTexto = '(Juros de 5%)';
+        }
+        
+        const valor = (totalComJuros / parcelas).toFixed(2);
+
+        valorParcela.textContent = `Total da Compra: R$ ${totalComJuros.toFixed(2)} — ${parcelas}x de R$ ${valor} ${jurosTexto}`;
+    });
+
+    // ============================================================
+    //               6. LÓGICA DO CARTÃO: PRÉ-VISUALIZAÇÃO
+    // ============================================================
+    cardNumberInput.addEventListener('input', (e) => {
+        let value = e.target.value.replace(/\D/g, '');
+        value = value.substring(0, 16);
+        value = value.replace(/(\d{4})(?=\d)/g, '$1 ');
+        e.target.value = value;
+        
+        const displayValue = value.padEnd(16 + 3, 'X').replace(/\d/g, 'X').replace(/(\w{4}\s?)/g, '$1').trim();
+        cardNumberDisplay.textContent = displayValue;
+    });
+
+    cardNameInput.addEventListener('input', (e) => {
+        const name = e.target.value.toUpperCase().trim();
+        cardNameDisplay.textContent = name.length > 0 ? name : 'NOME NO CARTÃO';
+    });
+
+    cardExpiryInput.addEventListener('input', (e) => {
+        let value = e.target.value.replace(/\D/g, '');
+        
+        if (value.length > 2) {
+            value = value.substring(0, 2) + '/' + value.substring(2, 4);
+        }
+        
+        e.target.value = value;
+        
+        const displayValue = value.padEnd(5, 'A').replace(/\d/g, 'N');
+        cardExpiryDisplay.textContent = displayValue.replace(/N+/g, (match) => '0'.repeat(match.length));
     });
 </script>
 
