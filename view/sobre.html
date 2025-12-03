@@ -3,52 +3,19 @@
 {% set titulo = "Sobre a Gamechip - Nossa História e Legado" %}
 
 {% block conteudo %}
-
 <style>
     /* ==========================================================================
        CSS ULTRA PREMIUM 2.0 - GAMECHIP VISUAL UPGRADE
        ========================================================================== */
     
     :root {
-        /* Paleta de Cores Refinada - Modo Claro (Default) */
-        --neon-primary: #0066ff;      /* Azul */
+        /* Paleta de Cores Refinada */
+        --neon-primary: #8a2be2;      /* Roxo Neon */
         --neon-secondary: #ff6b35;    /* Laranja Vibrante */
         --dark-bg: #0a0a12;           /* Fundo ultra escuro */
         --glass-surface: rgba(255, 255, 255, 0.03);
         --glass-border: 1px solid rgba(255, 255, 255, 0.08);
-        --text-glow: 0 0 10px rgba(0, 102, 255, 0.5);
-        
-        /* Cores específicas do modo claro */
-        --primary: #0066ff;
-        --primary-dark: #0052cc;
-        --primary-light: #3385ff;
-        
-        /* FUNDOS CLAROS PARA HISTÓRIA */
-        --story-bg-light: #f0f7ff;    /* Azul bem clarinho, quase neutro */
-        --story-bg-dark: #f5f0ff;     /* Roxo bem clarinho para modo escuro */
-        
-        /* Novas cores para texto */
-        --text-dark: #1a1a1a;    /* Preto para modo claro */
-        --text-light: #ffffff;   /* Branco para modo escuro */
-    }
-
-    /* Modo Escuro - Sobrescreve as cores */
-    .dark-theme {
-        --neon-primary: #ad33ff;      /* Roxo */
-        --neon-secondary: #ff6b35;    /* Laranja Vibrante */
-        --dark-bg: #0a0a12;
-        --glass-surface: rgba(255, 255, 255, 0.03);
-        --glass-border: 1px solid rgba(255, 255, 255, 0.08);
-        --text-glow: 0 0 10px rgba(173, 51, 255, 0.5);
-        
-        /* Cores específicas do modo escuro */
-        --primary: #ad33ff;
-        --primary-dark: #9900ff;
-        --primary-light: #cb5cff;
-        
-        /* FUNDO ROXO CLARINHO PARA HISTÓRIA NO MODO ESCURO */
-        --story-bg-light: #1a0f2a;    /* Roxo bem escuro de fundo */
-        --story-bg-dark: #2a1a4a;     /* Roxo um pouco mais claro */
+        --text-glow: 0 0 10px rgba(138, 43, 226, 0.5);
     }
 
     /* Scrollbar Personalizada */
@@ -97,59 +64,40 @@
     }
 
     /* ==========================================================================
-       1. HERO SECTION (A HISTÓRIA) - FUNDO AZUL/ROXO CLARINHO
+       1. HERO SECTION (A HISTÓRIA)
        ========================================================================== */
     .about-hero {
         padding: 100px 0 120px;
         position: relative;
         text-align: center;
         overflow: hidden;
-        /* FUNDO AZUL BEM CLARINHO (MODO CLARO) */
-        background: var(--story-bg-light) !important;
-        /* Suave gradiente para dar profundidade */
-        background: linear-gradient(135deg, 
-            var(--story-bg-light) 0%, 
-            rgba(255, 255, 255, 0.9) 100%) !important;
     }
 
-    .dark-theme .about-hero {
-        /* FUNDO ROXO BEM CLARINHO (MODO ESCURO) */
-        background: linear-gradient(135deg, 
-            var(--story-bg-light) 0%, 
-            rgba(30, 20, 50, 0.9) 100%) !important;
-    }
-
-    /* Fundo dinâmico com múltiplos brilhos - MAIS SUAVE */
+    /* Fundo dinâmico com múltiplos brilhos */
     .hero-glow-bg {
         position: absolute;
         top: -150px; left: 50%; transform: translateX(-50%);
         width: 1000px; height: 800px;
-        background: radial-gradient(circle, 
-            var(--neon-primary) 0%, 
-            transparent 60%);
+        background: radial-gradient(circle, rgba(138, 43, 226, 0.2) 0%, transparent 60%);
         pointer-events: none;
         z-index: 0;
         animation: pulseGlow 6s infinite alternate;
         filter: blur(60px);
-        opacity: 0.08; /* Muito mais suave */
     }
 
-    /* Segundo brilho para profundidade (Laranja) - MAIS SUAVE */
+    /* Segundo brilho para profundidade (Laranja) */
     .hero-glow-bg::after {
         content: '';
         position: absolute;
         bottom: 20%; right: 20%;
         width: 400px; height: 400px;
-        background: radial-gradient(circle, 
-            var(--neon-secondary) 0%, 
-            transparent 70%);
+        background: radial-gradient(circle, rgba(255, 107, 53, 0.1) 0%, transparent 70%);
         animation: floatGlow 8s infinite alternate-reverse;
-        opacity: 0.05; /* Muito mais suave */
     }
 
     @keyframes pulseGlow {
-        0% { opacity: 0.05; transform: translateX(-50%) scale(0.9); }
-        100% { opacity: 0.1; transform: translateX(-50%) scale(1.1); }
+        0% { opacity: 0.4; transform: translateX(-50%) scale(0.9); }
+        100% { opacity: 0.7; transform: translateX(-50%) scale(1.1); }
     }
 
     @keyframes floatGlow {
@@ -161,25 +109,18 @@
         display: inline-block;
         padding: 8px 24px;
         border-radius: 50px;
-        background: rgba(0, 102, 255, 0.1); /* Mais suave */
-        border: 1px solid rgba(0, 102, 255, 0.2);
-        color: var(--primary);
+        background: rgba(138, 43, 226, 0.05);
+        border: 1px solid rgba(138, 43, 226, 0.3);
+        color: #d8b4fe; /* Tom mais claro de roxo para leitura */
         font-weight: 800;
         text-transform: uppercase;
         font-size: 0.8rem;
         letter-spacing: 4px;
         margin-bottom: 30px;
-        box-shadow: 0 0 15px rgba(0, 102, 255, 0.1), inset 0 0 8px rgba(0, 102, 255, 0.05);
+        box-shadow: 0 0 20px rgba(138, 43, 226, 0.2), inset 0 0 10px rgba(138, 43, 226, 0.1);
         position: relative;
         z-index: 2;
         backdrop-filter: blur(5px);
-    }
-
-    .dark-theme .hero-badge {
-        background: rgba(173, 51, 255, 0.1);
-        border: 1px solid rgba(173, 51, 255, 0.2);
-        color: var(--primary-light);
-        box-shadow: 0 0 15px rgba(173, 51, 255, 0.1), inset 0 0 8px rgba(173, 51, 255, 0.05);
     }
 
     .hero-title {
@@ -187,79 +128,56 @@
         font-weight: 900;
         line-height: 1.1;
         margin-bottom: 60px;
-        /* TEXTO PRETO NO MODO CLARO, BRANCO NO MODO ESCURO */
-        color: var(--text-dark);
+        color: #fff;
         position: relative;
         z-index: 2;
-    }
-
-    .dark-theme .hero-title {
-        color: var(--text-light);
+        text-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
     .hero-title span {
-        background: linear-gradient(135deg, var(--primary) 0%, var(--neon-secondary) 100%);
+        background: linear-gradient(135deg, #a855f7 0%, #ff8a5b 100%); /* Gradiente mais suave */
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         position: relative;
     }
 
-    /* Card da História - Estilo Limpo e Moderno */
+    /* Card da História - Estilo HUD Futurista */
     .story-card {
-        background: rgba(255, 255, 255, 0.9); /* Branco semi-transparente */
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(0, 102, 255, 0.15);
+        background: linear-gradient(165deg, rgba(30, 30, 45, 0.7) 0%, rgba(20, 20, 30, 0.9) 100%);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 24px;
         padding: 60px;
         text-align: left;
         position: relative;
-        box-shadow: 0 20px 60px rgba(0, 102, 255, 0.08),
-            0 0 0 1px rgba(255, 255, 255, 0.5);
+        box-shadow: 0 30px 80px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,255,255,0.03);
         max-width: 900px;
         margin: 0 auto;
         overflow: hidden;
     }
 
-    .dark-theme .story-card {
-        background: rgba(30, 20, 40, 0.9); /* Roxo escuro semi-transparente */
-        border: 1px solid rgba(173, 51, 255, 0.2);
-        box-shadow: 0 20px 60px rgba(173, 51, 255, 0.08),
-            0 0 0 1px rgba(255, 255, 255, 0.1);
-    }
-
-    /* Barra de gradiente superior - MAIS SUAVE */
+    /* Barra de gradiente superior */
     .story-card::before {
         content: '';
         position: absolute;
         top: 0; left: 0; width: 100%; height: 2px;
-        background: linear-gradient(90deg, 
-            transparent, 
-            var(--neon-primary), 
-            var(--neon-secondary), 
-            transparent);
-        opacity: 0.6;
+        background: linear-gradient(90deg, transparent, var(--neon-primary), var(--neon-secondary), transparent);
+        opacity: 0.8;
     }
 
     .story-text {
         font-size: 1.25rem;
-        /* TEXTO PRETO NO MODO CLARO, BRANCO NO MODO ESCURO */
-        color: var(--text-dark);
+        color: #d1d5db; /* Cinza claro premium */
         line-height: 1.9;
         font-weight: 400;
     }
 
-    .dark-theme .story-text {
-        color: var(--text-light);
-    }
-
     .story-text strong {
-        color: var(--primary);
+        color: #fff;
         font-weight: 700;
-    }
-
-    .dark-theme .story-text strong {
-        color: var(--primary-light);
+        text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
     }
 
     /* ==========================================================================
@@ -283,17 +201,18 @@
         object-position: center;
         will-change: transform;
         transform: translateY(-15%);
-        filter: brightness(0.8) contrast(1.1);
+        filter: brightness(0.8) contrast(1.1); /* Ajuste de imagem */
     }
 
     .banner-overlay {
         position: absolute;
         top: 0; left: 0; width: 100%; height: 100%;
+        /* Gradiente mais complexo para suavizar transição */
         background: linear-gradient(to bottom, 
-            rgba(0, 0, 0, 0.8) 0%, 
-            rgba(0, 0, 0, 0.4) 20%, 
-            rgba(0, 0, 0, 0.4) 80%, 
-            rgba(0, 0, 0, 0.8) 100%);
+            var(--dark-bg) 0%, 
+            rgba(10, 10, 18, 0.4) 20%, 
+            rgba(10, 10, 18, 0.4) 80%, 
+            var(--dark-bg) 100%);
         pointer-events: none;
     }
 
@@ -302,7 +221,6 @@
        ========================================================================== */
     .stats-section {
         padding: 100px 0;
-        background: transparent !important;
     }
 
     .stats-grid {
@@ -314,33 +232,18 @@
     .stat-card {
         text-align: center;
         padding: 40px 20px;
-        background: rgba(255,255,255,0.9);
-        border: 1px solid rgba(0, 102, 255, 0.1);
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.05);
         border-radius: 20px;
         transition: transform 0.4s ease, border-color 0.4s ease;
         position: relative;
-        box-shadow: 0 10px 30px rgba(0, 102, 255, 0.05);
-    }
-
-    .dark-theme .stat-card {
-        background: rgba(30, 20, 40, 0.9);
-        border: 1px solid rgba(173, 51, 255, 0.1);
-        box-shadow: 0 10px 30px rgba(173, 51, 255, 0.05);
     }
 
     .stat-card:hover {
         transform: translateY(-10px);
-        border-color: var(--neon-primary);
-        background: rgba(255, 255, 255, 0.95);
-        box-shadow: 0 10px 40px rgba(0,0,0,0.1),
-            0 0 30px rgba(0, 102, 255, 0.1);
-    }
-
-    .dark-theme .stat-card:hover {
-        border-color: var(--neon-primary);
-        background: rgba(40, 30, 60, 0.95);
-        box-shadow: 0 10px 40px rgba(0,0,0,0.2),
-            0 0 30px rgba(173, 51, 255, 0.1);
+        border-color: rgba(138, 43, 226, 0.3);
+        background: rgba(255,255,255,0.04);
+        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
     }
 
     .stat-number {
@@ -349,26 +252,11 @@
         display: block;
         line-height: 1;
         margin-bottom: 15px;
-        background: linear-gradient(180deg, 
-            var(--primary-light) 20%, 
-            var(--primary) 100%);
+        background: linear-gradient(180deg, #fff 20%, rgba(255,255,255,0.4) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        filter: drop-shadow(0 0 5px rgba(0, 102, 255, 0.2));
+        filter: drop-shadow(0 0 10px rgba(138, 43, 226, 0.3));
     }
-    .dark-theme .stat-number {
-        background: linear-gradient(
-            180deg,
-            var(--primary-light) 0%,
-            var(--primary) 50%,
-            var(--primary-dark) 100%
-        );
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        filter: drop-shadow(0 0 5px rgba(173, 51, 255, 0.45));
-}
-
-
 
     .stat-label {
         font-size: 1rem;
@@ -378,8 +266,6 @@
         color: var(--neon-secondary);
         opacity: 0.9;
     }
-
-    /* O resto do CSS permanece igual... */
 
     /* ==========================================================================
        4. SEÇÃO EQUIPE (CARDS ESTILO JOGO)
@@ -392,25 +278,14 @@
     .team-header h2 {
         font-size: 3.5rem;
         font-weight: 800;
-        /* TEXTO PRETO NO MODO CLARO, BRANCO NO MODO ESCURO */
-        color: var(--text-dark);
+        color: #fff;
         margin-bottom: 15px;
-        text-shadow: 0 0 10px rgba(0, 102, 255, 0.2);
-    }
-
-    .dark-theme .team-header h2 {
-        color: var(--text-light);
-        text-shadow: 0 0 10px rgba(173, 51, 255, 0.2);
+        text-shadow: 0 0 20px rgba(138, 43, 226, 0.4);
     }
 
     .team-header p {
         font-size: 1.2rem;
-        /* TEXTO PRETO NO MODO CLARO, BRANCO NO MODO ESCURO */
-        color: var(--text-dark);
-    }
-
-    .dark-theme .team-header p {
-        color: var(--text-light);
+        color: #9ca3af;
     }
 
     .team-grid {
@@ -421,11 +296,8 @@
     }
 
     .member-card {
-        /* FUNDO AZUL NO MODO CLARO, ROXO NO MODO ESCURO */
-        background: linear-gradient(145deg, 
-            rgba(0, 102, 255, 0.08) 0%, 
-            rgba(0, 102, 255, 0.03) 100%);
-        border: 1px solid rgba(0, 102, 255, 0.15);
+        background: rgba(20, 20, 30, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.05);
         border-radius: 24px;
         padding: 45px 30px;
         text-align: center;
@@ -436,15 +308,6 @@
         flex-direction: column;
         align-items: center;
         height: 100%;
-        box-shadow: 0 10px 30px rgba(0, 102, 255, 0.08);
-    }
-
-    .dark-theme .member-card {
-        background: linear-gradient(145deg, 
-            rgba(173, 51, 255, 0.08) 0%, 
-            rgba(173, 51, 255, 0.03) 100%);
-        border: 1px solid rgba(173, 51, 255, 0.15);
-        box-shadow: 0 10px 30px rgba(173, 51, 255, 0.08);
     }
 
     /* Efeito de brilho ao passar o mouse no card */
@@ -452,19 +315,11 @@
         content: '';
         position: absolute;
         top: 0; left: 0; width: 100%; height: 100%;
-        background: radial-gradient(800px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
-            rgba(0, 102, 255, 0.1), 
-            transparent 40%);
+        background: radial-gradient(800px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.06), transparent 40%);
         opacity: 0;
         transition: opacity 0.5s;
         pointer-events: none;
         z-index: 0;
-    }
-
-    .dark-theme .member-card::after {
-        background: radial-gradient(800px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
-            rgba(173, 51, 255, 0.1), 
-            transparent 40%);
     }
     
     .member-card:hover::after {
@@ -473,15 +328,9 @@
 
     .member-card:hover {
         transform: translateY(-15px) scale(1.02);
-        border-color: var(--neon-primary);
-        box-shadow: 0 20px 50px rgba(0,0,0,0.15), 
-            0 0 30px rgba(0, 102, 255, 0.15);
-    }
-
-    .dark-theme .member-card:hover {
-        border-color: var(--neon-primary);
-        box-shadow: 0 20px 50px rgba(0,0,0,0.2), 
-            0 0 30px rgba(173, 51, 255, 0.15);
+        border-color: rgba(138, 43, 226, 0.4);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 30px rgba(138, 43, 226, 0.1);
+        background: rgba(25, 25, 40, 0.8);
     }
 
     /* Avatar com anéis orbitais */
@@ -499,11 +348,7 @@
         inset: -5px;
         border-radius: 50%;
         padding: 2px;
-        background: linear-gradient(45deg, 
-            transparent, 
-            var(--neon-primary), 
-            var(--neon-secondary), 
-            transparent);
+        background: linear-gradient(45deg, transparent, var(--neon-primary), transparent);
         -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
         mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
         -webkit-mask-composite: xor;
@@ -521,8 +366,8 @@
         height: 100%;
         border-radius: 50%;
         object-fit: cover;
-        border: 4px solid rgba(255, 255, 255, 0.9);
-        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        border: 4px solid rgba(20, 20, 35, 1);
+        box-shadow: 0 0 20px rgba(0,0,0,0.5);
         transition: 0.4s ease;
     }
 
@@ -530,56 +375,38 @@
         font-size: 0.8rem;
         font-weight: 800;
         text-transform: uppercase;
-        /* TEXTO PRETO NO MODO CLARO, BRANCO NO MODO ESCURO */
-        color: var(--text-dark);
+        color: var(--neon-secondary);
         letter-spacing: 1.5px;
         margin-bottom: 8px;
         display: block;
         z-index: 1;
     }
 
-    .dark-theme .member-role {
-        color: var(--text-light);
-    }
-
     .member-name {
         font-size: 1.5rem;
         font-weight: 700;
-        /* TEXTO PRETO NO MODO CLARO, BRANCO NO MODO ESCURO */
-        color: var(--text-dark);
+        color: #fff;
         margin-bottom: 15px;
         z-index: 1;
     }
 
-    .dark-theme .member-name {
-        color: var(--text-light);
-    }
-
     .member-desc {
         font-size: 0.95rem;
-        /* TEXTO PRETO NO MODO CLARO, BRANCO NO MODO ESCURO */
-        color: var(--text-dark);
+        color: #a0a0b0;
         line-height: 1.6;
         margin-bottom: 25px;
         flex-grow: 1;
         z-index: 1;
-        opacity: 0.8;
-    }
-
-    .dark-theme .member-desc {
-        color: var(--text-light);
-        opacity: 0.9;
     }
 
     .member-link {
         margin-top: auto;
         text-decoration: none;
         padding: 12px 28px;
-        background: var(--neon-primary);
-        border: 1px solid var(--neon-primary);
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.1);
         border-radius: 50px;
-        /* TEXTO BRANCO EM AMBOS OS MODOS */
-        color: #ffffff;
+        color: #fff;
         font-size: 0.85rem;
         font-weight: 600;
         transition: 0.3s;
@@ -590,16 +417,10 @@
     }
 
     .member-link:hover {
-        background: var(--primary-dark);
-        border-color: var(--primary-dark);
-        box-shadow: 0 0 20px rgba(0, 102, 255, 0.3);
+        background: var(--neon-primary);
+        border-color: var(--neon-primary);
+        box-shadow: 0 0 20px rgba(138, 43, 226, 0.4);
         transform: translateY(-2px);
-    }
-
-    .dark-theme .member-link:hover {
-        background: var(--primary-dark);
-        border-color: var(--primary-dark);
-        box-shadow: 0 0 20px rgba(173, 51, 255, 0.3);
     }
 
     /* ==========================================================================
@@ -609,22 +430,13 @@
         margin-top: 60px;
         padding: 80px 40px;
         text-align: center;
-        background: linear-gradient(135deg, 
-            rgba(0, 102, 255, 0.08) 0%, 
-            rgba(255, 255, 255, 0.9) 100%);
-        border: 1px solid rgba(0, 102, 255, 0.2);
+        /* Gradiente diagonal sofisticado */
+        background: linear-gradient(135deg, rgba(138, 43, 226, 0.15) 0%, rgba(10, 10, 20, 0.5) 100%);
+        border: 1px solid rgba(138, 43, 226, 0.3);
         border-radius: 30px;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 0 40px rgba(0, 102, 255, 0.08);
-    }
-
-    .dark-theme .contato-section {
-        background: linear-gradient(135deg, 
-            rgba(173, 51, 255, 0.08) 0%, 
-            rgba(30, 20, 40, 0.9) 100%);
-        border: 1px solid rgba(173, 51, 255, 0.2);
-        box-shadow: 0 0 40px rgba(173, 51, 255, 0.08);
+        box-shadow: 0 0 60px rgba(138, 43, 226, 0.1);
     }
 
     /* Efeito de luz ambiente no contato */
@@ -632,10 +444,7 @@
         content: '';
         position: absolute;
         top: -50%; left: -50%; width: 200%; height: 200%;
-        background: radial-gradient(circle, 
-            var(--neon-secondary) 0%, 
-            transparent 50%);
-        opacity: 0.05;
+        background: radial-gradient(circle, rgba(255, 107, 53, 0.05) 0%, transparent 50%);
         pointer-events: none;
     }
 
@@ -655,70 +464,42 @@
         justify-content: center;
         gap: 12px;
         padding: 18px 36px;
-        background: linear-gradient(45deg, 
-            var(--primary), 
-            var(--primary-dark));
+        background: linear-gradient(45deg, var(--neon-primary), #9d4edd);
         color: white;
         text-decoration: none;
         border-radius: 50px;
         font-weight: 700;
         transition: 0.3s;
         font-size: 1.05rem;
-        box-shadow: 0 10px 30px rgba(0, 102, 255, 0.2);
+        box-shadow: 0 10px 30px rgba(138, 43, 226, 0.3);
         min-width: 220px;
         border: 1px solid rgba(255,255,255,0.1);
     }
 
-    .dark-theme .contato-btn {
-        background: linear-gradient(45deg, 
-            var(--primary), 
-            var(--primary-dark));
-        box-shadow: 0 10px 30px rgba(173, 51, 255, 0.2);
-    }
-
     .contato-btn:hover {
         transform: translateY(-5px);
-        box-shadow: 0 15px 40px rgba(0, 102, 255, 0.3);
+        box-shadow: 0 15px 40px rgba(138, 43, 226, 0.5);
         filter: brightness(1.1);
-    }
-
-    .dark-theme .contato-btn:hover {
-        box-shadow: 0 15px 40px rgba(173, 51, 255, 0.3);
     }
 
     .contato-btn.secondary {
         background: transparent;
-        border: 2px solid var(--primary);
-        color: var(--primary);
+        border: 2px solid rgba(255,255,255,0.2);
+        color: #fff;
         box-shadow: none;
     }
 
-    .dark-theme .contato-btn.secondary {
-        border: 2px solid var(--primary);
-        color: var(--primary);
-    }
-
     .contato-btn.secondary:hover {
-        background: var(--primary);
-        border-color: var(--primary);
+        background: rgba(255,255,255,0.1);
+        border-color: #fff;
         color: white;
     }
 
     .section-divider {
         height: 1px;
-        background: linear-gradient(90deg, 
-            transparent, 
-            rgba(0, 102, 255, 0.2), 
-            transparent);
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
         margin: 100px 0;
         width: 100%;
-    }
-
-    .dark-theme .section-divider {
-        background: linear-gradient(90deg, 
-            transparent, 
-            rgba(173, 51, 255, 0.2), 
-            transparent);
     }
 
     /* ==========================================================================
