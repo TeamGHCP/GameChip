@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento Confirmado - TechStore</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .success-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            overflow: hidden;
+            text-align: center;
+        }
+        
+        .success-header {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            padding: 40px 30px;
+            color: white;
+            position: relative;
+        }
+        
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 50px;
+            color: #27ae60;
+            animation: bounce 1s ease infinite alternate;
+        }
+        
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
+        }
+        
+        .success-header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .success-header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .success-content {
+            padding: 40px 30px;
+        }
+        
+        .payment-method {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .method-icon {
+            font-size: 30px;
+        }
+        
+        .method-icon.cartao { color: #3498db; }
+        .method-icon.boleto { color: #9b59b6; }
+        
+        .method-info h3 {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .method-info p {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .order-details {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+        
+        .order-details h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 18px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed #ddd;
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+        
+        .detail-label {
+            color: #7f8c8d;
+        }
+        
+        .detail-value {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        
+        .boleto-info {
+            background: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: left;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .boleto-info h4 {
+            color: #e67e22;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .boleto-info p {
+            color: #7f8c8d;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #ecf0f1;
+            color: #2c3e50;
+            border: 2px solid #bdc3c7;
+        }
+        
+        .btn-secondary:hover {
+            background: #dfe6e9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-icon {
+            font-size: 20px;
+        }
+        
+        .whatsapp-btn {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .whatsapp-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3);
+        }
+        
+        .footer-note {
+            margin-top: 25px;
+            color: #7f8c8d;
+            font-size: 14px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        @media (max-width: 480px) {
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .success-header {
+                padding: 30px 20px;
+            }
+            
+            .success-content {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="success-container">
+        <div class="success-header">
+            <div class="success-icon">
+                <i class="fas fa-check"></i>
+            </div>
+            <h1>Pagamento Confirmado!</h1>
+            <p>Seu pedido foi processado com sucesso</p>
+        </div>
+        
+        <div class="success-content">
+            <!-- Método de Pagamento (Será dinâmico) -->
+            <div class="payment-method">
+                <div class="method-icon {% if metodo == 'cartao' %}cartao{% else %}boleto{% endif %}">
+                    {% if metodo == 'cartao' %}
+                    <i class="fas fa-credit-card"></i>
+                    {% else %}
+                    <i class="fas fa-barcode"></i>
+                    {% endif %}
+                </div>
+                <div class="method-info">
+                    <h3>Pagamento via {{ metodo|title }}</h3>
+                    <p>
+                        {% if metodo == 'cartao' %}
+                        Cartão de crédito/débito
+                        {% else %}
+                        Boleto bancário
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Informações do Pedido -->
+            <div class="order-details">
+                <h3>Detalhes do Pedido</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Número do Pedido:</span>
+                    <span class="detail-value">#{{ pedido_id }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Data:</span>
+                    <span class="detail-value">{{ data_pedido }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Valor Total:</span>
+                    <span class="detail-value">R$ {{ valor_total }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value" style="color: #27ae60;">
+                        <i class="fas fa-check-circle"></i> Aprovado
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Apenas para Boleto -->
+            {% if metodo == 'boleto' %}
+            <div class="boleto-info">
+                <h4><i class="fas fa-info-circle"></i> Instruções para pagamento:</h4>
+                <p>O boleto foi gerado com sucesso! Para concluir seu pedido, realize o pagamento em qualquer banco, casa lotérica ou internet banking. O prazo de validade é de 3 dias úteis.</p>
+                <p style="margin-top: 10px; font-weight: bold;">
+                    Número do boleto: <span style="color: #2c3e50;">{{ boleto_numero }}</span>
+                </p>
+            </div>
+            {% endif %}
+            
+            <!-- Botões de Ação -->
+            <div class="btn-group">
+                <a href="{{ url_for('meus_pedidos') }}" class="btn btn-primary">
+                    <i class="fas fa-shopping-bag btn-icon"></i>
+                    Ver Meus Pedidos
+                </a>
+                <a href="{{ url_for('listar_produtos') }}" class="btn btn-secondary">
+                    <i class="fas fa-store btn-icon"></i>
+                    Continuar Comprando
+                </a>
+            </div>
+            
+            <!-- WhatsApp -->
+            <a href="https://wa.me/5511999999999?text=Olá! Acabei de finalizar o pedido #{{ pedido_id }} e gostaria de mais informações." 
+               target="_blank" class="whatsapp-btn">
+                <i class="fab fa-whatsapp"></i>
+                Falar no WhatsApp
+            </a>
+            
+            <!-- Observação -->
+            <div class="footer-note">
+                <p><i class="fas fa-envelope"></i> Enviamos um e-mail de confirmação para você.</p>
+                <p style="margin-top: 10px;">Em caso de dúvidas, entre em contato: suporte@techstore.com</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dados dinâmicos que virão do Flask
+        const pedidoData = {
+            pedido_id: '{{ pedido_id|default("12345") }}',
+            metodo: '{{ metodo|default("cartao") }}',
+            valor_total: '{{ valor_total|default("1.299,99") }}',
+            data_pedido: '{{ data_pedido|default(datetime.now().strftime("%d/%m/%Y %H:%M")) }}',
+            boleto_numero: '{{ boleto_numero|default("34191.79001 01043.510047 91020.150008 8 84410000015000") }}'
+        };
+
+        // Animações
+        document.addEventListener('DOMContentLoaded', function() {
+            const successIcon = document.querySelector('.success-icon');
+            setTimeout(() => {
+                successIcon.style.animation = 'none';
+                setTimeout(() => {
+                    successIcon.style.animation = 'bounce 1s ease infinite alternate';
+                }, 100);
+            }, 2000);
+            
+            // Confetti para pagamento com cartão
+            if(pedidoData.metodo === 'cartao') {
+                setTimeout(createConfetti, 500);
+            }
+        });
+
+        // Função de confetti simples
+        function createConfetti() {
+            const colors = ['#2ecc71', '#3498db', '#e74c3c', '#f1c40f', '#9b59b6'];
+            for(let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.style.cssText = `
+                        position: fixed;
+                        width: 10px;
+                        height: 10px;
+                        background: ${colors[Math.floor(Math.random() * colors.length)]};
+                        border-radius: 50%;
+                        top: -20px;
+                        left: ${Math.random() * 100}vw;
+                        z-index: 1000;
+                        pointer-events: none;
+                        animation: fall ${Math.random() * 2 + 1}s linear forwards;
+                    `;
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => confetti.remove(), 2000);
+                }, i * 100);
+            }
+            
+            // Adicionar estilo de animação
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fall {
+                    to {
+                        transform: translateY(100vh) rotate(${Math.random() * 360}deg);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    </script>
+</body>
+</html>

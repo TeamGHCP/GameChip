@@ -1,0 +1,443 @@
+{% extends 'base.html' %}
+{% set titulo = "Boleto Bancário" %}
+{% block conteudo %}
+
+<style>
+    .boleto-container {
+        max-width: 700px;
+        margin: 60px auto;
+        background: var(--glass);
+        padding: 40px;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+    }
+
+    .boleto-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .boleto-title {
+        font-size: 2.2em;
+        font-weight: 800;
+        background: linear-gradient(135deg, #ff9800 0%, #ff6f00 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+    }
+
+    .boleto-subtitle {
+        color: var(--text-light);
+        font-size: 1.1em;
+    }
+
+    .order-summary {
+        background: rgba(255, 152, 0, 0.05);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 30px;
+        border-left: 4px solid #ff9800;
+    }
+
+    .order-summary h3 {
+        color: #ff9800;
+        margin-bottom: 15px;
+        font-size: 1.3em;
+    }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .summary-item.total {
+        font-weight: 700;
+        font-size: 1.2em;
+        color: #ff9800;
+        border-bottom: 2px solid #ff9800;
+        padding-top: 10px;
+        margin-top: 10px;
+    }
+
+    .boleto-details {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        border: 2px dashed #ff9800;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .boleto-code {
+        font-family: 'Courier New', monospace;
+        font-size: 1.3em;
+        letter-spacing: 2px;
+        background: #f5f5f5;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+        word-break: break-all;
+        border: 1px solid #ddd;
+    }
+
+    .boleto-info {
+        background: rgba(255, 152, 0, 0.08);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+
+    .boleto-info h4 {
+        color: #ff9800;
+        margin-bottom: 15px;
+        font-size: 1.2em;
+    }
+
+    .boleto-info ul {
+        text-align: left;
+        padding-left: 20px;
+    }
+
+    .boleto-info li {
+        margin-bottom: 10px;
+        color: var(--text);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin: 30px 0;
+        flex-wrap: wrap;
+    }
+
+    .btn-print {
+        background: linear-gradient(135deg, #ff9800 0%, #ff6f00 100%);
+        color: white;
+        padding: 15px 30px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 1.1em;
+        border: none;
+        cursor: pointer;
+        transition: var(--transition);
+        box-shadow: var(--shadow);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-print:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .btn-copy {
+        background: linear-gradient(135deg, var(--primary) 0%, #0066ff 100%);
+        color: white;
+        padding: 15px 30px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 1.1em;
+        border: none;
+        cursor: pointer;
+        transition: var(--transition);
+        box-shadow: var(--shadow);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-copy:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .btn-download {
+        background: linear-gradient(135deg, var(--success) 0%, #00b36e 100%);
+        color: white;
+        padding: 15px 30px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 1.1em;
+        border: none;
+        cursor: pointer;
+        transition: var(--transition);
+        box-shadow: var(--shadow);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-download:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .btn-back {
+        background: linear-gradient(135deg, var(--secondary) 0%, var(--border) 100%);
+        color: var(--text);
+        padding: 15px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1em;
+        border: none;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 20px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .btn-back:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+    }
+
+    .payment-instructions {
+        background: rgba(0, 102, 255, 0.05);
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 30px;
+        border-left: 4px solid var(--primary);
+    }
+
+    .payment-instructions h4 {
+        color: var(--primary);
+        margin-bottom: 15px;
+    }
+
+    .deadline-info {
+        background: rgba(255, 0, 0, 0.05);
+        border-radius: 8px;
+        padding: 15px;
+        margin: 20px 0;
+        border: 1px solid var(--danger);
+        text-align: center;
+    }
+
+    .deadline-info strong {
+        color: var(--danger);
+    }
+
+    @media (max-width: 600px) {
+        .boleto-container {
+            padding: 25px;
+            margin: 30px auto;
+        }
+        .boleto-title {
+            font-size: 1.8em;
+        }
+        .action-buttons {
+            flex-direction: column;
+        }
+        .boleto-code {
+            font-size: 1em;
+            padding: 15px;
+        }
+    }
+</style>
+
+<div class="boleto-container">
+    <div class="boleto-header">
+        <div class="boleto-title">📄 Boleto Bancário</div>
+        <div class="boleto-subtitle">Seu boleto foi gerado com sucesso</div>
+    </div>
+
+    <!-- Resumo do Pedido -->
+    <div class="order-summary">
+        <h3>📦 Resumo do Pedido</h3>
+        {% for produto in produtos_carrinho %}
+        <div class="summary-item">
+            <span>{{ produto.nome }} - {{ produto.quantidade }}x</span>
+            <span>R$ {{ "%.2f"|format(produto.preco * produto.quantidade) }}</span>
+        </div>
+        {% endfor %}
+        <div class="summary-item">
+            <span>Frete</span>
+            <span>Grátis</span>
+        </div>
+        <div class="summary-item total">
+            <span>Total do Boleto</span>
+            <span>R$ {{ "%.2f"|format(total_geral) }}</span>
+        </div>
+    </div>
+
+    <!-- Código do Boleto -->
+    <div class="boleto-details">
+        <h3>Código de Barras do Boleto</h3>
+        <div class="boleto-code" id="boleto-code">
+            {{ boleto_numero }}
+        </div>
+        <p>Copie o código acima ou use os botões abaixo para imprimir/salvar</p>
+    </div>
+
+    <!-- Informações do Boleto -->
+    <div class="boleto-info">
+        <h4>📋 Informações do Boleto</h4>
+        <ul>
+            <li><strong>Beneficiário:</strong> Sua Loja Online</li>
+            <li><strong>Valor:</strong> R$ {{ "%.2f"|format(total_geral) }}</li>
+            <li><strong>Vencimento:</strong> {{ vencimento|default("10/01/2024") }}</li>
+            <li><strong>Código do Pedido:</strong> #{{ pedido_id }}</li>
+            <li><strong>CPF/CNPJ:</strong> 00.000.000/0001-00</li>
+        </ul>
+    </div>
+
+    <!-- Prazo de Pagamento -->
+    <div class="deadline-info">
+        <strong>⚠️ ATENÇÃO:</strong> Este boleto vence em <strong>3 dias</strong>. Após esta data, será necessário gerar um novo boleto.
+    </div>
+
+    <!-- Botões de Ação -->
+    <div class="action-buttons">
+        <button class="btn-print" onclick="imprimirBoleto()">
+            🖨️ Imprimir Boleto
+        </button>
+        <button class="btn-copy" onclick="copiarBoleto()">
+            📋 Copiar Código
+        </button>
+        <button class="btn-download" onclick="baixarBoleto()">
+            ⬇️ Baixar PDF
+        </button>
+    </div>
+
+    <!-- Instruções de Pagamento -->
+    <div class="payment-instructions">
+        <h4>🏦 Como Pagar seu Boleto</h4>
+        <ol>
+            <li>Imprima o boleto ou anote o código</li>
+            <li>Pague em qualquer banco, lotérica ou internet banking</li>
+            <li>Após o pagamento, aguarde a confirmação (até 2 dias úteis)</li>
+            <li>Você receberá um email quando o pagamento for confirmado</li>
+        </ol>
+        <p style="margin-top: 15px; font-size: 0.9em; color: var(--text-light);">
+            <strong>Observação:</strong> O pedido só será processado após a confirmação do pagamento.
+        </p>
+    </div>
+
+    <center>
+        <a href="{{ url_for('finalizar_carrinho') }}" class="btn-back">
+            ↩️ Voltar para opções de pagamento
+        </a>
+        <br>
+        <a href="{{ url_for('meus_pedidos') }}" class="btn-back" style="margin-top: 10px;">
+            📦 Acompanhar Meus Pedidos
+        </a>
+    </center>
+</div>
+
+<script>
+// Função para copiar código do boleto
+function copiarBoleto() {
+    const boletoText = document.getElementById('boleto-code').textContent;
+    navigator.clipboard.writeText(boletoText).then(() => {
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '✅ Código Copiado!';
+        btn.style.background = 'linear-gradient(135deg, var(--success) 0%, #00b36e 100%)';
+        
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.style.background = '';
+        }, 2000);
+    }).catch(err => {
+        console.error('Erro ao copiar:', err);
+        alert('Erro ao copiar o código. Tente selecionar e copiar manualmente.');
+    });
+}
+
+// Função para imprimir boleto
+function imprimirBoleto() {
+    const printContent = `
+        <html>
+        <head>
+            <title>Boleto - Pedido #{{ pedido_id }}</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; }
+                .boleto-print { max-width: 700px; margin: 0 auto; }
+                .header { text-align: center; margin-bottom: 30px; }
+                .codigo { font-family: 'Courier New', monospace; font-size: 16px; 
+                         background: #f0f0f0; padding: 15px; margin: 20px 0; 
+                         text-align: center; border: 1px solid #ccc; }
+                .info { margin: 20px 0; }
+                .info table { width: 100%; border-collapse: collapse; }
+                .info td { padding: 8px; border-bottom: 1px solid #ddd; }
+                .instructions { margin-top: 30px; font-size: 12px; color: #666; }
+            </style>
+        </head>
+        <body>
+            <div class="boleto-print">
+                <div class="header">
+                    <h1>Boleto Bancário</h1>
+                    <h3>Pedido #{{ pedido_id }}</h3>
+                </div>
+                
+                <div class="codigo">
+                    {{ boleto_numero }}
+                </div>
+                
+                <div class="info">
+                    <table>
+                        <tr><td><strong>Beneficiário:</strong></td><td>Sua Loja Online</td></tr>
+                        <tr><td><strong>Valor:</strong></td><td>R$ {{ "%.2f"|format(total_geral) }}</td></tr>
+                        <tr><td><strong>Vencimento:</strong></td><td>{{ vencimento|default("10/01/2024") }}</td></tr>
+                        <tr><td><strong>CPF/CNPJ:</strong></td><td>00.000.000/0001-00</td></tr>
+                    </table>
+                </div>
+                
+                <div class="instructions">
+                    <p><strong>Instruções de Pagamento:</strong></p>
+                    <p>1. Pague em qualquer banco, lotérica ou internet banking<br>
+                    2. Após o pagamento, aguarde confirmação (até 2 dias úteis)<br>
+                    3. Guarde este comprovante até a entrega do pedido</p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.print();
+}
+
+// Função para baixar PDF (simulação)
+function baixarBoleto() {
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Gerando PDF...';
+    btn.disabled = true;
+    
+    // Simular geração de PDF
+    setTimeout(() => {
+        alert('PDF gerado com sucesso! (Esta é uma simulação. Em produção, geraria um PDF real)');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+        // Em produção, aqui você faria download do PDF real
+        // const link = document.createElement('a');
+        // link.href = '/gerar-boleto-pdf/{{ pedido_id }}';
+        // link.download = 'boleto-pedido-{{ pedido_id }}.pdf';
+        // link.click();
+    }, 1500);
+}
+
+// Selecionar código ao clicar
+document.getElementById('boleto-code').addEventListener('click', function() {
+    const range = document.createRange();
+    range.selectNodeContents(this);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+});
+</script>
+
+{% endblock %}
