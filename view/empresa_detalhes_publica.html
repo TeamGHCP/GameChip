@@ -1,465 +1,610 @@
 {% extends "base.html" %}
 
+{% block title %}{{ empresa.nome_fantasia or empresa.razao_social }} | Loja Parceira{% endblock %}
+
 {% block conteudo %}
-<div class="empresa-detalhes-container">
-    <div class="empresa-header-section">
-        <div class="empresa-header-content">
-            <div class="empresa-logo-grande">
-                <div class="logo-grande">{{ empresa.nome_fantasia[0] if empresa.nome_fantasia else empresa.razao_social[0] }}</div>
+<div class="loja-publica-container">
+    
+    <div class="loja-hero">
+        <div class="hero-bg"></div>
+        <div class="hero-content">
+            <div class="loja-avatar-container">
+                <div class="loja-avatar">
+                    {{ (empresa.nome_fantasia or empresa.razao_social)[0]|upper }}
+                </div>
+                {% if empresa.tempo_mercado %}
+                <div class="badge-tempo">🏆 {{ empresa.tempo_mercado }}</div>
+                {% endif %}
             </div>
-            <div class="empresa-info-principal">
-                <h1>{{ empresa.nome_fantasia or empresa.razao_social }}</h1>
-                <div class="empresa-stats-header">
-                    <div class="stat-header">
-                        <span class="stat-value">{{ "%.1f"|format(media_avaliacoes.media_notas or 0) }}</span>
-                        <span class="stat-label">Avaliação</span>
-                    </div>
-                    <div class="stat-header">
-                        <span class="stat-value">{{ media_avaliacoes.total_avaliacoes or 0 }}</span>
-                        <span class="stat-label">Avaliações</span>
-                    </div>
-                    <div class="stat-header">
-                        <span class="stat-value">{{ produtos|length }}</span>
+            
+            <div class="loja-info-main">
+                <h1 class="loja-nome">{{ empresa.nome_fantasia or empresa.razao_social }}</h1>
+                <div class="loja-meta">
+                    <span class="meta-item cnpj">🏢 {{ empresa.cnpj }}</span>
+                    {% if empresa.cidade %}<span class="meta-item">📍 {{ empresa.cidade }}/{{ empresa.estado }}</span>{% endif %}
+                </div>
+                
+                <div class="loja-stats">
+                    <div class="stat-box">
+                        <span class="stat-num">{{ produtos|length }}</span>
                         <span class="stat-label">Produtos</span>
                     </div>
-                    <div class="stat-header">
-                        <span class="stat-value">{{ empresa.tempo_mercado or "Novo" }}</span>
-                        <span class="stat-label">No mercado</span>
+                    <div class="stat-box">
+                        <span class="stat-num">{{ "%.1f"|format(media_avaliacoes.media_notas or 0) }}</span>
+                        <span class="stat-label">
+                            {% for i in range(5) %}
+                                {% if i < (media_avaliacoes.media_notas or 0)|int %}⭐{% else %}<span style="opacity:0.3">⭐</span>{% endif %}
+                            {% endfor %}
+                        </span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-num">{{ media_avaliacoes.total_avaliacoes or 0 }}</span>
+                        <span class="stat-label">Reviews</span>
                     </div>
                 </div>
-                <div class="empresa-actions">
-                    {% if session.get('usuario_id') %}
-                    <button class="btn-seguir" onclick="seguirEmpresa({{ empresa.id_empresa }})">
-                        ⭐ Seguir Loja
+            </div>
+
+            <div class="loja-actions-hero">
+                {% if session.get('usuario_id') and session.get('empresa_id') != empresa.id_empresa %}
+                <form action="{{ url_for('seguir_loja', id_empresa=empresa.id_empresa) }}" method="POST" style="width: 100%;">
+                    <button type="submit" class="btn-hero-primary">
+                        🔔 Seguir Loja
                     </button>
-                    {% endif %}
-                    <button class="btn-compartilhar" onclick="compartilharEmpresa()">
-                        📤 Compartilhar
-                    </button>
-                </div>
+                </form>
+                {% endif %}
+                <button class="btn-hero-secondary" onclick="compartilharEmpresa()">
+                    📤 Compartilhar
+                </button>
             </div>
         </div>
     </div>
 
-    <div class="empresa-navigation">
-        <nav class="nav-tabs">
-            <a href="#produtos" class="nav-tab active" onclick="mudarAba('produtos')">🛍️ Produtos</a>
-            <a href="#avaliacoes" class="nav-tab" onclick="mudarAba('avaliacoes')">⭐ Avaliações</a>
-            <a href="#sobre" class="nav-tab" onclick="mudarAba('sobre')">📝 Sobre</a>
-            <a href="#contato" class="nav-tab" onclick="mudarAba('contato')">📞 Contato</a>
+    <div class="loja-nav-container">
+        <nav class="loja-nav">
+            <button class="nav-item active" onclick="mudarAba('produtos')">🛍️ Produtos</button>
+            <button class="nav-item" onclick="mudarAba('avaliacoes')">⭐ Avaliações</button>
+            <button class="nav-item" onclick="mudarAba('sobre')">ℹ️ Sobre</button>
         </nav>
     </div>
 
-    <div class="empresa-content">
-        <div id="aba-produtos" class="aba-conteudo active">
-            <div class="produtos-header">
-                <h2>Produtos da Loja</h2>
-                <div class="filtros-produtos">
-                    <select onchange="filtrarProdutos(this.value)">
-                        <option value="">Todos os produtos</option>
-                        <option value="menor-preco">Menor preço</option>
-                        <option value="maior-preco">Maior preço</option>
-                        <option value="mais-vendidos">Mais vendidos</option>
-                        <option value="novidades">Novidades</option>
-                    </select>
+    <div class="loja-body">
+        
+        <div id="aba-produtos" class="tab-content active">
+            <div class="section-header">
+                <h2>Catálogo</h2>
+                <div class="search-filter">
+                    <input type="text" id="buscaProduto" placeholder="🔍 Buscar produto..." onkeyup="filtrarProdutosLocal()">
                 </div>
             </div>
 
             {% if produtos %}
             <div class="produtos-grid">
                 {% for produto in produtos %}
-                <div class="produto-card" onclick="verProduto({{ produto.id_produto }})">
-                    <div class="produto-imagem">
-                        {% if produto.imagens and produto.imagens is string %}
-                            {% set imagens = produto.imagens|from_json %}
-                            {% if imagens and imagens|length > 0 %}
-                                <img src="{{ url_for('static', filename='uploads/produtos/' + imagens[0]) }}" alt="{{ produto.nome }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            {% endif %}
+                <div class="card-produto-gamer" data-nome="{{ produto.nome|lower }}">
+                    <div class="card-img-wrapper">
+                        {% if produto.imagens and produto.imagens|length > 0 %}
+                            <img src="{{ url_for('static', filename='uploads/produtos/' ~ produto.imagens[0]) }}" 
+                                 alt="{{ produto.nome }}">
+                        {% else %}
+                            <div class="img-placeholder">{{ produto.nome[0] }}</div>
                         {% endif %}
-                        <div class="produto-imagem-placeholder" style="{% if produto.imagens and produto.imagens is string and (produto.imagens|from_json)|length > 0 %}display: none;{% endif %}">
-                            {{ produto.nome[0] if produto.nome else 'P' }}
-                        </div>
+                        
+                        {% if produto.estoque_empresa > 0 %}
+                            <div class="status-badge disponivel">EM ESTOQUE</div>
+                        {% else %}
+                            <div class="status-badge esgotado">ESGOTADO</div>
+                        {% endif %}
                     </div>
-                    <div class="produto-info">
-                        <h3 class="produto-nome">{{ produto.nome }}</h3>
-                        <p class="produto-marca">{{ produto.marca }}</p>
-                        <div class="produto-preco">
-                            <span class="preco-atual">R$ {{ "%.2f"|format(produto.preco_empresa or produto.preco) }}</span>
-                            {% if produto.preco_original and produto.preco_original > (produto.preco_empresa or produto.preco) %}
-                            <span class="preco-original">R$ {{ "%.2f"|format(produto.preco_original) }}</span>
-                            {% endif %}
+
+                    <div class="card-info">
+                        <span class="card-category">{{ produto.categoria }}</span>
+                        <h3 class="card-title">{{ produto.nome }}</h3>
+                        <p class="card-brand">{{ produto.marca }}</p>
+                        
+                        <div class="card-price-row">
+                            <span class="price-value">R$ {{ "%.2f"|format(produto.preco_empresa) }}</span>
+                            <span class="stock-mini">Restam: {{ produto.estoque_empresa }}</span>
                         </div>
-                        <div class="produto-estoque">
-                            {% if produto.estoque_empresa and produto.estoque_empresa > 0 %}
-                            <span class="estoque-disponivel">🟢 {{ produto.estoque_empresa }} em estoque</span>
-                            {% else %}
-                            <span class="estoque-indisponivel">🔴 Indisponível</span>
-                            {% endif %}
-                        </div>
+
+                        {% if produto.estoque_empresa > 0 %}
+                            <form action="{{ url_for('adicionar_carrinho', id_produto=produto.id_produto) }}" method="POST">
+                                <input type="hidden" name="id_produto" value="{{ produto.id_produto }}">
+                                <input type="hidden" name="id_empresa" value="{{ empresa.id_empresa }}">
+                                <input type="hidden" name="retorno" value="loja_parceira">
+                                <button type="submit" class="btn-buy-gamer">
+                                    🛒 Adicionar
+                                </button>
+                            </form>
+                        {% else %}
+                            <button disabled class="btn-disabled-gamer">🚫 Indisponível</button>
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <div class="empty-state">
-                <i>📦</i>
-                <h3>Nenhum produto encontrado</h3>
-                <p>Esta loja ainda não possui produtos cadastrados.</p>
+            <div class="empty-state-gamer">
+                <div class="empty-icon">📦</div>
+                <h3>Estoque Vazio</h3>
+                <p>Esta loja ainda não adicionou produtos ao catálogo.</p>
             </div>
             {% endif %}
         </div>
 
-        <div id="aba-avaliacoes" class="aba-conteudo">
-            <div class="avaliacoes-header">
-                <h2>Avaliações da Loja</h2>
-                <div class="resumo-avaliacoes">
-                    <div class="nota-geral">
-                        <span class="nota-total">{{ "%.1f"|format(media_avaliacoes.media_notas or 0) }}</span>
-                        <div class="estrelas-geral">
-                            {% set nota_int = (media_avaliacoes.media_notas or 0)|int %}
-                            {% for i in range(5) %}
-                                {% if i < nota_int %}
-                                    <span style="color: var(--warning);">⭐</span>
-                                {% else %}
-                                    <span>⭐</span> 
-                                {% endif %}
-                            {% endfor %}
-                        </div>
-                        <span class="total-avaliacoes">{{ media_avaliacoes.total_avaliacoes or 0 }} avaliações</span>
+        <div id="aba-avaliacoes" class="tab-content">
+            <div class="reviews-container">
+                <div class="reviews-summary">
+                    <div class="big-score">{{ "%.1f"|format(media_avaliacoes.media_notas or 0) }}</div>
+                    <div class="stars-static">
+                        {% for i in range(5) %}
+                            {% if i < (media_avaliacoes.media_notas or 0)|int %}⭐{% else %}☆{% endif %}
+                        {% endfor %}
                     </div>
+                    <p>Baseado em {{ media_avaliacoes.total_avaliacoes or 0 }} avaliações</p>
                 </div>
-            </div>
 
-            {% if session.get('usuario_id') and pode_avaliar %}
-            <div class="form-avaliacao-section">
-                <h3>Deixe sua avaliação</h3>
-                <form class="form-avaliacao" onsubmit="enviarAvaliacaoEmpresa(event)">
-                    <div class="avaliacao-nota">
-                        <label>Sua nota:</label>
-                        <div class="rating-input">
-                            <input type="radio" id="avaliacao-star5" name="nota" value="5" required>
-                            <label for="avaliacao-star5">⭐</label>
-                            <input type="radio" id="avaliacao-star4" name="nota" value="4">
-                            <label for="avaliacao-star4">⭐</label>
-                            <input type="radio" id="avaliacao-star3" name="nota" value="3">
-                            <label for="avaliacao-star3">⭐</label>
-                            <input type="radio" id="avaliacao-star2" name="nota" value="2">
-                            <label for="avaliacao-star2">⭐</label>
-                            <input type="radio" id="avaliacao-star1" name="nota" value="1">
-                            <label for="avaliacao-star1">⭐</label>
-                        </div>
-                    </div>
-                    <div class="avaliacao-comentario">
-                        <label>Comentário:</label>
-                        <textarea name="comentario" placeholder="Conte sua experiência com esta loja..." required></textarea>
-                    </div>
-                    <button type="submit" class="btn-enviar-avaliacao">📨 Enviar Avaliação</button>
-                </form>
-            </div>
-            {% elif session.get('usuario_id') and not pode_avaliar %}
-            <div class="avaliacao-info">
-                <p>💡 <strong>Você precisa ter comprado desta loja para poder avaliá-la.</strong></p>
-                <p>Faça uma compra e volte aqui para compartilhar sua experiência!</p>
-            </div>
-            {% else %}
-            <div class="avaliacao-info">
-                <p>🔐 <strong>Faça login para avaliar esta loja.</strong></p>
-                <p>Entre na sua conta para compartilhar sua experiência!</p>
-            </div>
-            {% endif %}
-
-            <div class="lista-avaliacoes">
-                {% if avaliacoes %}
-                    {% for avaliacao in avaliacoes %}
-                    <div class="avaliacao-item">
-                        <div class="avaliacao-header">
-                            <div class="avaliador-info">
-                                <div class="avaliador-avatar">
-                                    {{ avaliacao.avaliador_nome[0] if avaliacao.avaliador_nome else 'U' }}
-                                </div>
+                <div class="reviews-list">
+                    {% if avaliacoes %}
+                        {% for avaliacao in avaliacoes %}
+                        <div class="review-card">
+                            <div class="review-header">
+                                <div class="reviewer-avatar">{{ avaliacao.avaliador_nome[0] }}</div>
                                 <div>
-                                    <strong>{{ avaliacao.avaliador_nome or 'Usuário' }}</strong>
-                                    <div class="avaliacao-estrelas">
-                                        {{ '⭐' * avaliacao.nota }}
+                                    <strong>{{ avaliacao.avaliador_nome }}</strong>
+                                    <div class="review-stars">
+                                        {% for i in range(avaliacao.nota) %}⭐{% endfor %}
                                     </div>
                                 </div>
+                                <span class="review-date">{{ avaliacao.data_avaliacao.strftime('%d/%m/%Y') }}</span>
                             </div>
-                            <span class="avaliacao-data">
-                                {{ avaliacao.data_avaliacao.strftime('%d/%m/%Y') if avaliacao.data_avaliacao else '' }}
-                            </span>
+                            <p class="review-text">"{{ avaliacao.comentario }}"</p>
                         </div>
-                        <p class="avaliacao-texto">{{ avaliacao.comentario }}</p>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                <div class="empty-state">
-                    <i>⭐</i>
-                    <h3>Nenhuma avaliação ainda</h3>
-                    <p>Seja o primeiro a avaliar esta loja!</p>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <div id="aba-sobre" class="aba-conteudo">
-            <div class="sobre-section">
-                <h2>Sobre a Loja</h2>
-                <div class="sobre-content">
-                    <div class="sobre-info">
-                        <div class="info-item">
-                            <strong>Razão Social:</strong>
-                            <span>{{ empresa.razao_social }}</span>
-                        </div>
-                        <div class="info-item">
-                            <strong>CNPJ:</strong>
-                            <span>{{ empresa.cnpj }}</span>
-                        </div>
-                        <div class="info-item">
-                            <strong>Email:</strong>
-                            <span>{{ empresa.email }}</span>
-                        </div>
-                        <div class="info-item">
-                            <strong>Telefone:</strong>
-                            <span>{{ empresa.telefone or 'Não informado' }}</span>
-                        </div>
-                        <div class="info-item">
-                            <strong>Tipo:</strong>
-                            <span>
-                                {% if empresa.tipo_empresa == 'vendedor' %}
-                                    Vendedor
-                                {% elif empresa.tipo_empresa == 'comprador' %}
-                                    Comprador
-                                {% else %}
-                                    Vendedor e Comprador
-                                {% endif %}
-                            </span>
-                        </div>
-                        <div class="info-item">
-                            <strong>Data de Cadastro:</strong>
-                            <span>{{ empresa.data_cadastro.strftime('%d/%m/%Y') if empresa.data_cadastro else 'Não informada' }}</span>
-                        </div>
-                    </div>
-                    
-                    {% if empresa.endereco %}
-                    <div class="endereco-section">
-                        <h3>📍 Endereço</h3>
-                        <p>{{ empresa.endereco }}</p>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <div id="aba-contato" class="aba-conteudo">
-            <div class="contato-section">
-                <h2>Entre em Contato</h2>
-                <div class="contato-content">
-                    <div class="contato-info">
-                        <div class="contato-item">
-                            <span class="contato-icon">📧</span>
-                            <div>
-                                <strong>Email</strong>
-                                <p>{{ empresa.email }}</p>
-                            </div>
-                        </div>
-                        {% if empresa.telefone %}
-                        <div class="contato-item">
-                            <span class="contato-icon">📞</span>
-                            <div>
-                                <strong>Telefone</strong>
-                                <p>{{ empresa.telefone }}</p>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                    
-                    {% if session.get('usuario_id') %}
-                    <div class="form-contato">
-                        <h3>Enviar Mensagem</h3>
-                        <form onsubmit="enviarMensagemContato(event)">
-                            <div class="form-group">
-                                <label>Assunto:</label>
-                                <input type="text" name="assunto" placeholder="Assunto da mensagem..." required>
-                            </div>
-                            <div class="form-group">
-                                <label>Mensagem:</label>
-                                <textarea name="mensagem" rows="5" placeholder="Digite sua mensagem..." required></textarea>
-                            </div>
-                            <button type="submit" class="btn-enviar-mensagem">📤 Enviar Mensagem</button>
-                        </form>
-                    </div>
+                        {% endfor %}
                     {% else %}
-                    <div class="contato-login">
-                        <p>🔐 <strong>Faça login para enviar uma mensagem para esta loja.</strong></p>
-                    </div>
+                        <div class="empty-mini">Nenhuma avaliação ainda.</div>
                     {% endif %}
                 </div>
             </div>
         </div>
+
+        <div id="aba-sobre" class="tab-content">
+            <div class="about-grid">
+                <div class="about-card">
+                    <h3>🏢 Dados da Empresa</h3>
+                    <ul>
+                        <li><strong>Razão Social:</strong> {{ empresa.razao_social }}</li>
+                        <li><strong>CNPJ:</strong> {{ empresa.cnpj }}</li>
+                        <li><strong>Tipo:</strong> {{ empresa.tipo_empresa|capitalize }}</li>
+                        <li><strong>Membro desde:</strong> {{ empresa.data_cadastro.strftime('%Y') }}</li>
+                    </ul>
+                </div>
+                <div class="about-card">
+                    <h3>📞 Contato</h3>
+                    <ul>
+                        <li><strong>Email:</strong> {{ empresa.email }}</li>
+                        <li><strong>Telefone:</strong> {{ empresa.telefone or 'Não informado' }}</li>
+                        {% if empresa.endereco %}
+                        <li><strong>Endereço:</strong> {{ empresa.endereco }}</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
 <style>
-    /* ... (CSS permanece inalterado, exceto pela correção abaixo) ... */
-
-    /* Produtos */
-    .produtos-header {
-        display: flex;
-        /* CORREÇÃO 3. Ajuste de CSS: 'between' é inválido, o correto é 'space-between' */
-        justify-content: space-between; 
-        align-items: center;
-        margin-bottom: 30px;
+    /* =========================================
+       ESTILO GAMER / PREMIUM (RESPONSIVO)
+       ========================================= */
+    
+    .loja-publica-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding-bottom: 60px;
     }
 
-    /* ... (O restante do CSS é idêntico e funcional) ... */
+    /* --- HERO SECTION --- */
+    .loja-hero {
+        position: relative;
+        background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        padding: 60px 40px;
+        margin-bottom: 0;
+        overflow: hidden;
+        border-radius: 0 0 30px 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    /* Efeito Glow no fundo */
+    .loja-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%; left: -20%;
+        width: 600px; height: 600px;
+        background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+        opacity: 0.15;
+        filter: blur(80px);
+        pointer-events: none;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 40px;
+        max-width: 1200px;
+        margin: 0 auto;
+        flex-wrap: wrap;
+    }
+
+    .loja-avatar {
+        width: 140px;
+        height: 140px;
+        background: linear-gradient(45deg, var(--primary), #8a2be2);
+        border-radius: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        font-weight: 800;
+        color: white;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        border: 4px solid rgba(255,255,255,0.1);
+        flex-shrink: 0;
+    }
+
+    .loja-info-main {
+        flex: 1;
+        min-width: 300px;
+    }
+
+    .loja-nome {
+        font-size: 3rem;
+        font-weight: 800;
+        color: white;
+        margin-bottom: 10px;
+        line-height: 1.1;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+
+    .loja-meta {
+        display: flex;
+        gap: 20px;
+        color: rgba(255,255,255,0.6);
+        font-size: 0.95rem;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+    }
+
+    .loja-stats {
+        display: flex;
+        gap: 40px;
+        background: rgba(0,0,0,0.3);
+        padding: 15px 30px;
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,0.05);
+        backdrop-filter: blur(5px);
+        width: fit-content;
+    }
+
+    .stat-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        white-space: nowrap;
+    }
+
+    .stat-num {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: white;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        color: rgba(255,255,255,0.5);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .loja-actions-hero {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        min-width: 180px;
+    }
+
+    .btn-hero-primary {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 14px 20px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.3s;
+        box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.4);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        width: 100%;
+    }
+
+    .btn-hero-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(var(--primary-rgb), 0.6); }
+
+    .btn-hero-secondary {
+        background: rgba(255,255,255,0.1);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.1);
+        padding: 12px 20px;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.3s;
+        width: 100%;
+    }
+
+    .btn-hero-secondary:hover { background: rgba(255,255,255,0.2); }
+
+    /* --- NAVEGAÇÃO (TABS) --- */
+    .loja-nav-container {
+        display: flex;
+        justify-content: center;
+        margin-top: -30px; /* Sobrepõe o Hero */
+        position: relative;
+        z-index: 5;
+        padding: 0 10px;
+    }
+
+    .loja-nav {
+        background: var(--secondary);
+        padding: 8px;
+        border-radius: 50px;
+        display: flex;
+        gap: 5px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        border: 1px solid var(--border);
+        overflow-x: auto; /* Permite scroll no mobile */
+        max-width: 100%;
+        scrollbar-width: none; /* Firefox */
+    }
+    
+    .loja-nav::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
+
+    .nav-item {
+        background: transparent;
+        border: none;
+        color: var(--text-light);
+        padding: 12px 30px;
+        border-radius: 40px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+        white-space: nowrap; /* Impede quebra de linha no botão */
+    }
+
+    .nav-item.active {
+        background: var(--primary);
+        color: white;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .nav-item:hover:not(.active) { color: white; background: rgba(255,255,255,0.05); }
+
+    /* --- CONTEÚDO --- */
+    .loja-body {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    .tab-content { display: none; animation: fadeIn 0.5s ease; }
+    .tab-content.active { display: block; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .section-header h2 { margin: 0; font-size: 1.8rem; color: var(--text); }
+
+    #buscaProduto {
+        background: var(--glass);
+        border: 1px solid var(--border);
+        padding: 12px 20px;
+        border-radius: 12px;
+        color: white;
+        width: 250px;
+        font-size: 1rem;
+    }
+
+    /* --- CARDS DE PRODUTOS --- */
+    .produtos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 25px;
+    }
+
+    .card-produto-gamer {
+        background: var(--glass);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-produto-gamer:hover {
+        transform: translateY(-8px);
+        border-color: var(--primary);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    }
+
+    .card-img-wrapper {
+        height: 220px;
+        background: #151520;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .card-img-wrapper img {
+        width: 100%; height: 100%; object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .card-produto-gamer:hover img { transform: scale(1.1); }
+
+    .status-badge {
+        position: absolute;
+        top: 15px; right: 15px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        padding: 5px 10px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        z-index: 2;
+        letter-spacing: 1px;
+    }
+
+    .status-badge.disponivel { background: #00e676; color: #000; }
+    .status-badge.esgotado { background: #ff1744; color: #fff; }
+
+    .card-info { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+
+    .card-category { font-size: 0.75rem; color: var(--primary); text-transform: uppercase; font-weight: 700; margin-bottom: 5px; }
+    .card-title { font-size: 1.1rem; color: white; margin-bottom: 5px; line-height: 1.4; }
+    .card-brand { font-size: 0.9rem; color: rgba(255,255,255,0.5); margin-bottom: 15px; }
+
+    .card-price-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        margin-top: auto;
+    }
+
+    .price-value { font-size: 1.4rem; font-weight: 800; color: #00e676; }
+    .stock-mini { font-size: 0.8rem; color: rgba(255,255,255,0.4); }
+
+    .btn-buy-gamer {
+        width: 100%;
+        background: linear-gradient(90deg, var(--primary) 0%, #8a2be2 100%);
+        border: none;
+        color: white;
+        padding: 12px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.3s;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-buy-gamer:hover { opacity: 0.9; box-shadow: 0 5px 15px rgba(var(--primary-rgb), 0.3); }
+    .btn-disabled-gamer { width: 100%; background: #333; color: #666; border: none; padding: 12px; border-radius: 12px; cursor: not-allowed; }
+
+    /* ESTILOS DE AVALIAÇÕES E SOBRE */
+    .reviews-container { padding: 20px 0; }
+    .reviews-summary { text-align: center; margin-bottom: 40px; padding: 30px; background: var(--glass); border-radius: 20px; border: 1px solid var(--border); }
+    .big-score { font-size: 4rem; font-weight: 800; color: white; line-height: 1; margin-bottom: 10px; }
+    .stars-static { font-size: 1.5rem; color: #ffb400; margin-bottom: 10px; }
+    
+    .review-card { background: var(--glass); padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px; }
+    .review-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+    .reviewer-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    .review-date { margin-left: auto; font-size: 0.8rem; color: var(--text-light); }
+    
+    .about-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+    .about-card { background: var(--glass); padding: 30px; border-radius: 20px; border: 1px solid var(--border); }
+    .about-card h3 { margin-bottom: 20px; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+    .about-card ul { list-style: none; padding: 0; }
+    .about-card li { margin-bottom: 15px; color: var(--text-light); display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 5px; }
+    .about-card li strong { color: white; }
+
+    /* =========================================
+       RESPONSIVIDADE AVANÇADA (MOBILE)
+       ========================================= */
+    @media (max-width: 900px) {
+        .loja-hero { padding: 40px 20px; text-align: center; }
+        .hero-content { flex-direction: column; gap: 25px; }
+        .loja-info-main { width: 100%; min-width: auto; }
+        .loja-meta { justify-content: center; }
+        .loja-stats { margin: 0 auto; width: 100%; justify-content: space-around; padding: 15px; }
+        .loja-actions-hero { width: 100%; flex-direction: row; gap: 10px; }
+        .loja-nav-container { margin-top: 20px; }
+        .loja-nav { justify-content: flex-start; padding: 10px; }
+        
+        .section-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+        #buscaProduto { width: 100%; }
+        
+        /* Grid de 2 colunas no tablet/celular grande */
+        .produtos-grid { grid-template-columns: repeat(auto-fill, minmax(45%, 1fr)); gap: 15px; }
+    }
+
+    @media (max-width: 480px) {
+        .loja-nombre { font-size: 2rem; }
+        .loja-avatar { width: 100px; height: 100px; font-size: 2.5rem; }
+        
+        .loja-stats { gap: 15px; }
+        .stat-num { font-size: 1.2rem; }
+        .stat-label { font-size: 0.7rem; }
+        
+        .loja-actions-hero { flex-direction: column; }
+        
+        /* Cards mais compactos no celular */
+        .card-img-wrapper { height: 160px; }
+        .card-info { padding: 15px; }
+        .card-title { font-size: 1rem; }
+        .price-value { font-size: 1.2rem; }
+        .btn-buy-gamer { padding: 10px; font-size: 0.9rem; }
+        
+        .produtos-grid { grid-template-columns: 1fr; } /* 1 por linha em telas muito pequenas para melhor visualização */
+    }
 </style>
 
 <script>
-    function mudarAba(aba) {
-        // Esconder todas as abas
-        document.querySelectorAll('.aba-conteudo').forEach(aba => {
-            aba.classList.remove('active');
+    function mudarAba(abaId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(`aba-${abaId}`).classList.add('active');
+        // Encontra o botão que chamou a função (lógica simplificada)
+        event.target.classList.add('active');
+    }
+
+    function filtrarProdutosLocal() {
+        const termo = document.getElementById('buscaProduto').value.toLowerCase();
+        const cards = document.querySelectorAll('.card-produto-gamer');
+        
+        cards.forEach(card => {
+            const nome = card.getAttribute('data-nome');
+            if (nome.includes(termo)) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
         });
-        
-        // Remover active de todas as tabs
-        document.querySelectorAll('.nav-tab').forEach(tab => {
-            tab.classList.remove('active');
-        });
-        
-        // Mostrar aba selecionada
-        document.getElementById(`aba-${aba}`).classList.add('active');
-        
-        // Ativar tab selecionada
-        document.querySelector(`.nav-tab[href="#${aba}"]`).classList.add('active');
     }
-
-    function verProduto(produtoId) {
-        window.location.href = `/produto/${produtoId}`;
-    }
-
-    function filtrarProdutos(filtro) {
-        // Em produção, faria uma requisição AJAX para filtrar
-        console.log('Filtrando por:', filtro);
-        // Por enquanto, apenas recarrega a página
-        window.location.reload();
-    }
-
-    function seguirEmpresa(empresaId) {
-    // Adicionamos o ID da empresa como parâmetro
-    if (!{{ 'true' if session.get('usuario_id') else 'false' }}) {
-        alert('🔐 Faça login para seguir esta loja.');
-        return;
-    }
-    
-    // CORREÇÃO 4. Refatoração da função fetch para evitar SyntaxError ao receber redirecionamento
-    // O erro ocorria ao tentar processar (response.json()) uma resposta que era um redirecionamento HTTP (código 302, por exemplo), que não tem corpo JSON.
-    fetch(`/seguir_loja/${empresaId}`, { 
-        method: 'POST'
-    })
-    .then(response => {
-        // Se o Flask retornou um redirecionamento (status 302 ou similar), 
-        // a propriedade 'response.redirected' será true. 
-        // Se isso ocorrer, o navegador será redirecionado, e o flash() do Flask aparecerá.
-        if (response.redirected) {
-             window.location.href = response.url;
-             // Retorna um valor para interromper a cadeia .then() e evitar o erro no .json()
-             return { success: true }; 
-        }
-        
-        // Se não houver redirecionamento, tenta analisar como JSON
-        // Isso é o que você faria se a rota Flask retornasse um JSON de sucesso/erro (e não um redirect)
-        return response.json().catch(() => {
-            // Se o servidor retornar uma resposta não-JSON sem redirecionar (ex: erro 500 sem JSON), 
-            // tratamos como falha.
-            return { success: false, error: 'Resposta inesperada do servidor.' };
-        }); 
-    })
-    .then(data => {
-        // Se a resposta foi um JSON (caso de não-redirecionamento), processamos aqui
-        if (data && data.success) {
-            // Se o Flask não redirecionou, mas retornou um JSON de sucesso, podemos recarregar/avisar
-            alert('✅ Ação realizada com sucesso!');
-            location.reload(); 
-        } else if (data && data.error) {
-            alert('❌ ' + data.error);
-        }
-    })
-    .catch(error => {
-        // Catch para erros de rede ou outros problemas do fetch
-        console.error('Erro ao seguir/deixar de seguir empresa:', error);
-        // alert('❌ Erro ao seguir loja. Tente novamente.'); // Deixamos opcional, pois o Flask deve mostrar o flash
-    });
-}
 
     function compartilharEmpresa() {
-        const url = window.location.href;
-        navigator.clipboard.writeText(url)
-            .then(() => alert('✅ Link copiado para a área de transferência!'))
-            .catch(() => {
-                // Fallback para navegadores mais antigos
-                const tempInput = document.createElement('input');
-                tempInput.value = url;
-                document.body.appendChild(tempInput);
-                tempInput.select();
-                document.execCommand('copy');
-                document.body.removeChild(tempInput);
-                alert('✅ Link copiado para a área de transferência!');
-            });
+        navigator.clipboard.writeText(window.location.href);
+        alert('🔗 Link copiado!');
     }
-
-    function enviarAvaliacaoEmpresa(event) {
-        event.preventDefault();
-        
-        const formData = new FormData(event.target);
-        
-        fetch(`/avaliar-empresa/{{ empresa.id_empresa }}`, {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('✅ Avaliação enviada com sucesso!');
-                event.target.reset();
-                location.reload();
-            } else {
-                alert('❌ ' + data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Erro ao enviar avaliação:', error);
-            alert('❌ Erro ao enviar avaliação. Tente novamente.');
-        });
-    }
-
-    function enviarMensagemContato(event) {
-        event.preventDefault();
-        
-        const formData = new FormData(event.target);
-        
-        fetch(`/enviar-mensagem-empresa/{{ empresa.id_empresa }}`, {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('✅ Mensagem enviada com sucesso!');
-                event.target.reset();
-            } else {
-                alert('❌ ' + data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Erro ao enviar mensagem:', error);
-            alert('❌ Erro ao enviar mensagem. Tente novamente.');
-        });
-    }
-
-    // Inicializar a primeira aba
-    document.addEventListener('DOMContentLoaded', () => {
-        // CORREÇÃO 5. Adicionado para garantir que 'produtos' inicie como a aba ativa
-        mudarAba('produtos');
-    });
 </script>
 {% endblock %}

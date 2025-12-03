@@ -2,7 +2,6 @@
 
 {% block conteudo %}
 <div class="painel-empresa-container">
-    <!-- Header do Painel -->
     <div class="painel-header">
         <div class="empresa-info-header">
             <div class="empresa-avatar">
@@ -36,13 +35,15 @@
                class="btn btn-secondary" target="_blank">
                 👁️ Ver Perfil Público
             </a>
-            <button class="btn btn-primary" onclick="abrirModalAdicionar()">
-                ➕ Adicionar Produto
+            <button class="btn btn-secondary" onclick="abrirModalAdicionar()">
+                📂 Adicionar do Catálogo
+            </button>
+            <button class="btn btn-primary" onclick="abrirModalCriar()">
+                ✨ Criar Novo Produto
             </button>
         </div>
     </div>
 
-    <!-- Navegação do Painel -->
     <div class="painel-navigation">
         <nav class="nav-tabs-painel">
             <button class="nav-tab-painel active" onclick="mudarAbaPainel('produtos')">
@@ -60,9 +61,7 @@
         </nav>
     </div>
 
-    <!-- Conteúdo das Abas -->
     <div class="painel-content">
-        <!-- ABA: PRODUTOS -->
         <div id="aba-produtos" class="aba-painel active">
             <div class="produtos-section">
                 <div class="section-header">
@@ -94,7 +93,6 @@
                             <p class="produto-categoria">{{ produto.categoria }}</p>
                             
                             <div class="produto-precos">
-                                <span class="preco-original">R$ {{ "%.2f"|format(produto.preco) }}</span>
                                 <span class="preco-empresa">R$ {{ "%.2f"|format(produto.preco_empresa) }}</span>
                             </div>
                             
@@ -108,12 +106,18 @@
                         
                         <div class="produto-actions">
                             <button class="btn-action edit" 
-                                    onclick="editarProduto({ produto, id_produto_empresa })"
-                                    title="Editar produto">
+                                    onclick="abrirModalEditar(
+                                        '{{ produto.id_produto_empresa }}', 
+                                        '{{ produto.nome }}', 
+                                        '{{ produto.preco_empresa }}', 
+                                        '{{ produto.estoque_empresa }}', 
+                                        {{ 1 if produto.ativo else 0 }}
+                                    )"
+                                    title="Editar oferta">
                                 ✏️
                             </button>
                             <button class="btn-action delete" 
-                                    onclick="removerProduto({ produto, id_produto_empresa })"
+                                    onclick="removerProduto('{{ produto.id_produto_empresa }}')"
                                     title="Remover produto">
                                 🗑️
                             </button>
@@ -125,16 +129,20 @@
                 <div class="empty-state">
                     <div class="empty-icon">📦</div>
                     <h3>Nenhum produto cadastrado</h3>
-                    <p>Adicione produtos à sua loja para começar a vender.</p>
-                    <button class="btn btn-primary" onclick="abrirModalAdicionar()">
-                        ➕ Adicionar Primeiro Produto
-                    </button>
+                    <p>Crie produtos exclusivos ou adicione do catálogo para começar a vender.</p>
+                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                        <button class="btn btn-secondary" onclick="abrirModalAdicionar()">
+                            📂 Adicionar do Catálogo
+                        </button>
+                        <button class="btn btn-primary" onclick="abrirModalCriar()">
+                            ✨ Criar Novo Produto
+                        </button>
+                    </div>
                 </div>
                 {% endif %}
             </div>
         </div>
 
-        <!-- ABA: ESTATÍSTICAS -->
         <div id="aba-estatisticas" class="aba-painel">
             <div class="estatisticas-section">
                 <div class="section-header">
@@ -175,18 +183,9 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="charts-section">
-                    <div class="chart-placeholder">
-                        <div class="chart-icon">📊</div>
-                        <h4>Gráficos de Desempenho</h4>
-                        <p>Em breve: visualizações detalhadas das suas vendas e métricas</p>
-                    </div>
-                </div>
             </div>
         </div>
 
-        <!-- ABA: AVALIAÇÕES -->
         <div id="aba-avaliacoes" class="aba-painel">
             <div class="avaliacoes-section">
                 <div class="section-header">
@@ -244,79 +243,102 @@
             </div>
         </div>
 
-        <!-- ABA: CONFIGURAÇÕES -->
         <div id="aba-configuracoes" class="aba-painel">
-    <div class="configuracoes-section">
-        <div class="section-header">
-            <h2>Configurações da Loja</h2>
-            <p>Gerencie as informações da sua empresa</p>
-        </div>
-
-        <div class="configuracoes-grid">
-            <div class="config-card">
-                <h3>📝 Informações Básicas</h3>
-                <div class="config-content">
-                    <p><strong>Razão Social:</strong> {{ empresa.razao_social }}</p>
-                    <p><strong>Nome Fantasia:</strong> {{ empresa.nome_fantasia }}</p>
-                    <p><strong>CNPJ:</strong> {{ empresa.cnpj }}</p>
-                    <p><strong>Email:</strong> {{ empresa.email }}</p>
-                    <p><strong>Telefone:</strong> {{ empresa.telefone or 'Não informado' }}</p>
-                    <button class="btn btn-secondary" onclick="abrirModal('modalEditarInfo')">
-                        ✏️ Editar Informações
-                    </button>
+            <div class="configuracoes-section">
+                <div class="section-header">
+                    <h2>Configurações da Loja</h2>
+                    <p>Gerencie as informações da sua empresa</p>
                 </div>
-            </div>
 
-            <div class="config-card">
-                <h3>🎯 Tipo de Empresa</h3>
-                <div class="config-content">
-                    <p><strong>Atual:</strong> 
-                        {% if empresa.tipo_empresa == 'vendedor' %}
-                            Apenas Vendedor
-                        {% elif empresa.tipo_empresa == 'comprador' %}
-                            Apenas Comprador
-                        {% else %}
-                            Vendedor e Comprador
-                        {% endif %}
-                    </p>
-                    <button class="btn btn-secondary" onclick="abrirModal('modalAlterarTipo')">
-                        🔄 Alterar Tipo
-                    </button>
-                </div>
-            </div>
+                <div class="configuracoes-grid">
+                    
+                    <div class="config-card">
+                        <h3>🎨 Aparência</h3>
+                        <div class="config-content">
+                            <form action="{{ url_for('atualizar_preferencias_empresa') }}" method="POST">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                    <div>
+                                        <p style="margin-bottom: 5px; font-weight: 600;">🌙 Modo Escuro</p>
+                                        <p style="font-size: 0.9rem; color: var(--text-light); margin: 0;">Ative para descansar a visão.</p>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" name="tema_escuro" id="temaSwitch" 
+                                               {% if empresa.tema_escuro %}checked{% endif %}>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="width: 100%;">Salvar Preferência</button>
+                            </form>
+                        </div>
+                    </div>
 
-            <div class="config-card">
-                <h3>🔒 Segurança</h3>
-                <div class="config-content">
-                    <p>Altere sua senha e configure a segurança da conta</p>
-                    <button class="btn btn-secondary" onclick="abrirModal('modalAlterarSenha')">
-                        🔑 Alterar Senha
-                    </button>
+                    <div class="config-card">
+                        <h3>📝 Informações Básicas</h3>
+                        <div class="config-content">
+                            <p><strong>Razão Social:</strong> {{ empresa.razao_social }}</p>
+                            <p><strong>Nome Fantasia:</strong> {{ empresa.nome_fantasia }}</p>
+                            <p><strong>CNPJ:</strong> {{ empresa.cnpj }}</p>
+                            <p><strong>Email:</strong> {{ empresa.email }}</p>
+                            <p><strong>Telefone:</strong> {{ empresa.telefone or 'Não informado' }}</p>
+                            <button class="btn btn-secondary" onclick="abrirModal('modalEditarInfo')">
+                                ✏️ Editar Informações
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="config-card">
+                        <h3>🎯 Tipo de Empresa</h3>
+                        <div class="config-content">
+                            <p><strong>Atual:</strong> 
+                                {% if empresa.tipo_empresa == 'vendedor' %}
+                                    Apenas Vendedor
+                                {% elif empresa.tipo_empresa == 'comprador' %}
+                                    Apenas Comprador
+                                {% else %}
+                                    Vendedor e Comprador
+                                {% endif %}
+                            </p>
+                            <button class="btn btn-secondary" onclick="abrirModal('modalAlterarTipo')">
+                                🔄 Alterar Tipo
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="config-card">
+                        <h3>🔒 Segurança</h3>
+                        <div class="config-content">
+                            <p>Altere sua senha e configure a segurança da conta</p>
+                            <button class="btn btn-secondary" onclick="abrirModal('modalAlterarSenha')">
+                                🔑 Alterar Senha
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Adicionar Produto -->
 <div id="modalAdicionarProduto" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3>➕ Adicionar Produto à Loja</h3>
+            <h3>📂 Adicionar do Catálogo Global</h3>
             <button class="modal-close" onclick="fecharModalAdicionar()">&times;</button>
         </div>
         
         <div class="modal-body">
-            <form id="formAdicionarProduto" onsubmit="adicionarProduto(event)">
+            <p style="margin-bottom: 20px; color: var(--text-light);">
+                Selecione um produto que já existe no sistema para vender em sua loja.
+            </p>
+            <form id="formAdicionarProduto" action="{{ url_for('adicionar_produto_empresa') }}" method="POST">
                 <div class="form-group">
                     <label for="produtoSelect">Selecionar Produto *</label>
                     <select id="produtoSelect" name="id_produto" required>
                         <option value="">Selecione um produto...</option>
                         {% for produto in produtos_disponiveis %}
                         <option value="{{ produto.id_produto }}" 
-                                data-preco="{{ produto.preco }}"
-                                data-categoria="{{ produto.categoria }}">
-                            {{ produto.nome }} - {{ produto.marca }} (R$ {{ "%.2f"|format(produto.preco) }})
+                                data-preco="{{ produto.preco }}">
+                            {{ produto.nome }} - {{ produto.marca }} (Ref: R$ {{ "%.2f"|format(produto.preco) }})
                         </option>
                         {% endfor %}
                     </select>
@@ -348,8 +370,118 @@
                         Cancelar
                     </button>
                     <button type="submit" class="btn btn-primary">
-                        ➕ Adicionar Produto
+                        ➕ Adicionar à Loja
                     </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="modalCriarProduto" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header">
+            <h3>✨ Criar Novo Produto</h3>
+            <button class="modal-close" onclick="fecharModalCriar()">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <p style="margin-bottom: 20px; color: var(--text-light);">
+                Cadastre um produto totalmente novo. Ele será adicionado automaticamente à sua loja.
+            </p>
+            <form id="formCriarProduto" action="{{ url_for('cadastrar_novo_produto_empresa') }}" method="POST" enctype="multipart/form-data">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nome do Produto *</label>
+                        <input type="text" name="nome" required placeholder="Ex: Teclado Mecânico RGB">
+                    </div>
+                    <div class="form-group">
+                        <label>Marca *</label>
+                        <input type="text" name="marca" required placeholder="Ex: Logitech">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Categoria *</label>
+                        <select name="categoria" required>
+                            <option value="">Selecione...</option>
+                            <option value="Hardware">Hardware</option>
+                            <option value="Periféricos">Periféricos</option>
+                            <option value="Computadores">Computadores</option>
+                            <option value="Monitores">Monitores</option>
+                            <option value="Gift Card">Gift Card</option>
+                            <option value="Games">Games</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Preço de Venda (R$) *</label>
+                        <input type="number" name="preco" step="0.01" min="0" required placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label>Estoque Inicial *</label>
+                        <input type="number" name="estoque" min="0" required placeholder="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Descrição Detalhada</label>
+                    <textarea name="descricao" rows="4" class="form-control" placeholder="Detalhes técnicos, garantia, etc..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Imagem do Produto</label>
+                    <input type="file" name="imagens" accept="image/*" class="form-control">
+                    <small style="color: var(--text-light)">Formatos: JPG, PNG. (Recomendado 800x800px)</small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="fecharModalCriar()">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        💾 Salvar e Criar Produto
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="modalEditarProduto" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>✏️ Editar Oferta</h3>
+            <button class="modal-close" onclick="fecharModal('modalEditarProduto')">✕</button>
+        </div>
+        <div class="modal-body">
+            <p id="editNomeProduto" style="margin-bottom: 20px; font-weight: bold; color: var(--primary);"></p>
+            
+            <form id="formEditarProduto" onsubmit="salvarEdicaoProduto(event)">
+                <input type="hidden" id="editIdProdutoEmpresa">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Preço (R$)</label>
+                        <input type="number" id="editPreco" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Estoque</label>
+                        <input type="number" id="editEstoque" min="0" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="editAtivo">
+                        <span>Produto Ativo na Loja</span>
+                    </label>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="fecharModal('modalEditarProduto')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">💾 Salvar Alterações</button>
                 </div>
             </form>
         </div>
@@ -442,6 +574,7 @@
 </div>
 
 <style>
+    /* Estilos do Painel */
     .painel-empresa-container {
         max-width: 1400px;
         margin: 0 auto;
@@ -522,7 +655,8 @@
 
     .empresa-actions {
         display: flex;
-        gap: 15px;
+        flex-direction: column; /* Botões empilhados se preferir ou gap */
+        gap: 10px;
         flex-shrink: 0;
     }
 
@@ -819,31 +953,6 @@
         font-weight: 500;
     }
 
-    .charts-section {
-        background: var(--glass);
-        border-radius: 16px;
-        padding: 40px;
-        text-align: center;
-        border: 1px solid var(--border);
-        backdrop-filter: blur(20px);
-    }
-
-    .chart-placeholder .chart-icon {
-        font-size: 4rem;
-        margin-bottom: 20px;
-        opacity: 0.5;
-    }
-
-    .chart-placeholder h4 {
-        color: var(--text);
-        margin-bottom: 10px;
-        font-size: 1.3rem;
-    }
-
-    .chart-placeholder p {
-        color: var(--text-light);
-    }
-
     /* Avaliações */
     .resumo-avaliacoes {
         background: var(--glass);
@@ -965,6 +1074,38 @@
     .config-content strong {
         color: var(--primary);
     }
+
+    /* CSS DO SWITCH */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 28px;
+        flex-shrink: 0;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #ccc;
+        border-radius: 34px;
+        transition: .4s;
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        border-radius: 50%;
+        transition: .4s;
+    }
+    input:checked + .slider { background-color: var(--primary); }
+    input:checked + .slider:before { transform: translateX(22px); }
+
 
     /* Estados Vazios */
     .empty-state {
@@ -1101,7 +1242,8 @@
     }
 
     .form-group select,
-    .form-group input {
+    .form-group input,
+    .form-group textarea {
         width: 100%;
         padding: 12px 16px;
         border: 2px solid var(--border);
@@ -1113,7 +1255,8 @@
     }
 
     .form-group select:focus,
-    .form-group input:focus {
+    .form-group input:focus,
+    .form-group textarea:focus {
         border-color: var(--primary);
         box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
         outline: none;
@@ -1163,7 +1306,6 @@
         }
         
         .empresa-actions {
-            flex-direction: column;
             width: 100%;
         }
         
@@ -1216,20 +1358,16 @@
 <script>
     // Sistema de abas do painel
     function mudarAbaPainel(aba) {
-        // Esconder todas as abas
         document.querySelectorAll('.aba-painel').forEach(aba => {
             aba.classList.remove('active');
         });
         
-        // Remover active de todas as tabs
         document.querySelectorAll('.nav-tab-painel').forEach(tab => {
             tab.classList.remove('active');
         });
         
-        // Mostrar aba selecionada
         document.getElementById(`aba-${aba}`).classList.add('active');
         
-        // Ativar tab selecionada
         document.querySelectorAll('.nav-tab-painel').forEach(tab => {
             if (tab.textContent.includes(getAbaDisplayName(aba))) {
                 tab.classList.add('active');
@@ -1247,7 +1385,7 @@
         return names[aba] || aba;
     }
 
-    // Modal Adicionar Produto
+    // Modal Adicionar Produto (Existente)
     function abrirModalAdicionar() {
         document.getElementById('modalAdicionarProduto').style.display = 'block';
         document.body.style.overflow = 'hidden';
@@ -1258,44 +1396,34 @@
         document.body.style.overflow = 'auto';
     }
 
-    // Fechar modal ao clicar fora
-    document.getElementById('modalAdicionarProduto').addEventListener('click', (e) => {
-        if (e.target.id === 'modalAdicionarProduto') {
-            fecharModalAdicionar();
-        }
-    });
-
-    // Adicionar produto
-    function adicionarProduto(event) {
-        event.preventDefault();
-        
-        const formData = new FormData(event.target);
-        
-        fetch('/empresa/adicionar-produto', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            if (response.ok) {
-                return response;
-            }
-            throw new Error('Erro ao adicionar produto');
-        })
-        .then(() => {
-            alert('✅ Produto adicionado com sucesso!');
-            fecharModalAdicionar();
-            location.reload();
-        })
-        .catch(error => {
-            console.error('Erro:', error);
-            alert('❌ Erro ao adicionar produto. Tente novamente.');
-        });
+    // Modal Criar Produto (Novo)
+    function abrirModalCriar() {
+        document.getElementById('modalCriarProduto').style.display = 'block';
+        document.body.style.overflow = 'hidden';
     }
 
-    // Editar produto
-    function editarProduto(idProdutoEmpresa) {
-        // Em produção, implementar edição
-        alert(`📝 Editando produto ${idProdutoEmpresa} - Funcionalidade em desenvolvimento`);
+    function fecharModalCriar() {
+        document.getElementById('modalCriarProduto').style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    // Funções de Modal genérico
+    function abrirModal(id) {
+        document.getElementById(id).style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function fecharModal(id) {
+        document.getElementById(id).style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    // Fechar modal ao clicar fora
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = "none";
+            document.body.style.overflow = 'auto';
+        }
     }
 
     // Remover produto
@@ -1311,7 +1439,6 @@
                 throw new Error('Erro ao remover produto');
             })
             .then(() => {
-                alert('✅ Produto removido com sucesso!');
                 location.reload();
             })
             .catch(error => {
@@ -1321,16 +1448,85 @@
         }
     }
 
-    // Inicializar a primeira aba
+    // --- NOVA FUNÇÃO: Abrir Modal de Editar Produto ---
+    function abrirModalEditar(id, nome, preco, estoque, ativo) {
+        // Preenche os campos do modal com os dados atuais
+        document.getElementById('editIdProdutoEmpresa').value = id;
+        document.getElementById('editNomeProduto').textContent = nome;
+        document.getElementById('editPreco').value = parseFloat(preco).toFixed(2);
+        document.getElementById('editEstoque').value = estoque;
+        
+        // Verifica se é 1 (verdadeiro) ou 0 (falso)
+        document.getElementById('editAtivo').checked = (ativo == 1);
+
+        // Abre o modal
+        document.getElementById('modalEditarProduto').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+
+    // --- NOVA FUNÇÃO: Salvar Edição do Produto ---
+    function salvarEdicaoProduto(event) {
+        event.preventDefault(); // Impede o recarregamento padrão da página
+
+        const id = document.getElementById('editIdProdutoEmpresa').value;
+        const preco = document.getElementById('editPreco').value;
+        const estoque = document.getElementById('editEstoque').value;
+        const ativo = document.getElementById('editAtivo').checked; // Boolean
+
+        const btnSalvar = event.target.querySelector('button[type="submit"]');
+        const textoOriginal = btnSalvar.textContent;
+        btnSalvar.textContent = "Salvando...";
+        btnSalvar.disabled = true;
+
+        // Envia para o backend (espera JSON)
+        fetch(`/empresa/atualizar-produto/${id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                preco_empresa: parseFloat(preco),
+                estoque_empresa: parseInt(estoque),
+                ativo: ativo
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('❌ Erro ao atualizar: ' + (data.error || 'Erro desconhecido'));
+                btnSalvar.textContent = textoOriginal;
+                btnSalvar.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('❌ Erro de conexão.');
+            btnSalvar.textContent = textoOriginal;
+            btnSalvar.disabled = false;
+        });
+    }
+
+    // Sincronizar o switch de tema visualmente ao carregar e ao clicar
     document.addEventListener('DOMContentLoaded', () => {
         mudarAbaPainel('produtos');
         
-        // Fechar modal com ESC
+        // Fechar com ESC
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                fecharModalAdicionar();
+                document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+                document.body.style.overflow = 'auto';
             }
         });
+
+        // Alternância visual do tema (igual ao minha_conta.html)
+        const temaSwitch = document.getElementById('temaSwitch');
+        if(temaSwitch) {
+            temaSwitch.addEventListener('change', function() {
+                document.body.classList.toggle('dark-theme');
+            });
+        }
     });
 </script>
 {% endblock %}

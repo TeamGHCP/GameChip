@@ -635,6 +635,14 @@ CREATE INDEX IF NOT EXISTS idx_itens_pedido_preco ON itens_pedido(preco_unitario
 CREATE INDEX IF NOT EXISTS idx_produtos_empresa_empresa ON produtos_empresa(id_empresa);
 CREATE INDEX IF NOT EXISTS idx_produtos_empresa_produto ON produtos_empresa(id_produto);
 
+ALTER TABLE empresas ADD COLUMN tema_escuro BOOLEAN DEFAULT FALSE;
+
+ALTER TABLE pedidos MODIFY COLUMN id_cliente INT NULL;
+ALTER TABLE pedidos ADD COLUMN id_empresa_compradora INT NULL AFTER id_cliente;
+
+ALTER TABLE pedidos 
+ADD CONSTRAINT fk_pedido_empresa_compradora 
+FOREIGN KEY (id_empresa_compradora) REFERENCES empresas(id_empresa);
 
 -- ==============================================================================
 -- 10. CONFIRMAÇÃO

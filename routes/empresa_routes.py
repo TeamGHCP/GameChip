@@ -4,9 +4,17 @@ from utils.decorators import login_required
 import json
 import mysql.connector
 from datetime import datetime
+import os
+from werkzeug.utils import secure_filename
+from config import Config
+from uuid import uuid4
 
 def configure_empresa_routes(app):
     
+    # Função auxiliar para verificar arquivos permitidos
+    def allowed_file(filename):
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
+
     @app.route('/painel-empresa')
     @login_required
     def painel_empresa():
@@ -48,9 +56,9 @@ def configure_empresa_routes(app):
                     except:
                         produto['imagens'] = []
             
-            # Buscar produtos disponíveis para adicionar
+            # Buscar produtos disponíveis para adicionar (Catálogo Existente)
             cursor.execute("""
-                SELECT p.id_produto, p.nome, p.marca, p.preco, p.categoria
+                SELECT p.id_produto, p.nome, p.marca, p.preco, p.estoque, p.categoria
                 FROM produto p 
                 WHERE p.ativo = TRUE 
                 AND p.id_produto NOT IN (
@@ -71,7 +79,7 @@ def configure_empresa_routes(app):
             """, (empresa['email'],))
             stats = cursor.fetchone()
             
-            # Buscar avaliações da empresa
+            # Buscar avaliações
             cursor.execute("""
                 SELECT ae.*, COALESCE(c.nome, e.nome_fantasia, e.razao_social) as avaliador_nome
                 FROM avaliacoes_empresas ae
@@ -83,7 +91,7 @@ def configure_empresa_routes(app):
             """, (session['empresa_id'],))
             avaliacoes = cursor.fetchall()
             
-            # Calcular média de avaliações
+            # Calcular média
             cursor.execute("""
                 SELECT AVG(nota) as media_notas, COUNT(*) as total_avaliacoes
                 FROM avaliacoes_empresas
@@ -109,7 +117,6 @@ def configure_empresa_routes(app):
 
     @app.route('/empresa/<int:id_empresa>')
     def detalhes_empresa_publica(id_empresa):
-        """Página pública de detalhes da empresa"""
         try:
             conn = get_db_connection()
             if not conn:
@@ -118,7 +125,6 @@ def configure_empresa_routes(app):
             
             cursor = conn.cursor(dictionary=True)
             
-            # Buscar dados da empresa
             cursor.execute("""
                 SELECT * FROM empresas 
                 WHERE id_empresa = %s AND tipo_empresa IN ('vendedor', 'ambos')
@@ -130,7 +136,7 @@ def configure_empresa_routes(app):
                 flash('Empresa não encontrada.', 'error')
                 return redirect(url_for('inicio'))
             
-            # Buscar produtos da empresa
+            # Busca produtos vinculados
             cursor.execute("""
                 SELECT p.*, pe.preco_empresa, pe.estoque_empresa
                 FROM produtos_empresa pe
@@ -141,7 +147,6 @@ def configure_empresa_routes(app):
             
             produtos = cursor.fetchall()
             
-            # Processar imagens
             for produto in produtos:
                 if produto.get('imagens'):
                     try:
@@ -149,7 +154,6 @@ def configure_empresa_routes(app):
                     except:
                         produto['imagens'] = []
             
-            # Buscar avaliações da empresa
             cursor.execute("""
                 SELECT ae.*, COALESCE(c.nome, 'Usuário') as avaliador_nome
                 FROM avaliacoes_empresas ae
@@ -161,7 +165,6 @@ def configure_empresa_routes(app):
             
             avaliacoes = cursor.fetchall()
             
-            # Calcular média de avaliações
             cursor.execute("""
                 SELECT AVG(nota) as media_notas, COUNT(*) as total_avaliacoes
                 FROM avaliacoes_empresas
@@ -170,10 +173,8 @@ def configure_empresa_routes(app):
             
             media_avaliacoes = cursor.fetchone()
             
-            # Verificar se usuário pode avaliar (se comprou da empresa)
             pode_avaliar = False
             if session.get('usuario_id'):
-                # CORREÇÃO REALIZADA AQUI: Mudado de pedido_itens para itens_pedido
                 cursor.execute("""
                     SELECT COUNT(*) as comprou 
                     FROM pedidos p
@@ -194,7 +195,6 @@ def configure_empresa_routes(app):
                              pode_avaliar=pode_avaliar)
     
         except mysql.connector.Error as err:
-            # Mostra o erro detalhado se houver
             flash(f'Erro ao carregar dados da empresa: {err}', 'error')
             return redirect(url_for('inicio'))
         finally:
@@ -215,7 +215,6 @@ def configure_empresa_routes(app):
             
             cursor = conn.cursor(dictionary=True)
             
-            # Buscar produtos que ainda não foram adicionados pela empresa
             cursor.execute("""
                 SELECT p.id_produto, p.nome, p.marca, p.preco, p.estoque, p.categoria, p.imagens
                 FROM produto p 
@@ -229,7 +228,6 @@ def configure_empresa_routes(app):
             
             produtos = cursor.fetchall()
             
-            # Processar imagens
             for produto in produtos:
                 if produto.get('imagens'):
                     try:
@@ -241,6 +239,73 @@ def configure_empresa_routes(app):
         
         except mysql.connector.Error as err:
             return jsonify({'error': str(err)}), 500
+        finally:
+            if conn and conn.is_connected():
+                cursor.close()
+                conn.close()
+
+    # --- CORREÇÃO AQUI ---
+    @app.route('/empresa/cadastrar-novo-produto', methods=['POST'])
+    @login_required
+    def cadastrar_novo_produto_empresa():
+        if 'empresa_id' not in session:
+            flash('❌ Acesso não autorizado.', 'error')
+            return redirect(url_for('painel_empresa'))
+        
+        try:
+            nome = request.form.get('nome', '').strip()
+            marca = request.form.get('marca', '').strip()
+            categoria = request.form.get('categoria', '').strip()
+            descricao = request.form.get('descricao', '').strip()
+            preco = request.form.get('preco', '0').replace(',', '.')
+            estoque_inicial = int(request.form.get('estoque', '0')) # Convertendo para inteiro
+            
+            if not all([nome, marca, categoria, preco]):
+                flash('❌ Preencha os campos obrigatórios.', 'error')
+                return redirect(url_for('painel_empresa'))
+
+            conn = get_db_connection()
+            if not conn:
+                flash('❌ Erro ao conectar ao banco de dados.', 'error')
+                return redirect(url_for('painel_empresa'))
+            
+            cursor = conn.cursor()
+
+            imagens = []
+            if 'imagens' in request.files:
+                files = request.files.getlist('imagens')
+                for file in files:
+                    if file and allowed_file(file.filename):
+                        filename = secure_filename(file.filename)
+                        unique_filename = f"{uuid4().hex}_{filename}"
+                        filepath = os.path.join(Config.UPLOAD_FOLDER, unique_filename)
+                        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+                        file.save(filepath)
+                        imagens.append(unique_filename)
+            
+            # CORREÇÃO CRÍTICA: Passando estoque_inicial para o INSERT global também
+            # Antes estava 0, o que fazia o produtos.html mostrar "Esgotado"
+            cursor.execute("""
+                INSERT INTO produto (nome, marca, preco, descricao, estoque, categoria, imagens, ativo)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, TRUE)
+            """, (nome, marca, float(preco), descricao, estoque_inicial, categoria, json.dumps(imagens) if imagens else None))
+            
+            novo_id_produto = cursor.lastrowid
+            
+            # Inserindo na tabela da empresa
+            cursor.execute("""
+                INSERT INTO produtos_empresa (id_empresa, id_produto, preco_empresa, estoque_empresa, ativo)
+                VALUES (%s, %s, %s, %s, TRUE)
+            """, (session['empresa_id'], novo_id_produto, float(preco), estoque_inicial))
+            
+            conn.commit()
+            
+            flash('✅ Produto criado e adicionado à sua loja com sucesso!', 'success')
+            return redirect(url_for('painel_empresa'))
+            
+        except mysql.connector.Error as err:
+            flash(f'❌ Erro ao cadastrar produto: {err}', 'error')
+            return redirect(url_for('painel_empresa'))
         finally:
             if conn and conn.is_connected():
                 cursor.close()
@@ -270,7 +335,6 @@ def configure_empresa_routes(app):
             
             cursor = conn.cursor()
             
-            # Verificar se produto já foi adicionado
             cursor.execute("""
                 SELECT id_produto_empresa FROM produtos_empresa 
                 WHERE id_empresa = %s AND id_produto = %s
@@ -280,7 +344,6 @@ def configure_empresa_routes(app):
                 flash('⚠️ Este produto já foi adicionado à sua loja.', 'warning')
                 return redirect(url_for('painel_empresa'))
             
-            # Inserir produto na loja da empresa
             cursor.execute("""
                 INSERT INTO produtos_empresa (id_empresa, id_produto, preco_empresa, estoque_empresa, ativo)
                 VALUES (%s, %s, %s, %s, %s)
@@ -314,7 +377,6 @@ def configure_empresa_routes(app):
             
             cursor = conn.cursor()
             
-            # Verificar se o produto pertence à empresa
             cursor.execute("""
                 SELECT id_produto_empresa FROM produtos_empresa 
                 WHERE id_produto_empresa = %s AND id_empresa = %s
@@ -324,7 +386,6 @@ def configure_empresa_routes(app):
                 flash('❌ Produto não encontrado.', 'error')
                 return redirect(url_for('painel_empresa'))
             
-            # Remover produto
             cursor.execute("""
                 DELETE FROM produtos_empresa 
                 WHERE id_produto_empresa = %s AND id_empresa = %s
@@ -364,7 +425,6 @@ def configure_empresa_routes(app):
             """, (nome_fantasia, razao_social, email, telefone, session['empresa_id']))
             conn.commit()
             
-            # Atualiza sessão
             session['empresa_nome'] = nome_fantasia or razao_social
             
             flash('✅ Dados atualizados com sucesso!', 'success')
@@ -454,18 +514,36 @@ def configure_empresa_routes(app):
             if not conn:
                 return jsonify({'success': False, 'error': 'Erro de conexão'}), 500
             
-            cursor = conn.cursor()
+            cursor = conn.cursor(dictionary=True)
             
-            # Atualizar produto
+            # 1. Busca o ID do produto global vinculado a este produto da empresa
+            cursor.execute("SELECT id_produto FROM produtos_empresa WHERE id_produto_empresa = %s AND id_empresa = %s", 
+                          (id_produto_empresa, session['empresa_id']))
+            resultado = cursor.fetchone()
+            
+            if not resultado:
+                return jsonify({'success': False, 'error': 'Produto não encontrado'}), 404
+                
+            id_produto_global = resultado['id_produto']
+            
+            # 2. Atualiza a tabela da empresa (produtos_empresa)
             cursor.execute("""
                 UPDATE produtos_empresa 
                 SET preco_empresa = %s, estoque_empresa = %s, ativo = %s
                 WHERE id_produto_empresa = %s AND id_empresa = %s
             """, (preco_empresa, estoque_empresa, ativo, id_produto_empresa, session['empresa_id']))
             
+            # 3. ATUALIZAÇÃO CRÍTICA: Sincroniza com a tabela global (produto)
+            # Isso garante que o site principal veja o novo estoque e preço
+            cursor.execute("""
+                UPDATE produto 
+                SET estoque = %s, preco = %s, ativo = %s
+                WHERE id_produto = %s
+            """, (estoque_empresa, preco_empresa, ativo, id_produto_global))
+            
             conn.commit()
             
-            return jsonify({'success': True, 'message': 'Produto atualizado com sucesso!'})
+            return jsonify({'success': True, 'message': 'Produto atualizado e sincronizado com sucesso!'})
         
         except mysql.connector.Error as err:
             return jsonify({'success': False, 'error': str(err)}), 500
@@ -474,18 +552,9 @@ def configure_empresa_routes(app):
                 cursor.close()
                 conn.close()
 
-    # Adicione esta nova rota dentro da função configure_auth_routes(app):
-
     @app.route('/seguir_loja/<int:id_empresa>', methods=['POST'])
     @login_required
     def seguir_loja(id_empresa):
-        """
-        Permite ao cliente seguir ou deixar de seguir uma empresa (loja).
-        
-        A URL deve ser acessada via POST (preferencialmente de um botão/formulário) 
-        para evitar que um simples clique em um link mude o estado.
-        """
-        # Verifica se o usuário logado é um cliente (não uma empresa)
         if 'usuario_id' not in session:
             flash('❌ Apenas clientes podem seguir lojas.', 'error')
             return redirect(url_for('inicio'))
@@ -500,14 +569,12 @@ def configure_empresa_routes(app):
             
             cursor = conn.cursor()
             
-            # 1. Verificar se a empresa existe
             cursor.execute("SELECT id_empresa, nome_fantasia FROM empresas WHERE id_empresa = %s", (id_empresa,))
             empresa = cursor.fetchone()
             if not empresa:
                 flash('❌ Loja não encontrada.', 'error')
                 return redirect(url_for('inicio'))
             
-            # 2. Verificar se o cliente JÁ está seguindo a loja
             cursor.execute("""
                 SELECT id_seguidor FROM seguidores 
                 WHERE id_cliente = %s AND id_empresa = %s
@@ -516,7 +583,6 @@ def configure_empresa_routes(app):
             esta_seguindo = cursor.fetchone()
             
             if esta_seguindo:
-                # 3. Se estiver seguindo, DEIXA DE SEGUIR (DELETE)
                 cursor.execute("""
                     DELETE FROM seguidores 
                     WHERE id_seguidor = %s
@@ -524,8 +590,6 @@ def configure_empresa_routes(app):
                 mensagem = f'💔 Você deixou de seguir a loja "{empresa[1]}".'
                 
             else:
-                # 4. Se NÃO estiver seguindo, PASSA A SEGUIR (INSERT)
-                # O 'data_seguimento' pode ser a data atual (datetime.now())
                 cursor.execute("""
                     INSERT INTO seguidores (id_cliente, id_empresa, data_seguimento)
                     VALUES (%s, %s, %s)
@@ -542,5 +606,31 @@ def configure_empresa_routes(app):
                 cursor.close()
                 conn.close()
         
-        # Redireciona para a página anterior, ou para a página da loja/início
         return redirect(request.referrer or url_for('inicio'))
+
+    @app.route('/empresa/atualizar_preferencias', methods=['POST'])
+    @login_required
+    def atualizar_preferencias_empresa():
+        if 'empresa_id' not in session:
+            return redirect(url_for('login'))
+        
+        tema_escuro = request.form.get('tema_escuro') == 'on'
+        
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            # Nota: Isso requer que a coluna tema_escuro exista na tabela empresas
+            cursor.execute("UPDATE empresas SET tema_escuro = %s WHERE id_empresa = %s", 
+                           (tema_escuro, session['empresa_id']))
+            conn.commit()
+            
+            session['tema_escuro'] = tema_escuro 
+            
+            flash('✅ Preferências atualizadas!', 'success')
+        except Exception as e:
+            flash(f'❌ Erro ao salvar preferências: {e}', 'error')
+        finally:
+            if conn: conn.close()
+            
+        return redirect(url_for('painel_empresa'))
