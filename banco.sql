@@ -414,6 +414,8 @@ CREATE TABLE pagamentos (
 ALTER TABLE clientes 
 ADD COLUMN ultima_alteracao_senha TIMESTAMP NULL DEFAULT NULL AFTER senha;
 
+ALTER TABLE pagamentos ADD COLUMN id_pedido INT NULL;
+
 -- ==============================================================================
 -- 4. INSERÇÃO DE DADOS INICIAIS (VAGAS)
 -- ==============================================================================
