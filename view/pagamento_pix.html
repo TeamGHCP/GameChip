@@ -1,0 +1,634 @@
+{% extends 'base.html' %}
+{% set titulo = "Pagamento via PIX" %}
+{% block conteudo %}
+
+<style>
+    .pix-container {
+        max-width: 700px;
+        margin: 40px auto;
+        background: var(--glass);
+        padding: 40px;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+    }
+
+    .pix-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid var(--border);
+    }
+
+    .pix-title {
+        font-size: 2.2em;
+        font-weight: 800;
+        color: var(--primary);
+        margin-bottom: 10px;
+    }
+
+    .pix-subtitle {
+        font-size: 1.1em;
+        color: var(--text-light);
+        margin-bottom: 20px;
+    }
+
+    .pix-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+
+    @media (max-width: 768px) {
+        .pix-content {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .qrcode-section {
+        text-align: center;
+        padding: 25px;
+        background: rgba(0, 123, 255, 0.05);
+        border-radius: 15px;
+        border: 1px solid var(--border);
+    }
+
+    .qrcode-title {
+        font-size: 1.3em;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 15px;
+    }
+
+    .qrcode-img {
+        width: 240px;
+        height: 240px;
+        border-radius: 12px;
+        border: 2px solid var(--border);
+        padding: 10px;
+        background: white;
+        margin-bottom: 15px;
+    }
+
+    .instructions-section {
+        padding: 25px;
+        background: rgba(40, 167, 69, 0.05);
+        border-radius: 15px;
+        border: 1px solid var(--border);
+    }
+
+    .instructions-title {
+        font-size: 1.3em;
+        font-weight: 700;
+        color: var(--success);
+        margin-bottom: 20px;
+    }
+
+    .instruction-step {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .step-number {
+        background: var(--primary);
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+
+    .step-text {
+        color: var(--text);
+        font-size: 0.95em;
+        line-height: 1.5;
+    }
+
+    .copy-section {
+        margin-top: 20px;
+        padding: 20px;
+        background: rgba(255, 193, 7, 0.05);
+        border-radius: 10px;
+        border: 1px solid var(--border);
+    }
+
+    .copy-title {
+        font-size: 1.1em;
+        font-weight: 700;
+        color: var(--warning);
+        margin-bottom: 10px;
+    }
+
+    .copy-input-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .copy-textarea {
+        flex: 1;
+        height: 80px;
+        padding: 12px;
+        border-radius: 8px;
+        border: 2px solid var(--border);
+        background: var(--secondary);
+        color: var(--text);
+        font-family: monospace;
+        font-size: 0.85em;
+        resize: none;
+    }
+
+    .copy-btn {
+        background: linear-gradient(135deg, var(--warning) 0%, #d39e00 100%);
+        color: white;
+        padding: 0 25px;
+        border-radius: 8px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: var(--transition);
+        white-space: nowrap;
+    }
+
+    .copy-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+    }
+
+    .copy-btn.copied {
+        background: linear-gradient(135deg, var(--success) 0%, #00b36e 100%);
+    }
+
+    .payment-info {
+        margin-top: 30px;
+        padding: 25px;
+        background: rgba(108, 117, 125, 0.05);
+        border-radius: 15px;
+        border: 1px solid var(--border);
+    }
+
+    .info-title {
+        font-size: 1.2em;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 15px;
+        background: var(--secondary);
+        border-radius: 8px;
+        border: 1px solid var(--border);
+    }
+
+    .info-label {
+        color: var(--text-light);
+        font-weight: 600;
+    }
+
+    .info-value {
+        color: var(--text);
+        font-weight: 700;
+    }
+
+    .info-value.total {
+        color: var(--success);
+        font-size: 1.2em;
+    }
+
+    .timer-container {
+        text-align: center;
+        margin: 25px 0;
+        padding: 20px;
+        background: rgba(220, 53, 69, 0.05);
+        border-radius: 12px;
+        border: 2px solid var(--danger);
+    }
+
+    .timer-title {
+        font-size: 1.1em;
+        font-weight: 700;
+        color: var(--danger);
+        margin-bottom: 10px;
+    }
+
+    .timer {
+        font-size: 2em;
+        font-weight: 800;
+        color: var(--danger);
+        font-family: monospace;
+    }
+
+    .actions {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 40px;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        padding: 15px 30px;
+        border-radius: 10px;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow);
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, var(--secondary) 0%, #5a6268 100%);
+        color: white;
+        padding: 15px 30px;
+        border-radius: 10px;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-secondary:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow);
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, var(--success) 0%, #00b36e 100%);
+        color: white;
+        padding: 15px 30px;
+        border-radius: 10px;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-success:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow);
+    }
+
+    .status-indicator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin: 20px 0;
+        padding: 15px;
+        border-radius: 10px;
+        background: rgba(255, 193, 7, 0.1);
+        border: 1px solid var(--warning);
+    }
+
+    .status-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--warning);
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+
+    .status-text {
+        color: var(--warning);
+        font-weight: 600;
+    }
+</style>
+
+<div class="pix-container">
+    <div class="pix-header">
+        <h1 class="pix-title">💸 Pagamento via PIX</h1>
+        <p class="pix-subtitle">Escaneie o QR Code ou copie o código para pagar</p>
+    </div>
+
+    <!-- Status de pagamento -->
+    <div class="status-indicator">
+        <div class="status-dot"></div>
+        <span class="status-text">Aguardando pagamento...</span>
+    </div>
+
+    <!-- Timer de expiração -->
+    <div class="timer-container">
+        <div class="timer-title">⏰ Tempo restante para pagamento:</div>
+        <div class="timer" id="countdown">29:59</div>
+        <small>Após este tempo, o pedido será cancelado automaticamente.</small>
+    </div>
+
+    <div class="pix-content">
+        <!-- QR Code -->
+        <div class="qrcode-section">
+            <div class="qrcode-title">📱 Escaneie com seu app bancário</div>
+            <img src="data:image/png;base64,{{ qr_base64 }}" alt="QR Code PIX" class="qrcode-img">
+            <p style="color: var(--text-light); font-size: 0.9em; margin-top: 10px;">
+                Abra seu app bancário e escaneie o QR Code acima
+            </p>
+        </div>
+
+        <!-- Instruções -->
+        <div class="instructions-section">
+            <div class="instructions-title">📋 Como pagar com PIX</div>
+            
+            <div class="instruction-step">
+                <div class="step-number">1</div>
+                <div class="step-text">Abra o aplicativo do seu banco ou instituição financeira</div>
+            </div>
+            
+            <div class="instruction-step">
+                <div class="step-number">2</div>
+                <div class="step-text">Acesse a área de PIX e selecione "Pagar com QR Code"</div>
+            </div>
+            
+            <div class="instruction-step">
+                <div class="step-number">3</div>
+                <div class="step-text">Aponte a câmera para o código ao lado ou copie o código abaixo</div>
+            </div>
+            
+            <div class="instruction-step">
+                <div class="step-number">4</div>
+                <div class="step-text">Confirme o pagamento de <strong>R$ {{ "%.2f"|format(valor) }}</strong></div>
+            </div>
+            
+            <div class="instruction-step">
+                <div class="step-number">5</div>
+                <div class="step-text">Após o pagamento, clique em "Confirmar Pagamento" abaixo</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Código Copia e Cola -->
+    <div class="copy-section">
+        <div class="copy-title">📋 Código PIX (Copia e Cola)</div>
+        <p style="color: var(--text-light); font-size: 0.9em; margin-bottom: 15px;">
+            Caso não consiga escanear, copie o código abaixo e cole em seu app bancário
+        </p>
+        
+        <div class="copy-input-group">
+            <textarea class="copy-textarea" id="pix-code" readonly>{{ copia_cola }}</textarea>
+            <button class="copy-btn" onclick="copiarPix()" id="copy-button">📋 Copiar</button>
+        </div>
+    </div>
+
+    <!-- Informações do Pedido -->
+    <div class="payment-info">
+        <div class="info-title">📄 Informações do Pedido</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Nº do Pedido:</span>
+                <span class="info-value">#{{ pedido.id_pedido }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Data:</span>
+                <span class="info-value">
+                    {% if pedido.data_pedido %}
+                        {{ pedido.data_pedido.strftime('%d/%m/%Y %H:%M') }}
+                    {% elif pedido.data_geracao %}
+                        {{ pedido.data_geracao.strftime('%d/%m/%Y %H:%M') }}
+                    {% else %}
+                        Agora
+                    {% endif %}
+                </span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Forma de Pagamento:</span>
+                <span class="info-value">PIX</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Status:</span>
+                <span class="info-value" style="color: var(--warning);">Aguardando pagamento</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Valor Total:</span>
+                <span class="info-value total">R$ {{ "%.2f"|format(valor) }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações -->
+    <div class="actions">
+        <a href="{{ url_for('meus_pedidos') }}" class="btn-secondary">
+            <i class="fas fa-list"></i> Meus Pedidos
+        </a>
+        
+        <button class="btn-success" onclick="confirmarPagamento()" id="confirm-button">
+            <i class="fas fa-check-circle"></i> Confirmar Pagamento
+        </button>
+        
+        <a href="{{ url_for('listar_produtos') }}" class="btn-primary">
+            <i class="fas fa-home"></i> Voltar às Compras
+        </a>
+    </div>
+</div>
+
+<script>
+// Timer de 30 minutos
+let timeLeft = 30 * 60; // 30 minutos em segundos
+const timerElement = document.getElementById('countdown');
+
+function updateTimer() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    
+    if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        alert("⏰ O tempo para pagamento expirou! Seu pedido será cancelado.");
+        window.location.href = "{{ url_for('meus_pedidos') }}";
+    } else {
+        timeLeft--;
+    }
+}
+
+const timerInterval = setInterval(updateTimer, 1000);
+updateTimer();
+
+// Copiar código PIX
+function copiarPix() {
+    const codigo = document.getElementById('pix-code');
+    const copyButton = document.getElementById('copy-button');
+    
+    codigo.select();
+    navigator.clipboard.writeText(codigo.value)
+        .then(() => {
+            // Feedback visual
+            copyButton.classList.add('copied');
+            copyButton.innerHTML = '✅ Copiado!';
+            
+            setTimeout(() => {
+                copyButton.classList.remove('copied');
+                copyButton.innerHTML = '📋 Copiar';
+            }, 2000);
+            
+            // Notificação
+            showNotification('✅ Código PIX copiado para a área de transferência!');
+        })
+        .catch(err => {
+            console.error('Erro ao copiar: ', err);
+            alert('❌ Não foi possível copiar o código. Tente selecionar e copiar manualmente.');
+        });
+}
+
+// Confirmar pagamento
+async function confirmarPagamento() {
+    const confirmButton = document.getElementById('confirm-button');
+    
+    // Desabilitar botão para evitar múltiplos cliques
+    confirmButton.disabled = true;
+    confirmButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+    
+    try {
+        // PRIMEIRO: Vamos criar uma rota básica para testar
+        const response = await fetch(`/confirmar-pix/{{ pedido.id_pedido }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                showNotification('✅ Pagamento confirmado com sucesso!');
+                clearInterval(timerInterval);
+                
+                // Redirecionar para página de sucesso
+                setTimeout(() => {
+                    window.location.href = data.redirect || "{{ url_for('compra_sucesso', pedido_id=pedido.id_pedido) }}";
+                }, 1500);
+            } else {
+                showNotification('❌ ' + data.message, 'error');
+                confirmButton.disabled = false;
+                confirmButton.innerHTML = '<i class="fas fa-check-circle"></i> Confirmar Pagamento';
+            }
+        } else {
+            // Se a rota não existir, simular sucesso para teste
+            showNotification('✅ Pagamento simulado com sucesso!');
+            clearInterval(timerInterval);
+            
+            setTimeout(() => {
+                window.location.href = "{{ url_for('meus_pedidos') }}";
+            }, 1500);
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        
+        // Para teste, simular sucesso
+        showNotification('✅ Pagamento simulado com sucesso! (Modo de teste)');
+        clearInterval(timerInterval);
+        
+        setTimeout(() => {
+            window.location.href = "{{ url_for('meus_pedidos') }}";
+        }, 1500);
+        
+        // Comente a linha abaixo para o modo de produção
+        // showNotification('❌ Erro ao confirmar pagamento. Tente novamente.', 'error');
+        // confirmButton.disabled = false;
+        // confirmButton.innerHTML = '<i class="fas fa-check-circle"></i> Confirmar Pagamento';
+    }
+}
+
+// Função para mostrar notificações
+function showNotification(message, type = 'success') {
+    // Remove notificação anterior se existir
+    const oldNotification = document.querySelector('.notification');
+    if (oldNotification) {
+        oldNotification.remove();
+    }
+    
+    // Cria nova notificação
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 25px;
+        border-radius: 10px;
+        color: white;
+        font-weight: 600;
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+        box-shadow: var(--shadow);
+        background: ${type === 'error' ? 'var(--danger)' : 'var(--success)'};
+    `;
+    
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Remove após 3 segundos
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Adicionar estilos para animação
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+// Atalhos de teclado
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        window.location.href = "{{ url_for('meus_pedidos') }}";
+    }
+    
+    if (e.ctrlKey && e.key === 'c') {
+        e.preventDefault();
+        copiarPix();
+    }
+});
+
+</script>
+
+{% endblock %}

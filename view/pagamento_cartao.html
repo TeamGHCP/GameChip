@@ -185,14 +185,30 @@
         margin-bottom: 10px;
     }
 
+    /* --- Bandeiras de Cartão --- */
     .card-icons {
         display: flex;
         justify-content: center;
-        gap: 15px;
+        gap: 20px;
         margin-top: 20px;
-        font-size: 2em;
+        flex-wrap: wrap;
+        padding: 10px 0;
     }
 
+    .card-icons img {
+        height: 40px;
+        filter: brightness(1);
+        transition: transform 0.2s, filter 0.3s;
+    }
+    
+    /* Aplica um filtro de ajuste para cartões no modo escuro, usando o seletor .dark-theme de base.html */
+    .dark-theme .card-icons img { 
+        filter: brightness(0.8) contrast(1.1);
+    }
+
+    .card-icons img:hover {
+        transform: scale(1.15);
+    }
     .card-error {
         color: var(--danger);
         font-size: 0.9em;
@@ -318,11 +334,12 @@
         <h4><i class="fas fa-shield-alt"></i> Compra 100% Segura</h4>
         <p>Seus dados estão protegidos com criptografia SSL. Não armazenamos os dados do seu cartão.</p>
         <div class="card-icons">
-            <i class="fab fa-cc-visa" style="color: #1a1f71;"></i>
-            <i class="fab fa-cc-mastercard" style="color: #eb001b;"></i>
-            <i class="fab fa-cc-amex" style="color: #2e77bc;"></i>
-            <i class="fab fa-cc-diners-club" style="color: #0079be;"></i>
-        </div>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg" alt="Visa">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="MasterCard">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Elo_logo.png" alt="Elo">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/8/89/Hipercard_logo.svg" alt="Hipercard">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/3/30/American_Express_logo.svg" alt="Amex">
+          </div>
     </div>
 </div>
 

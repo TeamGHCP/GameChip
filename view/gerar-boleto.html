@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+{% set titulo = "Gerar Boleto Bancário" %}
+{% block conteudo %}
+
+<style>
+    .boleto-container {
+        max-width: 800px;
+        margin: 50px auto;
+        background: var(--glass);
+        padding: 40px;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+    }
+    
+    .boleto-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .boleto-title {
+        font-size: 2.2em;
+        font-weight: 800;
+        background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+    }
+    
+    .boleto-subtitle {
+        color: var(--text-light);
+        font-size: 1.1em;
+    }
+    
+    .order-summary {
+        background: rgba(155, 89, 182, 0.05);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 30px;
+        border-left: 4px solid #9b59b6;
+    }
+    
+    .order-summary h3 {
+        color: #9b59b6;
+        margin-bottom: 15px;
+        font-size: 1.3em;
+    }
+    
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .summary-item.total {
+        font-weight: 700;
+        font-size: 1.2em;
+        color: #9b59b6;
+        border-bottom: 2px solid #9b59b6;
+        padding-top: 10px;
+        margin-top: 10px;
+    }
+    
+    .client-info {
+        background: var(--secondary);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .client-info h4 {
+        color: var(--primary);
+        margin-bottom: 15px;
+    }
+    
+    .info-row {
+        display: flex;
+        margin-bottom: 10px;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: var(--text);
+        min-width: 150px;
+    }
+    
+    .info-value {
+        color: var(--text);
+    }
+    
+    .instructions {
+        background: #fff8e1;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
+        border-left: 4px solid #f1c40f;
+    }
+    
+    .instructions h4 {
+        color: #e67e22;
+        margin-bottom: 15px;
+    }
+    
+    .instructions ul {
+        padding-left: 20px;
+        color: var(--text);
+    }
+    
+    .instructions li {
+        margin-bottom: 8px;
+    }
+    
+    .btn-boleto {
+        background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+        color: white;
+        width: 100%;
+        padding: 18px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1.2em;
+        border: none;
+        cursor: pointer;
+        transition: var(--transition);
+        margin-top: 30px;
+        box-shadow: var(--shadow);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .btn-boleto:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .btn-back {
+        background: linear-gradient(135deg, var(--secondary) 0%, var(--border) 100%);
+        color: var(--text);
+        padding: 15px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1em;
+        border: none;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 20px;
+        box-shadow: var(--shadow-sm);
+        text-align: center;
+    }
+    
+    .btn-back:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+    }
+    
+    .warning-box {
+        background: rgba(231, 76, 60, 0.1);
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 20px;
+        border: 1px solid #e74c3c;
+    }
+    
+    .warning-box h5 {
+        color: #e74c3c;
+        margin-bottom: 10px;
+    }
+    
+    @media (max-width: 600px) {
+        .boleto-container {
+            padding: 25px;
+            margin: 30px auto;
+        }
+        .boleto-title {
+            font-size: 1.8em;
+        }
+        .info-row {
+            flex-direction: column;
+        }
+        .info-label {
+            min-width: auto;
+            margin-bottom: 5px;
+        }
+    }
+</style>
+
+<div class="boleto-container">
+    <div class="boleto-header">
+        <div class="boleto-title">📄 Boleto Bancário</div>
+        <div class="boleto-subtitle">Gere seu boleto para pagamento em qualquer banco ou lotérica</div>
+    </div>
+
+    <!-- Resumo do Pedido -->
+    <div class="order-summary">
+        <h3>📦 Resumo do Pedido</h3>
+        {% for produto in produtos_carrinho %}
+        <div class="summary-item">
+            <span>{{ produto.nome }} - {{ produto.quantidade }}x</span>
+            <span>R$ {{ "%.2f"|format(produto.preco * produto.quantidade) }}</span>
+        </div>
+        {% endfor %}
+        <div class="summary-item">
+            <span>Frete</span>
+            <span>Grátis</span>
+        </div>
+        <div class="summary-item total">
+            <span>Total a Pagar</span>
+            <span>R$ {{ "%.2f"|format(total_geral) }}</span>
+        </div>
+    </div>
+
+    <!-- Informações do Cliente -->
+    <div class="client-info">
+        <h4>👤 Dados para Emissão do Boleto</h4>
+        <div class="info-row">
+            <div class="info-label">Nome:</div>
+            <div class="info-value">{{ dados_entrega.nome }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Email:</div>
+            <div class="info-value">{{ dados_entrega.email }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Endereço:</div>
+            <div class="info-value">{{ dados_entrega.endereco }}</div>
+        </div>
+    </div>
+
+    <!-- Instruções -->
+    <div class="instructions">
+        <h4>ℹ️ Instruções para Pagamento</h4>
+        <ul>
+            <li>O boleto será gerado com vencimento em <strong>3 dias úteis</strong></li>
+            <li>Pague em qualquer banco, casa lotérica ou internet banking</li>
+            <li>Após o pagamento, seu pedido será processado em até 2 dias úteis</li>
+            <li>Guarde o comprovante de pagamento</li>
+            <li>O pedido será cancelado automaticamente se o boleto não for pago até o vencimento</li>
+        </ul>
+    </div>
+
+    <form method="POST" action="{{ url_for('gerar_boleto') }}">
+        <div class="warning-box">
+            <h5>⚠️ Atenção</h5>
+            <p>Ao gerar o boleto, os produtos do seu carrinho serão reservados até a confirmação do pagamento.</p>
+        </div>
+
+        <button type="submit" class="btn-boleto">
+            <i class="fas fa-barcode"></i> Gerar Boleto
+        </button>
+
+        <a href="{{ url_for('finalizar_carrinho') }}" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnGerar = document.querySelector('.btn-boleto');
+    const form = document.querySelector('form');
+    
+    form.addEventListener('submit', function(e) {
+        btnGerar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando Boleto...';
+        btnGerar.disabled = true;
+        
+        setTimeout(() => {
+            btnGerar.innerHTML = '<i class="fas fa-barcode"></i> Redirecionando...';
+        }, 1500);
+    });
+});
+</script>
+
+{% endblock %}

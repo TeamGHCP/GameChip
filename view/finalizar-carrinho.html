@@ -3,6 +3,7 @@
 {% block conteudo %}
 
 <style>
+/* CSS GERAL DA PÁGINA */
 .checkout-container {
     max-width: 700px;
     margin: 50px auto;
@@ -115,12 +116,165 @@
 .payment-method.pix i { color: #32BCAD; }
 .payment-method.cartao i { color: #1a1f71; }
 .payment-method.boleto i { color: #9b59b6; }
+
+/* ESTILOS PARA ENDEREÇOS */
+.address-section {
+    background: var(--secondary);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border-left: 4px solid var(--primary);
+}
+.address-section h3 {
+    color: var(--primary);
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.address-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.address-option {
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 15px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+.address-option:hover {
+    border-color: var(--primary);
+}
+
+.address-option.selected {
+        background-color: var(--primary) !important; 
+        border-color: var(--primary) !important;
+        color: white !important; 
+}
+
+.address-option.selected h4,
+    .address-option.selected p,
+    .address-option.selected small {
+        color: white !important;
+}
+
+.address-option.selected .address-type-badge {
+        background-color: white !important;
+        color: var(--primary) !important;
+}
+
+.address-radio {
+    margin-top: 3px;
+}
+.address-details h4 {
+    margin: 0 0 5px 0;
+    color: var(--text);
+    font-size: 1.1em;
+}
+.address-details p {
+    margin: 0;
+    color: var(--text-light);
+    font-size: 0.95em;
+    line-height: 1.4;
+}
+.address-type-badge {
+    background: var(--primary);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 600;
+    display: inline-block;
+    margin-bottom: 5px;
+}
+.btn-novo-endereco {
+    background: var(--primary);
+    color: white !important; 
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+    align-self: flex-start; /* ESTA REGRA ESTAVA IMPEDINDO A CENTRALIZAÇÃO */
+    text-decoration: none; 
+    display: inline-flex; 
+    align-items: center;
+    gap: 8px;
+}
+.btn-novo-endereco:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+    color: white !important;
+}
+.btn-secondary {
+    background: linear-gradient(135deg, var(--secondary) 0%, #5a6268 100%);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+}
+.btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+.novo-endereco-form {
+    display: none;
+    background: rgba(0, 102, 255, 0.05);
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 15px;
+}
+.novo-endereco-form.show {
+    display: block;
+}
+.address-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+/* --- AJUSTE DA CENTRALIZAÇÃO --- */
+.no-enderecos {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-light);
+    background: rgba(255, 193, 7, 0.1);
+    border-radius: 8px;
+    margin-bottom: 20px;
+    
+    /* Configuração Flexbox */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centraliza horizontalmente */
+    justify-content: center;
+    gap: 15px;
+}
+
+.no-enderecos p {
+    margin: 0;
+    font-size: 1.1em;
+}
+
+/* IMPORTANTE: Isso sobrescreve o align-self: flex-start do botão original */
+.no-enderecos .btn-novo-endereco {
+    align-self: center !important;
+}
+/* ------------------------------- */
 </style>
 
 <div class="checkout-container">
     <h2>🛒 Finalizar Compra</h2>
     
-    <!-- Resumo do Pedido -->
     <div class="order-summary">
         <h3>📦 Resumo do Pedido</h3>
         {% for produto in produtos_carrinho %}
@@ -140,27 +294,128 @@
     </div>
     
     <form method="POST" action="{{ url_for('finalizar_carrinho') }}" id="checkout-form">
-        <h3 style="color: var(--primary); margin-bottom: 15px;">📝 Dados de Entrega</h3>
+        <div class="address-section">
+            <h3>📍 Endereço de Entrega</h3>
+            
+            {% if enderecos %}
+                <div class="address-options" id="address-options">
+                    {% for endereco in enderecos %}
+                    <div class="address-option" data-id="{{ endereco.id_endereco }}">
+                        <div class="address-radio">
+                            <input type="radio" name="endereco_id" 
+                                   value="{{ endereco.id_endereco }}" 
+                                   id="endereco_{{ endereco.id_endereco }}"
+                                   {% if endereco.principal %}checked{% endif %}
+                                   required>
+                        </div>
+                        <div class="address-details">
+                            <span class="address-type-badge">
+                                {{ endereco.tipo }}
+                                {% if endereco.principal %}(Principal){% endif %}
+                            </span>
+                            <h4>{{ endereco.destinatario }}</h4>
+                            <p>
+                                {{ endereco.rua }}, {{ endereco.numero }}
+                                {% if endereco.complemento %}- {{ endereco.complemento }}{% endif %}
+                                <br>
+                                {{ endereco.bairro }} - {{ endereco.cidade }}/{{ endereco.estado }}
+                                <br>
+                                CEP: {{ endereco.cep }}
+                            </p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="novo-endereco-form" id="novo-endereco-form">
+                    <h4 style="color: var(--primary); margin-bottom: 15px;">➕ Cadastrar Novo Endereço</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label>Tipo</label>
+                            <select name="tipo_novo" class="tipo-novo">
+                                <option value="Casa">Casa</option>
+                                <option value="Apartamento">Apartamento</option>
+                                <option value="Trabalho">Trabalho</option>
+                                <option value="Outro">Outro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Destinatário *</label>
+                            <input type="text" name="destinatario_novo" placeholder="Seu nome">
+                        </div>
+                        <div>
+                            <label>CEP *</label>
+                            <input type="text" name="cep_novo" placeholder="00000-000">
+                        </div>
+                        <div>
+                            <label>Estado *</label>
+                            <input type="text" name="estado_novo" placeholder="UF" maxlength="2">
+                        </div>
+                        <div>
+                            <label>Cidade *</label>
+                            <input type="text" name="cidade_novo" placeholder="Cidade">
+                        </div>
+                        <div>
+                            <label>Bairro *</label>
+                            <input type="text" name="bairro_novo" placeholder="Bairro">
+                        </div>
+                        <div style="grid-column: span 2;">
+                            <label>Rua *</label>
+                            <input type="text" name="rua_novo" placeholder="Rua, Avenida, etc.">
+                        </div>
+                        <div>
+                            <label>Número *</label>
+                            <input type="text" name="numero_novo" placeholder="Número">
+                        </div>
+                        <div>
+                            <label>Complemento</label>
+                            <input type="text" name="complemento_novo" placeholder="Apto, Bloco, etc.">
+                        </div>
+                    </div>
+                    <div class="address-actions">
+                        <button type="button" class="btn-novo-endereco" onclick="cadastrarNovoEndereco()">
+                            <i class="fas fa-save"></i> Salvar Endereço
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="hideNewAddressForm()">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <button type="button" class="btn-novo-endereco" onclick="showNewAddressForm()">
+                        <i class="fas fa-plus"></i> Adicionar Novo Endereço
+                    </button>
+                </div>
+            {% else %}
+                <div class="no-enderecos">
+                    <p>📍 Você ainda não cadastrou nenhum endereço.<br>
+                    É necessário cadastrar um endereço antes de finalizar a compra.</p>
+                    
+                    <a href="{{ url_for('minha_conta') }}#enderecos" class="btn-novo-endereco">
+                        <i class="fas fa-plus"></i> Cadastrar endereço
+                    </a>
+                </div>
+                {% endif %}
+        </div>
+
+        {% if enderecos %}
+        <h3 style="color: var(--primary); margin-top: 20px; margin-bottom: 15px;">📝 Dados do Cliente</h3>
         
         <label>Nome Completo *</label>
         <input type="text" name="nome" required 
-               value="{{ dados_usuario.nome if dados_usuario else '' }}"
+               value="{{ session.get('usuario_nome', '') }}"
                placeholder="Seu nome completo">
 
         <label>Email *</label>
         <input type="email" name="email" required 
-               value="{{ dados_usuario.email if dados_usuario else '' }}"
+               value="{{ session.get('usuario_email', '') }}"
                placeholder="seu@email.com">
-
-        <label>Endereço de Entrega *</label>
-        <input type="text" name="endereco" required 
-               placeholder="Rua, Número, Bairro, Cidade, Estado">
 
         <h3 style="color: var(--primary); margin-top: 20px; margin-bottom: 15px;">💳 Forma de Pagamento</h3>
         
-        <!-- Seleção visual de métodos de pagamento -->
         <div class="payment-methods">
-            <div class="payment-method pix" data-value="pix">
+            <div class="payment-method pix selected" data-value="pix">
                 <i class="fas fa-qrcode"></i>
                 <div>PIX</div>
                 <small>Pagamento instantâneo</small>
@@ -179,111 +434,260 @@
             </div>
         </div>
         
-        <!-- Campo hidden para o método selecionado -->
-        <input type="hidden" id="pagamento" name="pagamento" required>
+        <input type="hidden" id="pagamento" name="pagamento" value="pix" required>
         
-        <div id="payment-info" style="display: none; background: var(--secondary); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-            <p id="selected-method-text" style="font-weight: 600; color: var(--primary);"></p>
+        <div id="payment-info" style="background: var(--secondary); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+            <p id="selected-method-text" style="font-weight: 600; color: var(--primary);">
+                PIX - Pagamento instantâneo via QR Code
+            </p>
         </div>
 
         <button type="submit" class="btn-finalizar" id="btn-continuar">
-            ▶️ Continuar para Pagamento
+            🏦 Gerar QR Code PIX
         </button>
+        {% else %}
+        <div style="text-align: center; padding: 20px; background: rgba(255, 193, 7, 0.1); border-radius: 10px;">
+            <p style="color: var(--warning); margin-bottom: 15px;">
+                ⚠️ Cadastre um endereço para habilitar a finalização da compra.
+            </p>
+            <a href="{{ url_for('minha_conta') }}" class="btn-novo-endereco" style="display: inline-block;">
+                <i class="fas fa-user-cog"></i> Ir para Minha Conta
+            </a>
+        </div>
+        {% endif %}
     </form>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const paymentMethods = document.querySelectorAll('.payment-method');
-    const paymentInput = document.getElementById('pagamento');
-    const paymentInfo = document.getElementById('payment-info');
-    const selectedMethodText = document.getElementById('selected-method-text');
-    const btnContinuar = document.getElementById('btn-continuar');
-    const checkoutForm = document.getElementById('checkout-form');
+    document.addEventListener('DOMContentLoaded', function() {
+        // Seleção de endereço
+        const addressOptions = document.querySelectorAll('.address-option');
+        addressOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                addressOptions.forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+                const radio = this.querySelector('input[type="radio"]');
+                radio.checked = true;
+            });
+            
+            const radio = option.querySelector('input[type="radio"]');
+            if (radio && radio.checked) {
+                option.classList.add('selected');
+            }
+        });
+        
+        // Seleção de método de pagamento
+        const paymentMethods = document.querySelectorAll('.payment-method');
+        const paymentInput = document.getElementById('pagamento');
+        const paymentInfo = document.getElementById('payment-info');
+        const selectedMethodText = document.getElementById('selected-method-text');
+        const btnContinuar = document.getElementById('btn-continuar');
+        const checkoutForm = document.getElementById('checkout-form');
+        
+        // Variável para controlar redirecionamento
+        let redirecionarPara = null;
+        
+        // Selecionar PIX por padrão (se houver endereços)
+        {% if enderecos %}
+        const pixMethod = document.querySelector('.payment-method.pix');
+        if (pixMethod) {
+            paymentInput.value = 'pix';
+        }
+        {% endif %}
+        
+        paymentMethods.forEach(method => {
+            method.addEventListener('click', function() {
+                paymentMethods.forEach(m => m.classList.remove('selected'));
+                this.classList.add('selected');
+                
+                const value = this.getAttribute('data-value');
+                paymentInput.value = value;
+                
+                let methodText = '';
+                let buttonText = '';
     
-    // Selecionar método de pagamento
-    paymentMethods.forEach(method => {
-        method.addEventListener('click', function() {
-            // Remover seleção anterior
-            paymentMethods.forEach(m => m.classList.remove('selected'));
+                // Na função paymentMethods.forEach, troque:
+                switch(value) {
+                    case 'pix':
+                        methodText = 'PIX - Pagamento instantâneo via QR Code';
+                        buttonText = '🏦 Gerar QR Code PIX';
+                        redirecionarPara = null;
+                        break;
+                    case 'cartao':
+                        methodText = 'Cartão de Crédito/Débito - Pagamento seguro';
+                        buttonText = '💳 Continuar para Dados do Cartão';
+                        redirecionarPara = '{{ url_for("pagamento_cartao", pedido_id="PLACEHOLDER") }}'.replace('PLACEHOLDER', 'TEMP_ID');
+                        break;
+                    case 'boleto':
+                        methodText = 'Boleto Bancário - Pague em qualquer banco ou lotérica';
+                        buttonText = '📄 Gerar Boleto';
+                        redirecionarPara = '{{ url_for("visualizar_boleto", pedido_id="PLACEHOLDER") }}'.replace('PLACEHOLDER', 'TEMP_ID');
+                        break;
+                }
+                
+                selectedMethodText.textContent = methodText;
+                paymentInfo.style.display = 'block';
+                btnContinuar.innerHTML = buttonText;
+            });
+        });
+        
+        // VALIDAÇÃO CORRIGIDA COM REDIRECIONAMENTO
+        checkoutForm.addEventListener('submit', function(e) {
+            {% if enderecos %}
+            console.log("Validando formulário...");
+            console.log("Método selecionado:", paymentInput.value);
+            console.log("Redirecionar para:", redirecionarPara);
             
-            // Adicionar seleção atual
-            this.classList.add('selected');
-            
-            // Atualizar campo hidden
-            const value = this.getAttribute('data-value');
-            paymentInput.value = value;
-            
-            // Mostrar informação do método selecionado
-            let methodText = '';
-            let buttonText = '';
-            
-            switch(value) {
-                case 'pix':
-                    methodText = 'PIX - Pagamento instantâneo via QR Code';
-                    buttonText = '🏦 Gerar QR Code PIX';
-                    break;
-                case 'cartao':
-                    methodText = 'Cartão de Crédito/Débito - Pagamento seguro';
-                    buttonText = '💳 Continuar para Dados do Cartão';
-                    break;
-                case 'boleto':
-                    methodText = 'Boleto Bancário - Pague em qualquer banco ou lotérica';
-                    buttonText = '📄 Gerar Boleto';
-                    break;
+            // 1. Verificar se endereço foi selecionado
+            const enderecoSelecionado = document.querySelector('input[name="endereco_id"]:checked');
+            if (!enderecoSelecionado) {
+                e.preventDefault();
+                alert('Por favor, selecione um endereço para entrega.');
+                return false;
             }
             
-            selectedMethodText.textContent = methodText;
-            paymentInfo.style.display = 'block';
-            btnContinuar.innerHTML = buttonText;
+            // 2. Verificar se formulário de novo endereço está visível
+            const novoEnderecoForm = document.getElementById('novo-endereco-form');
+            const isNovoEnderecoVisible = novoEnderecoForm.classList.contains('show');
+            
+            if (isNovoEnderecoVisible) {
+                const camposObrigatorios = novoEnderecoForm.querySelectorAll('input[type="text"]:not([name="complemento_novo"])');
+                let camposVazios = [];
+                
+                camposObrigatorios.forEach(campo => {
+                    if (!campo.value.trim()) {
+                        const label = campo.previousElementSibling ? campo.previousElementSibling.textContent : campo.name;
+                        camposVazios.push(label.replace('*', '').trim());
+                        campo.style.borderColor = 'var(--danger)';
+                    } else {
+                        campo.style.borderColor = '';
+                    }
+                });
+                
+                if (camposVazios.length > 0) {
+                    e.preventDefault();
+                    alert('Preencha todos os campos do novo endereço:\n' + camposVazios.join(', '));
+                    return false;
+                }
+            }
+            
+            // 3. Verificar nome e email
+            const nome = document.querySelector('input[name="nome"]').value.trim();
+            const email = document.querySelector('input[name="email"]').value.trim();
+            
+            if (!nome || !email) {
+                e.preventDefault();
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                return false;
+            }
+            
+            // 4. Validar email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                e.preventDefault();
+                alert('Por favor, insira um email válido.');
+                return false;
+            }
+            
+            // 5. Se for PIX, permitir envio normal
+            if (paymentInput.value === 'pix') {
+                console.log("Processando PIX - enviando formulário normalmente");
+                btnContinuar.disabled = true;
+                btnContinuar.innerHTML = '⏳ Gerando QR Code...';
+                return true; // Permite submit normal para PIX
+            }
+            
+            // 6. Se for CARTÃO ou BOLETO, REDIRECIONAR
+            e.preventDefault(); // Impede envio normal
+            
+            // Coletar dados
+            const formData = new FormData(checkoutForm);
+            const dados = {
+                nome: nome,
+                email: email,
+                endereco_id: enderecoSelecionado.value,
+                metodo_pagamento: paymentInput.value,
+                total_geral: parseFloat("{{ total_geral|safe }}"),
+                produtos: JSON.parse('{{ produtos_carrinho|tojson|safe }}')
+            };
+            
+            console.log("Dados coletados:", dados);
+            
+            // Desabilitar botão
+            btnContinuar.disabled = true;
+            btnContinuar.innerHTML = '⏳ Preparando redirecionamento...';
+            
+            // Salvar dados no localStorage
+            localStorage.setItem('pedido_temp', JSON.stringify(dados));
+            console.log("Dados salvos no localStorage");
+            
+            // Redirecionar após breve delay
+            setTimeout(() => {
+                if (paymentInput.value === 'cartao' && redirecionarPara) {
+                    console.log("Redirecionando para cartão:", redirecionarPara);
+                    window.location.href = redirecionarPara;
+                } else if (paymentInput.value === 'boleto' && redirecionarPara) {
+                    console.log("Redirecionando para boleto:", redirecionarPara);
+                    window.location.href = redirecionarPara;
+                } else {
+                    console.error("Não foi possível redirecionar");
+                    btnContinuar.disabled = false;
+                    btnContinuar.innerHTML = paymentInput.value === 'cartao' ? '💳 Continuar para Dados do Cartão' : '📄 Gerar Boleto';
+                    alert('Erro ao redirecionar. Tente novamente.');
+                }
+            }, 500);
+            
+            return false;
+            {% else %}
+            e.preventDefault();
+            alert('❌ Cadastre um endereço antes de finalizar a compra.');
+            window.location.href = "{{ url_for('minha_conta') }}#enderecos";
+            return false;
+            {% endif %}
         });
     });
     
-    // Validar formulário antes de enviar
-    checkoutForm.addEventListener('submit', function(e) {
-        if (!paymentInput.value) {
-            e.preventDefault();
-            alert('Por favor, selecione uma forma de pagamento.');
-            return false;
-        }
-        
-        // Validação básica de campos
-        const nome = document.querySelector('input[name="nome"]').value;
-        const email = document.querySelector('input[name="email"]').value;
-        const endereco = document.querySelector('input[name="endereco"]').value;
-        
-        if (!nome || !email || !endereco) {
-            e.preventDefault();
-            alert('Por favor, preencha todos os campos obrigatórios.');
-            return false;
-        }
-        
-        // Validação de email
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            e.preventDefault();
-            alert('Por favor, insira um email válido.');
-            return false;
-        }
-        
-        // Mudar texto do botão durante o envio
-        btnContinuar.innerHTML = '⏳ Processando...';
-        btnContinuar.disabled = true;
-        
-        return true;
-    });
-    
-    // Preencher automaticamente com dados da sessão se disponível
-    const usuarioNome = "{{ session.get('usuario_nome', '') }}";
-    const usuarioEmail = "{{ session.get('usuario_email', '') }}";
-    
-    if (usuarioNome) {
-        document.querySelector('input[name="nome"]').value = usuarioNome;
+    // Funções para novo endereço
+    function showNewAddressForm() {
+        document.getElementById('novo-endereco-form').classList.add('show');
     }
-    if (usuarioEmail) {
-        document.querySelector('input[name="email"]').value = usuarioEmail;
+    
+    function hideNewAddressForm() {
+        document.getElementById('novo-endereco-form').classList.remove('show');
     }
-});
+    
+    async function cadastrarNovoEndereco() {
+        const formData = new FormData();
+        formData.append('tipo', document.querySelector('select[name="tipo_novo"]').value);
+        formData.append('destinatario', document.querySelector('input[name="destinatario_novo"]').value);
+        formData.append('cep', document.querySelector('input[name="cep_novo"]').value);
+        formData.append('estado', document.querySelector('input[name="estado_novo"]').value);
+        formData.append('cidade', document.querySelector('input[name="cidade_novo"]').value);
+        formData.append('bairro', document.querySelector('input[name="bairro_novo"]').value);
+        formData.append('rua', document.querySelector('input[name="rua_novo"]').value);
+        formData.append('numero', document.querySelector('input[name="numero_novo"]').value);
+        formData.append('complemento', document.querySelector('input[name="complemento_novo"]').value);
+        formData.append('principal', 'false');
+        
+        try {
+            const response = await fetch('/adicionar_endereco', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                alert('✅ Endereço cadastrado com sucesso!');
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } else {
+                alert('❌ Erro ao cadastrar endereço. Verifique os dados.');
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            alert('❌ Erro ao conectar com o servidor.');
+        }
+    }
 </script>
 
 {% endblock %}

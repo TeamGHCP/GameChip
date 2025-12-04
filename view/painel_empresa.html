@@ -379,69 +379,78 @@
 </div>
 
 <div id="modalCriarProduto" class="modal">
-    <div class="modal-content" style="max-width: 800px;">
+    <div class="modal-content" style="max-width: 900px;">
         <div class="modal-header">
             <h3>✨ Criar Novo Produto</h3>
             <button class="modal-close" onclick="fecharModalCriar()">&times;</button>
         </div>
         
         <div class="modal-body">
-            <p style="margin-bottom: 20px; color: var(--text-light);">
-                Cadastre um produto totalmente novo. Ele será adicionado automaticamente à sua loja.
-            </p>
             <form id="formCriarProduto" action="{{ url_for('cadastrar_novo_produto_empresa') }}" method="POST" enctype="multipart/form-data">
                 
+                <h4 style="color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; font-weight: 700;">
+                    📑 Informações do Produto
+                </h4>
+
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Nome do Produto *</label>
-                        <input type="text" name="nome" required placeholder="Ex: Teclado Mecânico RGB">
+                        <label>Nome do Produto (Título) *</label>
+                        <input type="text" name="nome" required placeholder="">
                     </div>
                     <div class="form-group">
-                        <label>Marca *</label>
-                        <input type="text" name="marca" required placeholder="Ex: Logitech">
+                        <label>Plataforma / Marca *</label>
+                        <input type="text" name="marca" required placeholder="Ex: Steam, PlayStation Store, Xbox, Netflix...">
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Categoria *</label>
+                        <label>Categoria (Tipo de Ativo) *</label>
                         <select name="categoria" required>
-                            <option value="">Selecione...</option>
-                            <option value="Hardware">Hardware</option>
-                            <option value="Periféricos">Periféricos</option>
-                            <option value="Computadores">Computadores</option>
-                            <option value="Monitores">Monitores</option>
-                            <option value="Gift Card">Gift Card</option>
-                            <option value="Games">Games</option>
+                            <option value="" disabled>Selecione o Tipo</option>
+                            <option value="Gift Card" {% if produto and produto.categoria == 'Gift Card' %}selected{% endif %}>💳 Gift Card</option>
+                            <option value="Game Key" {% if produto and produto.categoria == 'Game Key' %}selected{% endif %}>🔑 Chave de Jogo (Key)</option>
+                            <option value="Assinatura" {% if produto and produto.categoria == 'Assinatura' %}selected{% endif %}>⭐ Assinatura (PS Plus, Game Pass)</option>
+                            <option value="Recarga" {% if produto and produto.categoria == 'Recarga' %}selected{% endif %}>💲 Recarga/Crédito</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Preço de Venda (R$) *</label>
                         <input type="number" name="preco" step="0.01" min="0" required placeholder="0.00">
                     </div>
-                    <div class="form-group">
-                        <label>Estoque Inicial *</label>
-                        <input type="number" name="estoque" min="0" required placeholder="0">
-                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Descrição Detalhada</label>
-                    <textarea name="descricao" rows="4" class="form-control" placeholder="Detalhes técnicos, garantia, etc..."></textarea>
+                    <label>Estoque Inicial *</label>
+                    <input type="number" name="estoque" min="0" required placeholder="Contagem total de códigos ativos">
                 </div>
 
+                <h4 style="color: var(--primary); margin: 30px 0 20px 0; display: flex; align-items: center; gap: 8px; font-weight: 700;">
+                    ⚙️ Configurações & Descrição
+                </h4>
+
                 <div class="form-group">
-                    <label>Imagem do Produto</label>
+                    <label>Descrição do Produto / Instruções de Uso</label>
+                    <textarea name="descricao" rows="4" class="form-control" placeholder="Ex: Como ativar a chave na Steam, validade do Gift Card, regiões compatíveis, etc."></textarea>
+                </div>
+
+                <h4 style="color: var(--primary); margin: 30px 0 20px 0; display: flex; align-items: center; gap: 8px; font-weight: 700;">
+                    🖼️ Imagem de Capa (Logo/Arte)
+                </h4>
+
+                <div class="form-group">
                     <input type="file" name="imagens" accept="image/*" class="form-control">
-                    <small style="color: var(--text-light)">Formatos: JPG, PNG. (Recomendado 800x800px)</small>
+                    <small style="color: var(--text-light); margin-top: 5px; display: block;">
+                        📎 Selecione a imagem principal (PNG, JPG)
+                    </small>
                 </div>
 
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="fecharModalCriar()">
+                <div class="form-actions" style="margin-top: 40px; border-top: 1px solid var(--border); padding-top: 20px;">
+                    <button type="button" class="btn btn-warning" style="background-color: #f1c40f; color: #fff; border:none;" onclick="fecharModalCriar()">
                         Cancelar
                     </button>
                     <button type="submit" class="btn btn-primary">
-                        💾 Salvar e Criar Produto
+                        💾 Cadastrar Ativo
                     </button>
                 </div>
             </form>

@@ -74,141 +74,123 @@
 </div>
 
 <style>
-    /* ================= CARROSSEL MODERNIZADO ================= */
+    /* ============ AUMENTO DA LOGO NO MOBILE ============ */
+    @media (max-width: 968px) {
+        .logo-navbar-img {
+            /* Aumentado para 90px para ficar bem visível */
+            height: 90px !important; 
+            width: auto;
+        }
+        .navbar-container {
+            /* Aumenta a barra para caber a logo maior */
+            min-height: 100px; 
+        }
+    }
 
-    /* 1. Wrapper: Centraliza tudo e impede que o banner exploda em monitores gigantes */
+    /* 1. Wrapper Desktop */
     .carousel-wrapper {
         width: 100%;
         display: flex;
         justify-content: center;
-        padding: 0 10px; /* Pequena margem lateral no mobile */
+        padding: 0 10px;
         margin-bottom: 40px;
+        box-sizing: border-box;
     }
 
-    /* 2. O Container do Banner */
+    /* 2. Container Desktop */
     .carousel-container {
         position: relative;
         width: 100%;
-        max-width: 1200px; /* Tamanho máximo (largura de site padrão) */
-        
-        /* A MÁGICA DA PROPORÇÃO:
-           16 / 9 = Formato Widescreen (YouTube/TV). 
-           Isso garante que ele não fique "quadrado" no mobile, 
-           mas mantenha altura suficiente para ler os textos. */
+        max-width: 1200px;
         aspect-ratio: 16 / 9; 
-
-        border-radius: 15px; /* Bordas mais arredondadas */
+        border-radius: 15px;
         overflow: hidden;
-        
-        /* Efeito de sombra/neon suave para destacar o banner */
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        background: #1a1a1a; /* Fundo escuro caso a imagem demore a carregar */
+        background: #1a1a1a;
     }
 
     .carousel-slide {
         position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        opacity: 0;
-        transition: opacity 0.6s ease-in-out; /* Transição um pouco mais suave */
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        top: 0; left: 0; width: 100%; height: 100%;
+        opacity: 0; transition: opacity 0.6s ease-in-out;
+        display: flex; align-items: center; justify-content: center;
     }
 
-    .carousel-slide.active {
-        opacity: 1;
-        z-index: 1;
-    }
+    .carousel-slide.active { opacity: 1; z-index: 1; }
 
-    /* 3. A Imagem */
+    /* Imagem padrão */
     .carousel-slide img {
         width: 100%;
         height: 100%;
-        /* object-fit: cover -> Preenche tudo sem distorcer.
-           Se suas imagens tiverem texto muito nas bordas, mude para 'contain' 
-           (mas 'contain' pode deixar faixas pretas). 'cover' é mais bonito visualmente. */
         object-fit: cover; 
         display: block;
     }
 
-    .carousel-slide a {
-        display: block;
-        width: 100%;
-        height: 100%;
-    }
+    .carousel-slide a { display: block; width: 100%; height: 100%; }
 
-    /* 4. Botões de Navegação Melhorados */
+    /* Botões */
     .carousel-btn {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        background: rgba(0, 0, 0, 0.3); /* Mais transparente */
-        color: white;
-        border: 1px solid rgba(255, 255, 255, 0.2); /* Borda sutil */
-        padding: 0;
-        cursor: pointer;
-        font-size: 20px;
-        border-radius: 50%;
-        transition: all 0.3s ease;
-        z-index: 10;
-        width: 45px;
-        height: 45px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(5px); /* Efeito vidro */
+        position: absolute; top: 50%; transform: translateY(-50%);
+        background: rgba(0, 0, 0, 0.3); color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 0; cursor: pointer; font-size: 20px;
+        border-radius: 50%; transition: all 0.3s ease;
+        z-index: 10; width: 45px; height: 45px;
+        display: flex; align-items: center; justify-content: center;
+        backdrop-filter: blur(5px);
     }
-
     .carousel-btn:hover {
-        background: var(--primary, #007bff); /* Usa a cor primária do seu tema ou azul padrão */
+        background: var(--primary, #007bff);
         border-color: var(--primary, #007bff);
         transform: translateY(-50%) scale(1.1);
-        box-shadow: 0 0 15px var(--primary, #007bff); /* Brilho ao passar o mouse */
+        box-shadow: 0 0 15px var(--primary, #007bff);
     }
-
     .prev-btn { left: 20px; }
     .next-btn { right: 20px; }
 
-    /* ================= MOBILE (CELULAR) ================= */
+    /* ================= MOBILE / CELULAR (MANTIDO O QUE FUNCIONOU) ================= */
     @media (max-width: 768px) {
+        
         .carousel-wrapper {
-            padding: 0; /* Remove padding lateral para aproveitar 100% da tela */
+            padding: 0 10px; 
+            margin-bottom: 20px;
+            width: 100%;
         }
         
         .carousel-container {
-            border-radius: 0; /* No celular fica bonito ocupar de ponta a ponta sem borda arredondada */
-            max-width: 100%;
+            width: 100%;
+            aspect-ratio: 16 / 9; 
+            height: auto; 
+            border-radius: 15px;
+            background: transparent;
+            box-shadow: none;
         }
 
-        /* Botões menores no celular para não atrapalhar a imagem */
+        .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: fill; /* Garante 100% da imagem na caixa */
+            border-radius: 15px;
+        }
+
+        /* Botões */
         .carousel-btn { 
-            width: 35px; 
-            height: 35px; 
-            font-size: 16px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.5); /* Um pouco mais escuro para contraste */
+            width: 32px; height: 32px; font-size: 14px;
+            left: 5px; background: rgba(0, 0, 0, 0.5); border: none;
         }
-        
-        .next-btn {
-            left: auto;
-            right: 10px;
-        }
+        .next-btn { left: auto; right: 5px; }
     }
 </style>
 
 <script>
     let slideIndex = 0;
     const slides = document.querySelectorAll('.carousel-slide');
-    const intervalTime = 4000; // Aumentei um pouco para dar tempo de ler (4s)
+    const intervalTime = 4000;
     let slideInterval;
 
     function showSlides(n) {
         if (n >= slides.length) slideIndex = 0;
         if (n < 0) slideIndex = slides.length - 1;
-
         slides.forEach(slide => slide.classList.remove('active'));
         slides[slideIndex].classList.add('active');
     }
@@ -220,6 +202,7 @@
     }
 
     function startCarousel() {
+        if(slideInterval) clearInterval(slideInterval);
         slideInterval = setInterval(() => {
             slideIndex++;
             showSlides(slideIndex);
@@ -230,7 +213,6 @@
         clearInterval(slideInterval);
         startCarousel();
     }
-
     startCarousel();
 </script>
 

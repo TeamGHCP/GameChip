@@ -674,7 +674,7 @@
                                 <span class="badge-status {% if pedido.status in ['concluido', 'entregue'] %}bg-success{% elif pedido.status == 'cancelado' %}bg-danger{% else %}bg-warning{% endif %}">
                                     {{ pedido.status|upper }}
                                 </span>
-                                <a href="{{ url_for('detalhes_pedido', id_pedido=pedido.id_pedido) }}" class="btn btn-sm btn-outline">Detalhes</a>
+                                <a href="{{ url_for('detalhes_pedido', pedido_id=pedido.id_pedido) }}" class="btn btn-sm btn-outline">Detalhes</a>
                             </div>
                         </div>
                         {% endfor %}

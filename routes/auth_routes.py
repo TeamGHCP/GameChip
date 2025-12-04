@@ -76,7 +76,6 @@ def configure_auth_routes(app):
                         session['usuario_nome'] = usuario['nome']
                         session['usuario_email'] = usuario['email']
                         
-                        # Carregar tema preferido
                         try:
                             cursor.execute("SELECT tema_escuro FROM preferencias WHERE id_cliente = %s", (usuario['id_cliente'],))
                             pref = cursor.fetchone()
@@ -85,7 +84,7 @@ def configure_auth_routes(app):
                             else:
                                 session['theme'] = 'light'
                         except:
-                            pass # Se der erro na preferência, segue o login normal
+                            pass
                         
                         flash(f'🎉 Bem-vindo de volta, {usuario["nome"]}!', 'success')
                         
@@ -137,8 +136,9 @@ def configure_auth_routes(app):
             flash('❌ E-mail inválido.', 'error')
             return redirect(url_for('login'))
         
-        # Validação simples de CPF para não travar testes (mas mantém formatação)
-        # if not validar_cpf(cpf): ...
+        if not validar_cpf(cpf):
+            flash('❌ CPF inválido. Verifique os dígitos.', 'error')
+            return redirect(url_for('login'))
         
         cpf_formatado = formatar_cpf(cpf)
         

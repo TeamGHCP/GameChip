@@ -1,10 +1,45 @@
-from flask import render_template, request, flash, redirect, url_for, session, jsonify
+from flask import render_template, request, flash, redirect, url_for, session, jsonify, send_file
 from models.database import get_db_connection
 from utils.decorators import login_required
 from utils.qrcode_generator import gerar_qrcode_pix
 import mysql.connector
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
+import random
+import io 
+from barcode import Code128
+from barcode.writer import ImageWriter
+import base64
+import time
+
+
+def gerar_imagem_codigo_barras(codigo_texto):
+    """
+    Gera uma imagem de código de barras a partir do texto
+    Retorna: base64 da imagem
+    """
+    try:
+        # Remover pontos e espaços para o código de barras real
+        codigo_limpo = ''.join(filter(str.isdigit, codigo_texto))
+        
+        # Criar código de barras Code128 (padrão para boletos)
+        code128 = Code128(codigo_limpo, writer=ImageWriter())
+        
+        # Salvar em buffer de memória
+        buffer = io.BytesIO()
+        code128.write(buffer)
+        buffer.seek(0)
+        
+        # Converter para base64
+        img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        
+        return f"data:image/png;base64,{img_base64}"
+        
+    except Exception as e:
+        print(f"❌ ERRO ao gerar código de barras: {e}")
+        # Fallback: imagem vazia
+        return ""
+
 
 def configure_carrinho_routes(app):
     
@@ -52,6 +87,7 @@ def configure_carrinho_routes(app):
                     'preco': float(produto['preco']),
                     'quantidade': quantidade,
                     'imagens': imagens_produto,
+                    'imagem_principal': imagens_produto[0] if imagens_produto else '',
                     'categoria': produto['categoria']
                 })
             session['carrinho'] = carrinho
@@ -104,430 +140,739 @@ def configure_carrinho_routes(app):
         flash('🗑️ Carrinho limpo!', 'success')
         return redirect(url_for('carrinho'))
 
-    @app.route('/gerar-pix/<float:valor>')
-    def gerar_pix(valor):
-        qr_base64, copia_cola = gerar_qrcode_pix(valor)
-        return render_template('gerar_pix.html', valor=valor, qr_base64=qr_base64, copia_cola=copia_cola)
+    # ============ FUNÇÕES AUXILIARES PARA BOLETO ============
+    
+    def calcular_fator_vencimento(vencimento):
+        """Calcula o fator de vencimento para boleto"""
+        # Data base para boletos: 07/10/1997
+        data_base = datetime(1997, 10, 7)
+        diferenca = vencimento - data_base
+        return f"{diferenca.days:04d}"
 
-
-    @app.route('/pagamento-cartao', methods=['GET', 'POST'])
-    @login_required
-    def pagamento_cartao():
-        """Página dedicada para pagamento com cartão"""
-        from datetime import datetime
+    def calcular_digito_verificador(codigo):
+        """Calcula dígito verificador usando módulo 10"""
+        # Remove posição do dígito verificador (posição 4)
+        if len(codigo) >= 4:
+            codigo_sem_dv = codigo[:4] + codigo[5:]
+        else:
+            codigo_sem_dv = codigo
         
+        soma = 0
+        peso = 2
+        
+        # Percorre de trás para frente
+        for digito in reversed(codigo_sem_dv):
+            resultado = int(digito) * peso
+            if resultado > 9:
+                resultado = sum(int(d) for d in str(resultado))
+            soma += resultado
+            peso = 3 if peso == 2 else 2
+        
+        resto = soma % 10
+        if resto == 0:
+            return "0"
+        else:
+            return str(10 - resto)
+
+    def calcular_dv_modulo10(numero):
+        """Calcula dígito verificador usando módulo 10 (para blocos)"""
+        soma = 0
+        peso = 2
+        
+        for digito in reversed(str(numero)):
+            resultado = int(digito) * peso
+            if resultado > 9:
+                resultado = sum(int(d) for d in str(resultado))
+            soma += resultado
+            peso = 3 if peso == 2 else 2
+        
+        resto = soma % 10
+        if resto == 0:
+            return "0"
+        else:
+            return str(10 - resto)
+
+    def gerar_codigo_barras_boleto(pedido_id, valor, vencimento):
+        """Gera um código de barras fictício para o boleto"""
+        try:
+            # Formato: 341 (Banco Itaú) + 9 (Moeda Real) + fator vencimento + valor
+            banco = "341"
+            
+            # Calcular fator de vencimento
+            fator = calcular_fator_vencimento(vencimento)
+            
+            # Formatar valor (10 dígitos com zeros à esquerda)
+            valor_centavos = int(valor * 100)
+            valor_formatado = f"{valor_centavos:010d}"
+            
+            # Código do beneficiário (fictício)
+            beneficiario = "1234567"
+            
+            # Carteira (fictício)
+            carteira = "157"
+            
+            # Nosso número (usando pedido_id)
+            nosso_numero = f"{pedido_id:08d}"
+            
+            # Constante para identificação
+            constante = "0"
+            
+            # Montar código (43 dígitos sem DV)
+            codigo_sem_dv = f"{banco}9{fator}{valor_formatado}{beneficiario}{carteira}{nosso_numero}{constante}"
+            
+            # Garantir 43 dígitos
+            codigo_sem_dv = codigo_sem_dv.ljust(43, '0')
+            
+            # Calcular dígito verificador
+            dv = calcular_digito_verificador(codigo_sem_dv)
+            
+            # Inserir DV na posição 4 (índice 3)
+            codigo_completo = codigo_sem_dv[:4] + dv + codigo_sem_dv[4:]
+            
+            return codigo_completo[:44]  # Garantir 44 dígitos
+            
+        except Exception as e:
+            print(f"❌ ERRO ao gerar código de barras: {e}")
+            # Código de fallback
+            return "34199844100000150000000012345671570000012345678"
+
+    def formatar_linha_digitavel(codigo_barras):
+        """Formata a linha digitável do boleto"""
+        try:
+            if len(codigo_barras) < 44:
+                codigo_barras = codigo_barras.ljust(44, '0')
+            
+            # Extrair partes do código
+            campo1 = codigo_barras[0:4] + codigo_barras[19:24]  # Banco + 5 primeiros do beneficiário
+            campo2 = codigo_barras[24:34]  # Próximos 10 dígitos
+            campo3 = codigo_barras[34:44]  # Últimos 10 dígitos
+            campo4 = codigo_barras[4]  # DV geral
+            campo5 = codigo_barras[5:19]  # Fator vencimento + valor
+            
+            # Calcular DVs dos campos
+            dv1 = calcular_dv_modulo10(campo1)
+            dv2 = calcular_dv_modulo10(campo2)
+            dv3 = calcular_dv_modulo10(campo3)
+            
+            # Formatar
+            linha = f"{campo1[:5]}.{campo1[5:]}{dv1} {campo2[:5]}.{campo2[5:]}{dv2} {campo3[:5]}.{campo3[5:]}{dv3} {campo4} {campo5}"
+            
+            return linha
+            
+        except Exception as e:
+            print(f"❌ ERRO ao formatar linha digitável: {e}")
+            return "34191.79001 01043.510047 91020.150008 8 84410000015000"
+
+    # ============ ROTAS PRINCIPAIS (SISTEMA DO SEU AMIGO + BOLETO) ============
+
+    @app.route('/finalizar-carrinho', methods=['GET', 'POST'])
+    @login_required
+    def finalizar_carrinho():
+        """Finalização da compra (checkout) - SISTEMA DO SEU AMIGO ATUALIZADO"""
+        # Verificar se há itens no carrinho
         produtos_carrinho = session.get('carrinho', [])
         
         if not produtos_carrinho:
             flash('⚠️ Seu carrinho está vazio.', 'warning')
             return redirect(url_for('carrinho'))
         
-        # Pegar dados da sessão
-        dados_entrega = session.get('dados_entrega', {})
-        if not dados_entrega:
-            flash('⚠️ Complete os dados de entrega primeiro.', 'warning')
-            return redirect(url_for('finalizar_carrinho'))
+        # Processar imagens para exibição
+        for produto in produtos_carrinho:
+            if 'imagens' not in produto or not produto['imagens']:
+                produto['imagens'] = []
+            produto['imagem_principal'] = produto['imagens'][0] if produto['imagens'] else ''
         
         total_geral = sum(item['preco'] * item['quantidade'] for item in produtos_carrinho)
         
         if request.method == 'POST':
-            # Processar pagamento com cartão
-            nome_titular = request.form.get('nome_titular')
-            numero_cartao = request.form.get('numero_cartao')
-            validade = request.form.get('validade')
-            cvv = request.form.get('cvv')
-            tipo_cartao = request.form.get('tipo_cartao')
-            parcelas = request.form.get('parcelas', '1')
-            
-            print(f"🔍 DEBUG: Processando pagamento com cartão")
-            
-            # Validar dados do cartão
-            if not all([nome_titular, numero_cartao, validade, cvv, tipo_cartao]):
-                flash('❌ Preencha todos os dados do cartão.', 'error')
-                return render_template('pagamento-cartao.html',
-                                    produtos_carrinho=produtos_carrinho,
-                                    total_geral=total_geral,
-                                    dados_entrega=dados_entrega)
-            
-            # Validar número do cartão (simplificado)
-            numero_limpo = ''.join(filter(str.isdigit, numero_cartao))
-            if len(numero_limpo) < 13 or len(numero_limpo) > 19:
-                flash('❌ Número do cartão inválido.', 'error')
-                return render_template('pagamento-cartao.html',
-                                    produtos_carrinho=produtos_carrinho,
-                                    total_geral=total_geral,
-                                    dados_entrega=dados_entrega)
-            
-            # Inicializar variáveis
-            pedido_id = None
-            conn = None
-            cursor = None
-            
             try:
+                # Obter dados do formulário
+                endereco_id = request.form.get('endereco_id')
+                forma_pagamento = request.form.get('pagamento')
+                nome = request.form.get('nome')
+                email = request.form.get('email')
+                
+                # Validar campos obrigatórios
+                if not endereco_id:
+                    flash('❌ Selecione um endereço para entrega.', 'error')
+                    return redirect(url_for('finalizar_carrinho'))
+                
+                if not forma_pagamento:
+                    flash('❌ Selecione uma forma de pagamento.', 'error')
+                    return redirect(url_for('finalizar_carrinho'))
+                
+                if not nome or not email:
+                    flash('❌ Preencha todos os campos obrigatórios.', 'error')
+                    return redirect(url_for('finalizar_carrinho'))
+                
+                # Validar forma de pagamento
+                formas_validas = ['pix', 'cartao', 'boleto']
+                if forma_pagamento not in formas_validas:
+                    flash('❌ Forma de pagamento inválida.', 'error')
+                    return redirect(url_for('finalizar_carrinho'))
+                
                 conn = get_db_connection()
                 cursor = conn.cursor(dictionary=True)
                 
-                # 1. Inserir pedido
-                cursor.execute("""
-                    INSERT INTO pedidos (id_cliente, total, forma_pagamento, status, data_pedido)
-                    VALUES (%s, %s, %s, %s, NOW())
-                """, (session['usuario_id'], total_geral, 'cartao', 'aprovado'))
-                
-                pedido_id = cursor.lastrowid
-                print(f"✅ DEBUG: Pedido #{pedido_id} criado")
-                
-                # 2. Inserir itens do pedido
+                # Verificar estoque
                 for item in produtos_carrinho:
                     cursor.execute("""
-                        INSERT INTO itens_pedido (id_pedido, id_produto, quantidade, preco_unitario)
-                        VALUES (%s, %s, %s, %s)
-                    """, (pedido_id, item['id_produto'], item['quantidade'], item['preco']))
+                        SELECT nome, estoque 
+                        FROM produto 
+                        WHERE id_produto = %s AND ativo = TRUE
+                    """, (item['id_produto'],))
+                    
+                    produto_db = cursor.fetchone()
+                    
+                    if not produto_db:
+                        flash(f"❌ Produto '{item['nome']}' não está mais disponível.", 'error')
+                        return redirect(url_for('carrinho'))
+                    
+                    if produto_db['estoque'] < item['quantidade']:
+                        flash(f"⚠️ Estoque insuficiente de '{produto_db['nome']}'.", 'warning')
+                        return redirect(url_for('carrinho'))
+                
+                # Buscar endereço
+                cursor.execute("""
+                    SELECT * FROM enderecos 
+                    WHERE id_endereco = %s AND id_cliente = %s
+                """, (endereco_id, session['usuario_id']))
+                
+                endereco = cursor.fetchone()
+                
+                if not endereco:
+                    flash('❌ Endereço não encontrado.', 'error')
+                    return redirect(url_for('finalizar_carrinho'))
+                
+                # Criar pedido
+                cursor.execute("""
+                    INSERT INTO pedidos (
+                        id_cliente, 
+                        id_endereco, 
+                        total, 
+                        forma_pagamento, 
+                        status, 
+                        data_pedido
+                    ) VALUES (%s, %s, %s, %s, %s, NOW())
+                """, (
+                    session['usuario_id'],
+                    endereco_id,
+                    total_geral,
+                    forma_pagamento,
+                    'pendente'  # Status inicial
+                ))
+                
+                pedido_id = cursor.lastrowid
+                
+                # Adicionar itens ao pedido
+                for item in produtos_carrinho:
+                    cursor.execute("""
+                        INSERT INTO itens_pedido (
+                            id_pedido, 
+                            id_produto, 
+                            quantidade, 
+                            preco_unitario
+                        ) VALUES (%s, %s, %s, %s)
+                    """, (
+                        pedido_id,
+                        item['id_produto'],
+                        item['quantidade'],
+                        item['preco']
+                    ))
                     
                     # Atualizar estoque
                     cursor.execute("""
-                        UPDATE produto SET estoque = estoque - %s 
+                        UPDATE produto 
+                        SET estoque = estoque - %s 
                         WHERE id_produto = %s
                     """, (item['quantidade'], item['id_produto']))
-                    print(f"  ✅ {item['nome']} - Estoque atualizado")
                 
-                # 3. Registrar pagamento na tabela pagamentos
-                try:
+                # Registrar na tabela geral de pagamentos
+                cursor.execute("""
+                    INSERT INTO pagamentos (
+                        nome, 
+                        email, 
+                        metodo, 
+                        valor
+                    ) VALUES (%s, %s, %s, %s)
+                """, (nome, email, forma_pagamento, total_geral))
+                
+                # Se for PIX, registrar também na tabela pagamentos_pix
+                if forma_pagamento == 'pix':
+                    # Primeiro gere o QR Code e código PIX
+                    qr_base64, codigo_pix = gerar_qrcode_pix(total_geral)
+                    
+                    # Extraia o txid do código PIX (se necessário)
+                    # Ou gere um txid único
+                    txid = f"GHCP{int(time.time())}{random.randint(1000, 9999)}"
+                    
                     cursor.execute("""
-                        INSERT INTO pagamentos (nome, email, endereco, metodo, valor)
-                        VALUES (%s, %s, %s, %s, %s)
+                        INSERT INTO pagamentos_pix (
+                            id_pedido,
+                            id_cliente,
+                            chave_pix,
+                            nome_recebedor,
+                            cidade_recebedor,
+                            valor,
+                            qr_code_base64,
+                            codigo_copia_cola,
+                            txid,
+                            status
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'pendente')
                     """, (
-                        dados_entrega.get('nome', ''),
-                        dados_entrega.get('email', ''),
-                        dados_entrega.get('endereco', ''),
-                        'cartao',
-                        total_geral
+                        pedido_id,
+                        session['usuario_id'],
+                        app.config.get('PIX_CHAVE', '14057629939'),
+                        app.config.get('PIX_NOME', 'CAETANO GBUR PETRY'),
+                        app.config.get('PIX_CIDADE', 'JOINVILLE'),
+                        total_geral,
+                        qr_base64,
+                        codigo_pix,
+                        txid
                     ))
-                    print(f"✅ DEBUG: Pagamento registrado")
-                except Exception as e:
-                    print(f"⚠️ DEBUG: Não foi possível registrar pagamento: {e}")
-                    # Continua mesmo sem registrar
                 
                 conn.commit()
                 
-                # 4. Limpar carrinho e salvar dados para página de sucesso
+                # Limpar carrinho da sessão
                 session.pop('carrinho', None)
-                session.pop('dados_entrega', None)
-                
-                # Converter parcelas para inteiro
-                try:
-                    parcelas_int = int(parcelas)
-                except:
-                    parcelas_int = 1
-                
-                session['pedido_confirmado'] = {
-                    'id': pedido_id,
-                    'total': total_geral,
-                    'metodo': 'cartao',
-                    'tipo_cartao': tipo_cartao,
-                    'parcelas': parcelas_int,
-                    'data': datetime.now().strftime("%d/%m/%Y %H:%M"),
-                    'ultimos_digitos': numero_limpo[-4:],
-                    'nome_titular': nome_titular
-                }
                 session.modified = True
                 
-                print(f"✅ DEBUG: Pagamento processado com sucesso! Redirecionando para compra-sucesso")
+                # Redirecionar conforme método de pagamento
+                if forma_pagamento == 'pix':
+                    session['pedido_em_andamento'] = pedido_id
+                    return redirect(url_for('pagamento_pix', pedido_id=pedido_id))
+                elif forma_pagamento == 'cartao':
+                    flash(f'🎉 Pedido #{pedido_id} criado com sucesso!', 'success')
+                    return redirect(url_for('meus_pedidos'))
+                elif forma_pagamento == 'boleto':
+                    # PARA BOLETO: Redirecionar para página do boleto
+                    return redirect(url_for('visualizar_boleto', pedido_id=pedido_id))
                 
-                # Redirecionar para página de sucesso
-                return redirect(url_for('compra_sucesso'))
-                
-            except Exception as err:
-                print(f"❌ DEBUG: Erro no pagamento: {err}")
-                import traceback
-                traceback.print_exc()  # Mostra o traceback completo
-                
-                if conn and conn.is_connected():
+            except mysql.connector.Error as err:
+                if 'conn' in locals() and conn.is_connected():
                     conn.rollback()
-                    print(f"❌ DEBUG: Rollback realizado")
-                
-                flash(f'❌ Erro ao processar pagamento. Tente novamente.', 'error')
-                return render_template('pagamento-cartao.html',
-                                    produtos_carrinho=produtos_carrinho,
-                                    total_geral=total_geral,
-                                    dados_entrega=dados_entrega)
+                flash(f'❌ Erro ao processar pedido: {err}', 'error')
+                return redirect(url_for('carrinho'))
+            except Exception as err:
+                flash(f'❌ Erro inesperado: {err}', 'error')
+                return redirect(url_for('carrinho'))
             finally:
-                if cursor:
+                if 'conn' in locals() and conn and conn.is_connected():
                     cursor.close()
-                if conn and conn.is_connected():
                     conn.close()
-                    print(f"✅ DEBUG: Conexão com banco fechada")
         
-        # GET request: mostrar formulário de pagamento
-        return render_template('pagamento-cartao.html',
-                            produtos_carrinho=produtos_carrinho,
-                            total_geral=total_geral,
-                            dados_entrega=dados_entrega)
-        
-    @app.route('/compra-sucesso')
-    @login_required
-    def compra_sucesso():
-        """Página de confirmação de compra bem-sucedida"""
-        
-        pedido_info = session.get('pedido_confirmado')
-        
-        if not pedido_info:
-            flash('⚠️ Nenhum pedido recente encontrado.', 'info')
-            return redirect(url_for('meus_pedidos'))
-        
-        # Garantir que todos os campos existam
-        if 'data' not in pedido_info:
-            from datetime import datetime
-            pedido_info['data'] = datetime.now().strftime("%d/%m/%Y %H:%M")
-        
-        if 'parcelas' not in pedido_info:
-            pedido_info['parcelas'] = 1
-        
-        if 'tipo_cartao' not in pedido_info:
-            pedido_info['tipo_cartao'] = 'cartao'
-        
-        return render_template('compra-sucesso.html', pedido=pedido_info)
-
-
-
-
-    @app.route('/finalizar-carrinho', methods=['GET', 'POST'])
-    def finalizar_carrinho():
-        """Página para finalizar a compra com dados de entrega"""
-        
-        print(f"\n🔍 DEBUG: Chegou na rota finalizar_carrinho")
-        
-        # Verificar se usuário está logado
-        if 'usuario_id' not in session:
-            flash('⚠️ Faça login para finalizar sua compra.', 'warning')
-            print(f"🔍 DEBUG: usuario_id NÃO encontrado na sessão - Redirecionando para login")
-            return redirect(url_for('login', next=url_for('finalizar_carrinho')))
-        
-        produtos_carrinho = session.get('carrinho', [])
-        print(f"🔍 DEBUG: Produtos no carrinho = {len(produtos_carrinho)} itens")
-        
-        if not produtos_carrinho and request.method == 'GET':
-            print(f"🔍 DEBUG: Carrinho vazio no GET - Redirecionando para carrinho")
-            flash('🛒 Seu carrinho está vazio.', 'info')
-            return redirect(url_for('carrinho'))
-        
-        for produto in produtos_carrinho:
-            if 'imagem' in produto and ('imagens' not in produto or not produto['imagens']):
-                produto['imagens'] = [produto['imagem']]
-            if 'imagens' not in produto:
-                produto['imagens'] = []
-        
-        total_geral = sum(item['preco'] * item['quantidade'] for item in produtos_carrinho)
-        session['chegou_finalizar-carrinho'] = True
-        
-        print(f"🔍 DEBUG: Total geral = R$ {total_geral:.2f}")
-        
-        if request.method == 'POST':
-            nome = request.form.get('nome')
-            email = request.form.get('email')
-            endereco = request.form.get('endereco')
-            pagamento = request.form.get('pagamento')
-            
-            print(f"🔍 DEBUG: Formulário recebido:")
-            print(f"  Nome: {nome}")
-            print(f"  Email: {email}")
-            print(f"  Endereço: {endereco}")
-            print(f"  Pagamento: {pagamento}")
-            
-            if not produtos_carrinho:
-                flash('⚠️ Seu carrinho está vazio.', 'warning')
-                return redirect(url_for('carrinho'))
-            
-            # Validar dados
-            if not all([nome, email, endereco, pagamento]):
-                flash('❌ Preencha todos os campos obrigatórios.', 'error')
-                return render_template('finalizar-carrinho.html', 
-                                    produtos_carrinho=produtos_carrinho,
-                                    total_geral=total_geral)
-            
-            # Salvar dados na sessão para usar nas próximas etapas
-            session['dados_entrega'] = {
-                'nome': nome,
-                'email': email,
-                'endereco': endereco
-            }
-            session.modified = True
-            
-            # Redirecionar para a página de pagamento apropriada
-            if pagamento == 'cartao':
-                print(f"🔍 DEBUG: Redirecionando para pagamento com cartão")
-                return redirect(url_for('pagamento_cartao'))
-            elif pagamento == 'pix':
-                print(f"🔍 DEBUG: Redirecionando para PIX")
-                return redirect(url_for('gerar_pix', valor=total_geral))
-            elif pagamento == 'boleto':
-                print(f"🔍 DEBUG: Processando boleto")
-                # Aqui você pode redirecionar para uma página de boleto
-                # ou processar diretamente
-                try:
-                    # Processar boleto - adicione sua lógica aqui
-                    flash('📄 Boleto gerado com sucesso!', 'success')
-                    # Redirecionar para página de sucesso
-                    return redirect(url_for('compra-sucesso', metodo='boleto'))
-                except Exception as e:
-                    flash(f'❌ Erro ao gerar boleto: {e}', 'error')
-                    return redirect(url_for('carrinho'))
-            else:
-                flash('❌ Forma de pagamento inválida.', 'error')
-                return redirect(url_for('carrinho'))
-        
-        # GET request: mostrar formulário de finalização
-        print(f"🔍 DEBUG: Renderizando template finalizar-carrinho.html")
-        
-        # Preencher dados do usuário se disponíveis
-        dados_usuario = {
-            'nome': session.get('usuario_nome', ''),
-            'email': session.get('usuario_email', '')
-        }
-        
-        return render_template('finalizar-carrinho.html', 
-                            produtos_carrinho=produtos_carrinho,
-                            total_geral=total_geral,
-                            dados_usuario=dados_usuario)
-
-    @app.route('/confirmar-pagamento', methods=['POST'])
-    @login_required
-    def confirmar_pagamento():
-        """Confirma o pagamento e atualiza o status do pedido"""
+        # GET: mostrar formulário de finalização
         try:
             conn = get_db_connection()
             cursor = conn.cursor(dictionary=True)
             
-            # 1. Buscar o ÚLTIMO pedido PENDENTE do cliente
+            # Buscar endereços do cliente
             cursor.execute("""
-                SELECT id_pedido 
-                FROM pedidos 
+                SELECT * FROM enderecos 
                 WHERE id_cliente = %s 
-                AND status = 'pendente' 
-                ORDER BY id_pedido DESC 
-                LIMIT 1
+                ORDER BY principal DESC
             """, (session['usuario_id'],))
             
-            pedido = cursor.fetchone()
+            enderecos = cursor.fetchall()
             
-            if pedido:
-                id_pedido = pedido['id_pedido']
-                
-                # 2. Atualizar status para 'concluido' (ou 'aprovado')
-                cursor.execute("""
-                    UPDATE pedidos 
-                    SET status = 'concluido' 
-                    WHERE id_pedido = %s
-                """, (id_pedido,))
-                
-                conn.commit()
-                
-                # 3. Marcar na sessão que o pagamento foi confirmado
-                session['pagamento_confirmado'] = True
-                session.modified = True
-                
-                return jsonify({
-                    'status': 'success', 
-                    'message': 'Pagamento confirmado!',
-                    'pedido_id': id_pedido
-                })
-            else:
-                return jsonify({
-                    'status': 'error', 
-                    'message': 'Nenhum pedido pendente encontrado.'
-                })
-            
+            return render_template('finalizar-carrinho.html',
+                                produtos_carrinho=produtos_carrinho,
+                                total_geral=total_geral,
+                                enderecos=enderecos)
+        
         except Exception as err:
-            print(f"Erro ao confirmar pagamento: {err}")
-            if 'conn' in locals() and conn.is_connected():
-                conn.rollback()
-            return jsonify({'status': 'error', 'message': str(err)})
+            flash(f'Erro ao carregar endereços: {err}', 'error')
+            return redirect(url_for('carrinho'))
         finally:
             if 'conn' in locals() and conn and conn.is_connected():
                 cursor.close()
                 conn.close()
-                
-    @app.route('/compra-sucedida')
-    def compra_sucedida():
-        return render_template('compra-sucedida.html')
-    @app.route('/meus-pedidos')
+
+    # ============ ROTAS DE PAGAMENTO ============
+
+    @app.route('/pagamento/pix/<int:pedido_id>')
     @login_required
-    def meus_pedidos():
+    def pagamento_pix(pedido_id):
+        """Página de pagamento via PIX"""
         try:
             conn = get_db_connection()
             cursor = conn.cursor(dictionary=True)
             
-            # Busca TODOS os pedidos do cliente (não só os 5 últimos)
+            # Buscar dados COMPLETOS do pedido e PIX
             cursor.execute("""
-                SELECT * FROM pedidos 
-                WHERE id_cliente = %s 
-                ORDER BY data_pedido DESC
-            """, (session['usuario_id'],))
+                SELECT 
+                    pp.*,
+                    p.id_pedido,
+                    p.id_cliente,
+                    p.total as pedido_total,
+                    p.data_pedido,
+                    p.status as pedido_status,
+                    p.forma_pagamento,
+                    c.nome as cliente_nome,
+                    c.email
+                FROM pedidos p
+                JOIN clientes c ON p.id_cliente = c.id_cliente
+                LEFT JOIN pagamentos_pix pp ON p.id_pedido = pp.id_pedido
+                WHERE p.id_pedido = %s AND p.id_cliente = %s
+            """, (pedido_id, session['usuario_id']))
             
-            pedidos = cursor.fetchall()
+            pedido_data = cursor.fetchone()
             
-            # Conta itens para exibir na tabela
-            for pedido in pedidos:
-                cursor.execute("SELECT COUNT(*) as qtd FROM itens_pedido WHERE id_pedido = %s", (pedido['id_pedido'],))
-                pedido['qtd_itens'] = cursor.fetchone()['qtd']
+            if not pedido_data:
+                flash('❌ Pedido não encontrado.', 'error')
+                return redirect(url_for('meus_pedidos'))
             
-            return render_template('meus_pedidos.html', pedidos=pedidos)
+            valor = float(pedido_data.get('valor') or pedido_data['pedido_total'])
             
-        except mysql.connector.Error as err:
-            flash(f'Erro ao carregar pedidos: {err}', 'error')
-            return redirect(url_for('minha_conta'))
+            # Se não tem registro PIX, criar
+            if not pedido_data.get('id_pagamento_pix'):
+                qr_base64, codigo_pix = gerar_qrcode_pix(valor)
+                
+                cursor.execute("""
+                    INSERT INTO pagamentos_pix 
+                    (id_pedido, id_cliente, valor, qr_code_base64, codigo_copia_cola, status)
+                    VALUES (%s, %s, %s, %s, %s, 'pendente')
+                """, (pedido_id, session['usuario_id'], valor, qr_base64, codigo_pix))
+                
+                conn.commit()
+                
+                pedido_data['qr_code_base64'] = qr_base64
+                pedido_data['codigo_copia_cola'] = codigo_pix
+                pedido_data['id_pagamento_pix'] = cursor.lastrowid
+            
+            # Se tem PIX mas não tem QR Code, gerar
+            elif not pedido_data.get('qr_code_base64'):
+                qr_base64, codigo_pix = gerar_qrcode_pix(valor)
+                
+                cursor.execute("""
+                    UPDATE pagamentos_pix 
+                    SET qr_code_base64 = %s, 
+                        codigo_copia_cola = %s,
+                        data_geracao = NOW()
+                    WHERE id_pagamento_pix = %s
+                """, (qr_base64, codigo_pix, pedido_data['id_pagamento_pix']))
+                
+                conn.commit()
+                
+                pedido_data['qr_code_base64'] = qr_base64
+                pedido_data['codigo_copia_cola'] = codigo_pix
+            
+            return render_template('pagamento_pix.html',
+                                pedido=pedido_data,
+                                qr_base64=pedido_data['qr_code_base64'],
+                                copia_cola=pedido_data['codigo_copia_cola'],
+                                valor=valor)
+        
+        except Exception as err:
+            flash(f'Erro ao carregar dados do PIX: {str(err)}', 'error')
+            return redirect(url_for('meus_pedidos'))
         finally:
-            if conn and conn.is_connected():
+            if 'conn' in locals() and conn and conn.is_connected():
                 cursor.close()
                 conn.close()
 
-    @app.route('/meus-pedidos/<int:id_pedido>')
+    @app.route('/boleto/<int:pedido_id>')
     @login_required
-    def detalhes_pedido(id_pedido):
+    def visualizar_boleto(pedido_id):
+        """Página para visualizar o boleto gerado"""
         try:
             conn = get_db_connection()
             cursor = conn.cursor(dictionary=True)
             
-            # Busca detalhes do pedido específico
+            # Buscar pedido com endereço
             cursor.execute("""
-                SELECT p.*, e.rua, e.numero, e.bairro, e.cidade, e.estado, e.cep, e.destinatario
+                SELECT p.*, c.nome as cliente_nome, c.email as cliente_email,
+                       e.rua, e.numero, e.bairro, e.cidade, e.estado, e.cep, e.destinatario
                 FROM pedidos p
+                JOIN clientes c ON p.id_cliente = c.id_cliente
                 LEFT JOIN enderecos e ON p.id_endereco = e.id_endereco
                 WHERE p.id_pedido = %s AND p.id_cliente = %s
-            """, (id_pedido, session['usuario_id']))
+            """, (pedido_id, session['usuario_id']))
             
             pedido = cursor.fetchone()
             
             if not pedido:
-                flash('Pedido não encontrado.', 'error')
+                flash('❌ Boleto não encontrado.', 'error')
                 return redirect(url_for('meus_pedidos'))
             
-            # Busca os produtos desse pedido
+            # Gerar dados do boleto
+            vencimento = datetime.now() + timedelta(days=3)
+            codigo_barras = gerar_codigo_barras_boleto(pedido_id, pedido['total'], vencimento)
+            linha_digitavel = formatar_linha_digitavel(codigo_barras)
+            
+            # Gerar imagem do código de barras
+            imagem_codigo_barras = gerar_imagem_codigo_barras(codigo_barras)
+            
+            # Buscar produtos do pedido
             cursor.execute("""
-                SELECT ip.*, p.nome, p.imagem, p.imagens, p.marca
+                SELECT p.nome, ip.quantidade, ip.preco_unitario
                 FROM itens_pedido ip
                 JOIN produto p ON ip.id_produto = p.id_produto
                 WHERE ip.id_pedido = %s
-            """, (id_pedido,))
+            """, (pedido_id,))
+            
+            produtos = cursor.fetchall()
+            
+            # Preparar dados para o template
+            boleto_data = {
+                'id_pedido': pedido['id_pedido'],
+                'codigo_barras': codigo_barras,
+                'linha_digitavel': linha_digitavel,
+                'valor': pedido['total'],
+                'vencimento': vencimento,
+                'data': pedido.get('data_pedido', datetime.now()),
+                'data_emissao': pedido.get('data_pedido', datetime.now()).strftime('%d/%m/%Y'),
+                'nome': pedido.get('destinatario', pedido.get('cliente_nome', session.get('usuario_nome', 'Cliente'))),
+                'cliente_nome': pedido.get('cliente_nome', session.get('usuario_nome', 'Cliente')),
+                'email': pedido.get('cliente_email', ''),
+                'endereco': f"{pedido.get('rua', '')}, {pedido.get('numero', '')} - {pedido.get('bairro', '')}",
+                'imagem_codigo_barras': imagem_codigo_barras
+            }
+            
+            return render_template('visualizar-boleto.html',
+                                boleto=boleto_data,
+                                produtos=produtos)
+            
+        except Exception as err:
+            print(f"❌ ERRO ao gerar boleto: {err}")
+            
+            # Fallback: mostrar página com dados mínimos
+            flash('⚠️ Não foi possível carregar todos os dados do boleto, mas aqui está uma versão básica.', 'warning')
+            
+            boleto_data = {
+                'id_pedido': pedido_id,
+                'codigo_barras': '34191.79001 01043.510047 91020.150008 8 84410000015000',
+                'linha_digitavel': '34191.79001 01043.510047 91020.150008 8 84410000015000',
+                'valor': 0.00,
+                'vencimento': datetime.now() + timedelta(days=3),
+                'data': datetime.now(),
+                'data_emissao': datetime.now().strftime('%d/%m/%Y'),
+                'nome': session.get('usuario_nome', 'Cliente'),
+                'cliente_nome': session.get('usuario_nome', 'Cliente'),
+                'imagem_codigo_barras': ''
+            }
+            
+            return render_template('visualizar-boleto.html',
+                                boleto=boleto_data,
+                                produtos=[])
+            
+        finally:
+            if 'cursor' in locals() and cursor:
+                cursor.close()
+            if 'conn' in locals() and conn and conn.is_connected():
+                conn.close()
+
+    @app.route('/api/confirmar-pagamento/<int:pedido_id>', methods=['POST'])
+    @login_required
+    def confirmar_pagamento(pedido_id):
+        """API para confirmar pagamento (simulação)"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            
+            # Verificar se o pedido pertence ao usuário
+            cursor.execute("""
+                SELECT p.*, pp.* 
+                FROM pedidos p
+                LEFT JOIN pagamentos_pix pp ON p.id_pedido = pp.id_pedido
+                WHERE p.id_pedido = %s AND p.id_cliente = %s
+            """, (pedido_id, session['usuario_id']))
+            
+            pedido = cursor.fetchone()
+            
+            if not pedido:
+                return jsonify({'status': 'error', 'message': 'Pedido não encontrado'}), 404
+            
+            # Atualizar status do pedido
+            cursor.execute("""
+                UPDATE pedidos 
+                SET status = 'aprovado' 
+                WHERE id_pedido = %s
+            """, (pedido_id,))
+            
+            # Atualizar status do pagamento PIX se existir
+            if pedido.get('id_pagamento_pix'):
+                cursor.execute("""
+                    UPDATE pagamentos_pix 
+                    SET status = 'pago', data_pagamento = NOW() 
+                    WHERE id_pedido = %s
+                """, (pedido_id,))
+            
+            conn.commit()
+            
+            # Limpar sessão de pedido em andamento
+            session.pop('pedido_em_andamento', None)
+            
+            return jsonify({
+                'status': 'success',
+                'message': 'Pagamento confirmado!',
+                'redirect': url_for('compra_sucesso', pedido_id=pedido_id)
+            })
+        
+        except mysql.connector.Error as err:
+            if 'conn' in locals() and conn.is_connected():
+                conn.rollback()
+            return jsonify({'status': 'error', 'message': str(err)}), 500
+        finally:
+            if 'conn' in locals() and conn and conn.is_connected():
+                cursor.close()
+                conn.close()
+
+    @app.route('/compra-sucesso/<int:pedido_id>')
+    @login_required
+    def compra_sucesso(pedido_id):
+        """Página de sucesso após compra"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            
+            # Buscar pedido com endereço
+            cursor.execute("""
+                SELECT p.*, e.* 
+                FROM pedidos p
+                LEFT JOIN enderecos e ON p.id_endereco = e.id_endereco
+                WHERE p.id_pedido = %s AND p.id_cliente = %s
+            """, (pedido_id, session['usuario_id']))
+            
+            pedido = cursor.fetchone()
+            
+            if not pedido:
+                flash('❌ Pedido não encontrado.', 'error')
+                return redirect(url_for('meus_pedidos'))
+            
+            # Buscar itens do pedido
+            cursor.execute("""
+                SELECT ip.*, pr.nome, pr.imagens
+                FROM itens_pedido ip
+                JOIN produto pr ON ip.id_produto = pr.id_produto
+                WHERE ip.id_pedido = %s
+            """, (pedido_id,))
             
             itens = cursor.fetchall()
             
-            # Corrige imagens JSON
+            # Processar imagens dos itens
+            for item in itens:
+                if item.get('imagens'):
+                    try:
+                        imagens = json.loads(item['imagens'])
+                        item['imagem_principal'] = imagens[0] if imagens else None
+                    except:
+                        item['imagem_principal'] = None
+                else:
+                    item['imagem_principal'] = None
+            
+            return render_template('compra_sucesso.html', 
+                                 pedido=pedido,
+                                 itens=itens,
+                                 pedido_id=pedido_id)
+        
+        except Exception as err:
+            flash(f'Erro ao carregar dados da compra: {err}', 'error')
+            return redirect(url_for('meus_pedidos'))
+        finally:
+            if 'conn' in locals() and conn and conn.is_connected():
+                cursor.close()
+                conn.close()
+
+    @app.route('/meus-pedidos')
+    @login_required
+    def meus_pedidos():
+        """Lista todos os pedidos do cliente"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            
+            cursor.execute("""
+                SELECT p.*, COUNT(ip.id_item) as qtd_itens
+                FROM pedidos p
+                LEFT JOIN itens_pedido ip ON p.id_pedido = ip.id_pedido
+                WHERE p.id_cliente = %s 
+                GROUP BY p.id_pedido
+                ORDER BY p.data_pedido DESC
+            """, (session['usuario_id'],))
+            
+            pedidos = cursor.fetchall()
+            
+            return render_template('meus_pedidos.html', pedidos=pedidos)
+        
+        except Exception as err:
+            flash(f'Erro ao carregar pedidos: {err}', 'error')
+            return redirect(url_for('inicio'))
+        finally:
+            if 'conn' in locals() and conn and conn.is_connected():
+                cursor.close()
+                conn.close()
+
+    @app.route('/meus-pedidos/<int:pedido_id>')
+    @login_required
+    def detalhes_pedido(pedido_id):
+        """Detalhes de um pedido específico"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            
+            # Buscar pedido
+            cursor.execute("""
+                SELECT p.*, e.*, pp.status as status_pix
+                FROM pedidos p
+                LEFT JOIN enderecos e ON p.id_endereco = e.id_endereco
+                LEFT JOIN pagamentos_pix pp ON p.id_pedido = pp.id_pedido
+                WHERE p.id_pedido = %s AND p.id_cliente = %s
+            """, (pedido_id, session['usuario_id']))
+            
+            pedido = cursor.fetchone()
+            
+            if not pedido:
+                flash('❌ Pedido não encontrado.', 'error')
+                return redirect(url_for('meus_pedidos'))
+            
+            # Buscar itens do pedido
+            cursor.execute("""
+                SELECT ip.*, p.nome, p.marca, p.imagens
+                FROM itens_pedido ip
+                JOIN produto p ON ip.id_produto = p.id_produto
+                WHERE ip.id_pedido = %s
+            """, (pedido_id,))
+            
+            itens = cursor.fetchall()
+            
+            # Processar imagens
             for item in itens:
                 if item.get('imagens'):
                     try:
                         imgs = json.loads(item['imagens'])
-                        item['imagem_principal'] = imgs[0] if imgs else item['imagem']
+                        item['imagem_principal'] = imgs[0] if imgs else None
                     except:
-                        item['imagem_principal'] = item['imagem']
+                        item['imagem_principal'] = None
                 else:
-                    item['imagem_principal'] = item['imagem']
-
-            return render_template('detalhes_pedido.html', pedido=pedido, itens=itens)
+                    item['imagem_principal'] = None
             
-        except mysql.connector.Error as err:
+            return render_template('detalhes_pedido.html', 
+                                 pedido=pedido, 
+                                 itens=itens)
+        
+        except Exception as err:
             flash(f'Erro ao carregar detalhes: {err}', 'error')
             return redirect(url_for('meus_pedidos'))
         finally:
-            if conn and conn.is_connected():
+            if 'conn' in locals() and conn and conn.is_connected():
                 cursor.close()
                 conn.close()
+
+    @app.route('/teste-pix/<float:valor>')
+    def teste_pix(valor):
+        """Rota para testar a geração do PIX"""
+        try:
+            qr_base64, codigo_pix = gerar_qrcode_pix(valor)
+            
+            return f"""
+            <h1>Teste PIX - R$ {valor}</h1>
+            <h3>Código PIX:</h3>
+            <textarea rows="5" cols="80">{codigo_pix}</textarea>
+            <h3>QR Code:</h3>
+            <img src="data:image/png;base64,{qr_base64}" alt="QR Code">
+            <br><br>
+            <a href="/">Voltar</a>
+            """
+        except Exception as e:
+            return f"<h1>Erro: {str(e)}</h1>"
