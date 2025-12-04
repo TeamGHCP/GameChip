@@ -1,0 +1,378 @@
+{% extends 'base.html' %}
+{% set titulo = "Compra Confirmada!" %}
+{% block conteudo %}
+
+<style>
+    .success-container {
+        max-width: 800px;
+        margin: 50px auto;
+        background: var(--glass);
+        padding: 40px;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+        text-align: center;
+    }
+    
+    .success-icon {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, var(--success) 0%, #00b36e 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 30px;
+        font-size: 50px;
+        color: white;
+        animation: bounce 1s ease infinite alternate;
+    }
+    
+    @keyframes bounce {
+        from { transform: translateY(0); }
+        to { transform: translateY(-10px); }
+    }
+    
+    .success-title {
+        font-size: 2.5em;
+        font-weight: 800;
+        color: var(--success);
+        margin-bottom: 10px;
+    }
+    
+    .success-subtitle {
+        color: var(--text-light);
+        font-size: 1.2em;
+        margin-bottom: 30px;
+    }
+    
+    .order-card {
+        background: var(--secondary);
+        border-radius: 12px;
+        padding: 25px;
+        margin: 30px 0;
+        text-align: left;
+        border-left: 4px solid var(--primary);
+    }
+    
+    .order-card h3 {
+        color: var(--primary);
+        margin-bottom: 20px;
+        font-size: 1.3em;
+    }
+    
+    .order-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+    
+    .info-item {
+        padding: 15px;
+        background: var(--glass);
+        border-radius: 8px;
+        border: 1px solid var(--border);
+    }
+    
+    .info-label {
+        font-size: 0.9em;
+        color: var(--text-light);
+        margin-bottom: 5px;
+    }
+    
+    .info-value {
+        font-weight: 600;
+        color: var(--text);
+        font-size: 1.1em;
+    }
+    
+    .products-list {
+        margin-top: 20px;
+    }
+    
+    .product-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        margin-bottom: 10px;
+        background: var(--glass);
+        border-radius: 8px;
+        border: 1px solid var(--border-light);
+    }
+    
+    .product-name {
+        font-weight: 600;
+        color: var(--text);
+    }
+    
+    .product-quantity {
+        color: var(--text-light);
+    }
+    
+    .product-price {
+        font-weight: 700;
+        color: var(--success);
+    }
+    
+    .btn-group {
+        display: flex;
+        gap: 15px;
+        margin-top: 30px;
+        justify-content: center;
+    }
+    
+    .btn-success {
+        background: linear-gradient(135deg, var(--success) 0%, #00b36e 100%);
+        color: white;
+        padding: 15px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1em;
+        border: none;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .btn-success:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow);
+    }
+    
+    .btn-secondary {
+        background: linear-gradient(135deg, var(--secondary) 0%, var(--border) 100%);
+        color: var(--text);
+        padding: 15px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1em;
+        border: none;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .btn-secondary:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow);
+    }
+    
+    .whatsapp-btn {
+        background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+        color: white;
+        padding: 15px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 20px;
+        transition: var(--transition);
+    }
+    
+    .whatsapp-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3);
+    }
+    
+    .footer-note {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border);
+        color: var(--text-light);
+        font-size: 0.9em;
+    }
+    
+    @media (max-width: 600px) {
+        .success-container {
+            padding: 25px;
+            margin: 30px auto;
+        }
+        .success-title {
+            font-size: 2em;
+        }
+        .btn-group {
+            flex-direction: column;
+        }
+        .order-info {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="success-container">
+    <div class="success-icon">
+        <i class="fas fa-check"></i>
+    </div>
+    
+    <h1 class="success-title">🎉 Compra Confirmada!</h1>
+    <p class="success-subtitle">Seu pedido foi processado com sucesso</p>
+    
+    {% if pedido %}
+    <div class="order-card">
+        <h3><i class="fas fa-receipt"></i> Detalhes do Pedido</h3>
+        
+        <div class="order-info">
+            <div class="info-item">
+                <div class="info-label">Número do Pedido</div>
+                <div class="info-value">#{{ pedido.id }}</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">Data</div>
+                <div class="info-value">{{ pedido.data }}</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">Forma de Pagamento</div>
+                <div class="info-value">
+                    {% if pedido.metodo == 'cartao' %}
+                    <i class="fas fa-credit-card"></i> 
+                    {% if pedido.tipo_cartao == 'credito' %}
+                    Cartão de Crédito
+                    {% elif pedido.tipo_cartao == 'debito' %}
+                    Cartão de Débito
+                    {% else %}
+                    Cartão
+                    {% endif %}
+                    
+                    {# Corrigir a comparação convertendo para inteiro #}
+                    {% if pedido.parcelas and pedido.parcelas|int > 1 %}
+                    ({{ pedido.parcelas }}x)
+                    {% endif %}
+                    
+                    {% elif pedido.metodo == 'pix' %}
+                    <i class="fas fa-qrcode"></i> PIX
+                    {% elif pedido.metodo == 'boleto' %}
+                    <i class="fas fa-barcode"></i> Boleto
+                    {% else %}
+                    {{ pedido.metodo|title if pedido.metodo else 'Não informado' }}
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">Valor Total</div>
+                <div class="info-value" style="color: var(--success);">
+                    R$ {{ "%.2f"|format(pedido.total|float) }}
+                </div>
+            </div>
+        </div>
+        
+        {% if pedido.produtos and pedido.produtos|length > 0 %}
+        <div class="products-list">
+            <h4 style="color: var(--primary); margin-bottom: 15px;">Produtos:</h4>
+            {% for produto in pedido.produtos %}
+            <div class="product-item">
+                <div class="product-name">{{ produto.nome }}</div>
+                <div class="product-quantity">{{ produto.quantidade }}x</div>
+                <div class="product-price">
+                    R$ {{ "%.2f"|format(produto.preco_unitario|float * produto.quantidade|int) }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div style="margin-top: 20px; padding: 15px; background: rgba(0, 208, 132, 0.1); border-radius: 8px;">
+            <p style="color: var(--success); font-weight: 600; margin-bottom: 10px;">
+                <i class="fas fa-truck"></i> Status da Entrega
+            </p>
+            <p style="color: var(--text);">
+                Seu pedido está sendo preparado para envio. Acompanhe o status em <strong>Meus Pedidos</strong>.
+            </p>
+        </div>
+    </div>
+    
+    <div class="btn-group">
+        <a href="{{ url_for('meus_pedidos') }}" class="btn-success">
+            <i class="fas fa-shopping-bag"></i> Meus Pedidos
+        </a>
+        <a href="{{ url_for('listar_produtos') }}" class="btn-secondary">
+            <i class="fas fa-store"></i> Continuar Comprando
+        </a>
+    </div>
+    
+    <a href="https://wa.me/5511999999999?text=Olá! Acabei de finalizar o pedido #{{ pedido.id }} no site e gostaria de mais informações." 
+       target="_blank" class="whatsapp-btn">
+        <i class="fab fa-whatsapp"></i> Falar no WhatsApp
+    </a>
+    
+    {% else %}
+    <div class="order-card">
+        <h3><i class="fas fa-exclamation-triangle" style="color: var(--warning);"></i> Informações do Pedido</h3>
+        <p style="color: var(--text);">As informações detalhadas do seu pedido serão exibidas aqui.</p>
+        <p style="color: var(--text-light); margin-top: 10px;">Você pode visualizar todos os seus pedidos na página "Meus Pedidos".</p>
+    </div>
+    
+    <div class="btn-group">
+        <a href="{{ url_for('meus_pedidos') }}" class="btn-success">
+            <i class="fas fa-shopping-bag"></i> Ver Meus Pedidos
+        </a>
+        <a href="{{ url_for('listar_produtos') }}" class="btn-secondary">
+            <i class="fas fa-store"></i> Voltar às Compras
+        </a>
+    </div>
+    {% endif %}
+    
+    <div class="footer-note">
+        <p><i class="fas fa-envelope"></i> Enviamos um e-mail de confirmação para você.</p>
+        <p style="margin-top: 10px;">Em caso de dúvidas, entre em contato: suporte@seusite.com</p>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Efeito de confete
+    setTimeout(() => {
+        createConfetti();
+    }, 500);
+});
+
+function createConfetti() {
+    const colors = ['#2ecc71', '#3498db', '#e74c3c', '#f1c40f', '#9b59b6'];
+    
+    for(let i = 0; i < 20; i++) {
+        setTimeout(() => {
+            const confetti = document.createElement('div');
+            confetti.style.cssText = `
+                position: fixed;
+                width: 8px;
+                height: 8px;
+                background: ${colors[Math.floor(Math.random() * colors.length)]};
+                border-radius: 50%;
+                top: -20px;
+                left: ${Math.random() * 100}vw;
+                z-index: 9999;
+                pointer-events: none;
+                animation: fall ${Math.random() * 2 + 1}s linear forwards;
+            `;
+            document.body.appendChild(confetti);
+            
+            setTimeout(() => confetti.remove(), 2000);
+        }, i * 100);
+    }
+    
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(${Math.random() * 360}deg);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+}
+</script>
+
+{% endblock %}

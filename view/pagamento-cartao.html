@@ -143,6 +143,12 @@
         box-shadow: var(--shadow-lg);
     }
 
+    .btn-pay:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
     .btn-back {
         background: linear-gradient(135deg, var(--secondary) 0%, var(--border) 100%);
         color: var(--text);
@@ -194,6 +200,13 @@
         display: none;
     }
 
+    .validation-error {
+        color: var(--danger);
+        font-size: 0.9em;
+        margin-top: 5px;
+        display: none;
+    }
+
     @media (max-width: 600px) {
         .payment-container {
             padding: 25px;
@@ -230,4 +243,206 @@
         </div>
         <div class="summary-item total">
             <span>Total</span>
-            <span>
+            <span>R$ {{ "%.2f"|format(total_geral) }}</span>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('pagamento_cartao') }}" class="payment-form" id="payment-form">
+        <div class="form-group">
+            <label>Nome do Titular *</label>
+            <input type="text" name="nome_titular" required 
+                   placeholder="Como está no cartão"
+                   id="nome-titular">
+            <div class="validation-error" id="nome-error">Nome do titular é obrigatório</div>
+        </div>
+
+        <div class="form-group">
+            <label>Número do Cartão *</label>
+            <input type="text" name="numero_cartao" required maxlength="19" 
+                   placeholder="0000 0000 0000 0000" 
+                   class="card-number"
+                   id="numero-cartao">
+            <div class="validation-error" id="cartao-error">Número do cartão inválido</div>
+        </div>
+
+        <div class="card-details">
+            <div class="form-group">
+                <label>Validade (MM/AA) *</label>
+                <input type="text" name="validade" required maxlength="5" 
+                       placeholder="MM/AA" class="card-expiry"
+                       id="validade">
+                <div class="validation-error" id="validade-error">Validade inválida (use MM/AA)</div>
+            </div>
+
+            <div class="form-group">
+                <label>CVV *</label>
+                <input type="text" name="cvv" required maxlength="4" 
+                       placeholder="123" class="card-cvv"
+                       id="cvv">
+                <div class="validation-error" id="cvv-error">CVV inválido</div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Tipo de Cartão *</label>
+            <select name="tipo_cartao" required id="tipo-cartao">
+                <option value="">Selecione</option>
+                <option value="credito">Crédito</option>
+                <option value="debito">Débito</option>
+            </select>
+            <div class="validation-error" id="tipo-error">Selecione o tipo de cartão</div>
+        </div>
+
+        <div class="form-group installments" id="installments-section" style="display: none;">
+            <label>Parcelamento</label>
+            <select name="parcelas" id="parcelas">
+                <option value="1">1x de R$ {{ "%.2f"|format(total_geral) }} sem juros</option>
+                <option value="2">2x de R$ {{ "%.2f"|format(total_geral/2) }} sem juros</option>
+                <option value="3">3x de R$ {{ "%.2f"|format(total_geral/3) }} sem juros</option>
+                <option value="4">4x de R$ {{ "%.2f"|format(total_geral/4) }} sem juros</option>
+                <option value="5">5x de R$ {{ "%.2f"|format(total_geral/5) }} sem juros</option>
+                <option value="6">6x de R$ {{ "%.2f"|format(total_geral/6) }} sem juros</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn-pay" id="btn-finalizar">
+            <i class="fas fa-lock"></i> Finalizar Pagamento
+        </button>
+
+        <a href="{{ url_for('finalizar_carrinho') }}" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </form>
+
+    <div class="security-info">
+        <h4><i class="fas fa-shield-alt"></i> Compra 100% Segura</h4>
+        <p>Seus dados estão protegidos com criptografia SSL. Não armazenamos os dados do seu cartão.</p>
+        <div class="card-icons">
+            <i class="fab fa-cc-visa" style="color: #1a1f71;"></i>
+            <i class="fab fa-cc-mastercard" style="color: #eb001b;"></i>
+            <i class="fab fa-cc-amex" style="color: #2e77bc;"></i>
+            <i class="fab fa-cc-diners-club" style="color: #0079be;"></i>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoCartao = document.getElementById('tipo-cartao');
+    const installmentsSection = document.getElementById('installments-section');
+    const paymentForm = document.getElementById('payment-form');
+    const btnFinalizar = document.getElementById('btn-finalizar');
+    
+    // Mostrar parcelas apenas para crédito
+    tipoCartao.addEventListener('change', function() {
+        if (this.value === 'credito') {
+            installmentsSection.style.display = 'block';
+        } else {
+            installmentsSection.style.display = 'none';
+        }
+    });
+    
+    // Máscara para número do cartão
+    const cardNumber = document.getElementById('numero-cartao');
+    cardNumber.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        value = value.replace(/(\d{4})/g, '$1 ').trim();
+        e.target.value = value.substring(0, 19);
+    });
+    
+    // Máscara para validade
+    const cardExpiry = document.getElementById('validade');
+    cardExpiry.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length >= 2) {
+            value = value.substring(0, 2) + '/' + value.substring(2, 4);
+        }
+        e.target.value = value.substring(0, 5);
+    });
+    
+    // Máscara para CVV
+    const cardCvv = document.getElementById('cvv');
+    cardCvv.addEventListener('input', function(e) {
+        e.target.value = e.target.value.replace(/\D/g, '').substring(0, 4);
+    });
+    
+    // Validação do formulário
+    paymentForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Reset errors
+        document.querySelectorAll('.validation-error').forEach(el => {
+            el.style.display = 'none';
+        });
+        
+        let isValid = true;
+        
+        // Validar nome do titular
+        const nomeTitular = document.getElementById('nome-titular').value.trim();
+        if (!nomeTitular) {
+            document.getElementById('nome-error').style.display = 'block';
+            isValid = false;
+        }
+        
+        // Validar número do cartão
+        const numeroCartao = cardNumber.value.replace(/\s/g, '');
+        if (numeroCartao.length < 13 || numeroCartao.length > 19) {
+            document.getElementById('cartao-error').style.display = 'block';
+            isValid = false;
+        }
+        
+        // Validar validade (MM/AA)
+        const validade = cardExpiry.value;
+        const validadeRegex = /^(0[1-9]|1[0-2])\/\d{2}$/;
+        if (!validadeRegex.test(validade)) {
+            document.getElementById('validade-error').style.display = 'block';
+            isValid = false;
+        }
+        
+        // Validar CVV
+        const cvv = cardCvv.value;
+        if (cvv.length < 3 || cvv.length > 4) {
+            document.getElementById('cvv-error').style.display = 'block';
+            isValid = false;
+        }
+        
+        // Validar tipo de cartão
+        const tipoCartaoValue = tipoCartao.value;
+        if (!tipoCartaoValue) {
+            document.getElementById('tipo-error').style.display = 'block';
+            isValid = false;
+        }
+        
+        if (isValid) {
+            // Desabilitar botão e mostrar loading
+            btnFinalizar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+            btnFinalizar.disabled = true;
+            
+            // Enviar formulário
+            setTimeout(() => {
+                paymentForm.submit();
+            }, 500);
+        } else {
+            // Scroll para o primeiro erro
+            const firstError = document.querySelector('.validation-error[style*="display: block"]');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    });
+    
+    // Remover erro quando o usuário começar a digitar
+    const inputs = document.querySelectorAll('input, select');
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            const errorId = this.id + '-error';
+            const errorElement = document.getElementById(errorId);
+            if (errorElement) {
+                errorElement.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+
+{% endblock %}
