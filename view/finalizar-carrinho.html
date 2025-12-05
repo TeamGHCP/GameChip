@@ -393,7 +393,7 @@
                     É necessário cadastrar um endereço antes de finalizar a compra.</p>
                     
                     <a href="{{ url_for('minha_conta') }}#enderecos" class="btn-novo-endereco">
-                        <i class="fas fa-plus"></i> Cadastrar endereço
+                        <i class="fas fa-plus"></i> Ir para Minha Conta
                     </a>
                 </div>
                 {% endif %}
@@ -484,9 +484,6 @@
         const btnContinuar = document.getElementById('btn-continuar');
         const checkoutForm = document.getElementById('checkout-form');
         
-        // Variável para controlar redirecionamento
-        let redirecionarPara = null;
-        
         // Selecionar PIX por padrão (se houver endereços)
         {% if enderecos %}
         const pixMethod = document.querySelector('.payment-method.pix');
@@ -506,22 +503,18 @@
                 let methodText = '';
                 let buttonText = '';
     
-                // Na função paymentMethods.forEach, troque:
                 switch(value) {
                     case 'pix':
                         methodText = 'PIX - Pagamento instantâneo via QR Code';
                         buttonText = '🏦 Gerar QR Code PIX';
-                        redirecionarPara = null;
                         break;
                     case 'cartao':
                         methodText = 'Cartão de Crédito/Débito - Pagamento seguro';
                         buttonText = '💳 Continuar para Dados do Cartão';
-                        redirecionarPara = '{{ url_for("pagamento_cartao", pedido_id="PLACEHOLDER") }}'.replace('PLACEHOLDER', 'TEMP_ID');
                         break;
                     case 'boleto':
                         methodText = 'Boleto Bancário - Pague em qualquer banco ou lotérica';
                         buttonText = '📄 Gerar Boleto';
-                        redirecionarPara = '{{ url_for("visualizar_boleto", pedido_id="PLACEHOLDER") }}'.replace('PLACEHOLDER', 'TEMP_ID');
                         break;
                 }
                 
@@ -531,12 +524,11 @@
             });
         });
         
-        // VALIDAÇÃO CORRIGIDA COM REDIRECIONAMENTO
+        // VALIDAÇÃO SIMPLIFICADA - O BACKEND FAZ O REDIRECIONAMENTO
         checkoutForm.addEventListener('submit', function(e) {
             {% if enderecos %}
             console.log("Validando formulário...");
             console.log("Método selecionado:", paymentInput.value);
-            console.log("Redirecionar para:", redirecionarPara);
             
             // 1. Verificar se endereço foi selecionado
             const enderecoSelecionado = document.querySelector('input[name="endereco_id"]:checked');
@@ -589,55 +581,14 @@
                 return false;
             }
             
-            // 5. Se for PIX, permitir envio normal
-            if (paymentInput.value === 'pix') {
-                console.log("Processando PIX - enviando formulário normalmente");
-                btnContinuar.disabled = true;
-                btnContinuar.innerHTML = '⏳ Gerando QR Code...';
-                return true; // Permite submit normal para PIX
-            }
-            
-            // 6. Se for CARTÃO ou BOLETO, REDIRECIONAR
-            e.preventDefault(); // Impede envio normal
-            
-            // Coletar dados
-            const formData = new FormData(checkoutForm);
-            const dados = {
-                nome: nome,
-                email: email,
-                endereco_id: enderecoSelecionado.value,
-                metodo_pagamento: paymentInput.value,
-                total_geral: parseFloat("{{ total_geral|safe }}"),
-                produtos: JSON.parse('{{ produtos_carrinho|tojson|safe }}')
-            };
-            
-            console.log("Dados coletados:", dados);
-            
-            // Desabilitar botão
+            // 5. PARA TODOS OS MÉTODOS, DEIXE O FORMULÁRIO SER ENVIADO NORMALMENTE
+            // O BACKEND VAI REDIRECIONAR CONFORME O MÉTODO DE PAGAMENTO
+            console.log("Enviando formulário para o backend...");
             btnContinuar.disabled = true;
-            btnContinuar.innerHTML = '⏳ Preparando redirecionamento...';
+            btnContinuar.innerHTML = '⏳ Processando...';
             
-            // Salvar dados no localStorage
-            localStorage.setItem('pedido_temp', JSON.stringify(dados));
-            console.log("Dados salvos no localStorage");
+            return true; // Permite submit normal para todos os métodos
             
-            // Redirecionar após breve delay
-            setTimeout(() => {
-                if (paymentInput.value === 'cartao' && redirecionarPara) {
-                    console.log("Redirecionando para cartão:", redirecionarPara);
-                    window.location.href = redirecionarPara;
-                } else if (paymentInput.value === 'boleto' && redirecionarPara) {
-                    console.log("Redirecionando para boleto:", redirecionarPara);
-                    window.location.href = redirecionarPara;
-                } else {
-                    console.error("Não foi possível redirecionar");
-                    btnContinuar.disabled = false;
-                    btnContinuar.innerHTML = paymentInput.value === 'cartao' ? '💳 Continuar para Dados do Cartão' : '📄 Gerar Boleto';
-                    alert('Erro ao redirecionar. Tente novamente.');
-                }
-            }, 500);
-            
-            return false;
             {% else %}
             e.preventDefault();
             alert('❌ Cadastre um endereço antes de finalizar a compra.');

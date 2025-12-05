@@ -461,6 +461,13 @@
 </div>
 
 <script>
+// DEBUG: Verificar dados na página
+console.log("=== DEBUG PAGAMENTO PIX ===");
+console.log("ID do Pedido:", {{ pedido.id_pedido }});
+console.log("URL da API:", `/api/confirmar-pagamento/{{ pedido.id_pedido }}`);
+console.log("Forma de pagamento:", "{{ pedido.forma_pagamento }}");
+console.log("Status atual:", "{{ pedido.pedido_status }}");
+
 // Timer de 30 minutos
 let timeLeft = 30 * 60; // 30 minutos em segundos
 const timerElement = document.getElementById('countdown');
@@ -508,7 +515,7 @@ function copiarPix() {
         });
 }
 
-// Confirmar pagamento
+// Confirmar pagamento - ROTA CORRIGIDA!
 async function confirmarPagamento() {
     const confirmButton = document.getElementById('confirm-button');
     
@@ -517,8 +524,8 @@ async function confirmarPagamento() {
     confirmButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
     
     try {
-        // PRIMEIRO: Vamos criar uma rota básica para testar
-        const response = await fetch(`/confirmar-pix/{{ pedido.id_pedido }}`, {
+        // ROTA CORRETA: usar /api/confirmar-pagamento/ em vez de /confirmar-pix/
+        const response = await fetch(`/api/confirmar-pagamento/{{ pedido.id_pedido }}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -542,29 +549,26 @@ async function confirmarPagamento() {
                 confirmButton.innerHTML = '<i class="fas fa-check-circle"></i> Confirmar Pagamento';
             }
         } else {
-            // Se a rota não existir, simular sucesso para teste
-            showNotification('✅ Pagamento simulado com sucesso!');
-            clearInterval(timerInterval);
+            // Se der erro, mostrar mensagem específica
+            if (response.status === 404) {
+                showNotification('❌ Rota de pagamento não encontrada. Contate o suporte.', 'error');
+            } else if (response.status === 500) {
+                showNotification('❌ Erro interno do servidor. Tente novamente.', 'error');
+            } else {
+                showNotification('❌ Erro ao confirmar pagamento (Status: ' + response.status + ')', 'error');
+            }
             
-            setTimeout(() => {
-                window.location.href = "{{ url_for('meus_pedidos') }}";
-            }, 1500);
+            confirmButton.disabled = false;
+            confirmButton.innerHTML = '<i class="fas fa-check-circle"></i> Confirmar Pagamento';
+            
+            // Log para debug
+            console.error('Erro HTTP:', response.status);
         }
     } catch (error) {
         console.error('Erro:', error);
-        
-        // Para teste, simular sucesso
-        showNotification('✅ Pagamento simulado com sucesso! (Modo de teste)');
-        clearInterval(timerInterval);
-        
-        setTimeout(() => {
-            window.location.href = "{{ url_for('meus_pedidos') }}";
-        }, 1500);
-        
-        // Comente a linha abaixo para o modo de produção
-        // showNotification('❌ Erro ao confirmar pagamento. Tente novamente.', 'error');
-        // confirmButton.disabled = false;
-        // confirmButton.innerHTML = '<i class="fas fa-check-circle"></i> Confirmar Pagamento';
+        showNotification('❌ Erro ao conectar com o servidor. Verifique sua conexão.', 'error');
+        confirmButton.disabled = false;
+        confirmButton.innerHTML = '<i class="fas fa-check-circle"></i> Confirmar Pagamento';
     }
 }
 
@@ -628,7 +632,6 @@ document.addEventListener('keydown', (e) => {
         copiarPix();
     }
 });
-
 </script>
 
 {% endblock %}

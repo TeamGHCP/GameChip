@@ -6,6 +6,7 @@
     <title>Login - Admin GHCP</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="{{ url_for('static', filename='logos/favicon.ico') }}">
+    
     <style>
         /* ==================== 1. VARIÁVEIS DE COR E EFEITO ==================== */
         :root {
@@ -13,7 +14,7 @@
             --blue-vivid: #4682B4; /* Azul-aço vivo */
             --gradient-bg: linear-gradient(145deg, #130f40 0%, #30336b 100%);
             --gradient-primary: linear-gradient(45deg, var(--purple-vivid) 0%, var(--blue-vivid) 100%);
-            --glass-bg: rgba(255, 255, 255, 0.08); /* Mais transparente */
+            --glass-bg: rgba(255, 255, 255, 0.08); /* Fundo vidro transparente */
             --glass-border: rgba(255, 255, 255, 0.2);
             --text-color: #f8f8ff; 
             --input-bg: rgba(255, 255, 255, 0.98); 
@@ -24,7 +25,7 @@
             --error: #ff3366;
         }
 
-        /* ==================== 2. ESTILOS BÁSICOS E BACKGROUND PARTÍCULAS ==================== */
+        /* ==================== 2. ESTILOS BÁSICOS E BACKGROUND ==================== */
         * {
             margin: 0;
             padding: 0;
@@ -34,8 +35,10 @@
         html, body {
             min-height: 100vh;
             width: 100%;
-            /* 'overflow: hidden' para manter o efeito das partículas fixo */
-            overflow: hidden; 
+            /* CORREÇÃO: overflow-x hidden para evitar barra lateral, 
+               mas permite scroll vertical se a tela for pequena */
+            overflow-x: hidden; 
+            overflow-y: auto; 
         }
 
         body {
@@ -48,18 +51,18 @@
             position: relative;
         }
 
-        /* EFEITO PARTÍCULAS DEGRADÊ - Posicionamento e Movimento Lateral */
+        /* EFEITO PARTÍCULAS DEGRADÊ - Ficam fixas no fundo */
         .particle {
-            position: absolute;
+            position: fixed; /* Mudado para fixed para não rolar com a página */
             border-radius: 50%;
             filter: blur(120px); 
             opacity: 0.65;
-            z-index: 1;
+            z-index: -1; /* Garante que fique atrás de tudo */
             animation: particleMovement 25s infinite alternate ease-in-out;
             pointer-events: none;
         }
 
-        /* Definições de cor, tamanho e posição para cada partícula */
+        /* Configuração das partículas */
         .particle-1 { 
             width: 350px; 
             height: 350px; 
@@ -86,23 +89,22 @@
             animation-delay: -15s; 
         }
 
-        /* Animação para movimentação suave e alteração de escala */
         @keyframes particleMovement {
             0% { transform: translate(0, 0) scale(1); opacity: 0.65; }
             50% { transform: translate(70px, -70px) scale(1.1); opacity: 0.8; }
             100% { transform: translate(-50px, 50px) scale(0.95); opacity: 0.7; }
         }
 
-        /* ==================== 3. LOGIN CONTAINER E GLASSMORPHISM ==================== */
+        /* ==================== 3. LOGIN CONTAINER ==================== */
         .login-container {
             width: 100%;
             max-width: 450px;
             z-index: 10;
+            margin: auto; /* Centraliza se houver scroll */
         }
 
         .login-box {
             background: var(--glass-bg);
-            /* Efeito Glassmorphism: Desfoque no fundo e saturação */
             backdrop-filter: blur(25px) saturate(180%); 
             -webkit-backdrop-filter: blur(25px) saturate(180%);
             padding: clamp(2rem, 8vh, 3.5rem);
@@ -113,18 +115,16 @@
             transition: var(--transition);
         }
         
-        /* Efeito de hover no container */
         .login-box:hover {
             transform: scale(1.01) translateY(-8px); 
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
         }
 
-        /* ==================== 4. TIPOGRAFIA E ELEMENTOS ==================== */
+        /* ==================== 4. TIPOGRAFIA E FORMULÁRIO ==================== */
         .logo {
             margin-bottom: 2.5rem;
         }
 
-        /* Título com gradiente de cor */
         .logo h1 {
             font-size: clamp(2.4rem, 6vw, 3.0rem); 
             font-weight: 900;
@@ -144,7 +144,7 @@
             font-weight: 500;
         }
         
-        /* Flash Messages (mensagens de erro/sucesso do backend, ex: Flask) */
+        /* Sistema de Mensagens Flash (Flask) */
         .flash-messages {
             margin-bottom: 2rem;
             text-align: left;
@@ -162,33 +162,13 @@
             transition: var(--transition);
         }
         
-        .flash:hover {
-            transform: scale(1.02);
-        }
+        .flash:hover { transform: scale(1.02); }
 
-        .flash i {
-            font-size: 1.3rem;
-        }
+        .flash-success { background: var(--success); color: white; border: 1px solid #00a56e; }
+        .flash-error { background: var(--error); color: white; border: 1px solid #e62958; }
+        .flash-info { background: #00b8d4; color: white; border: 1px solid #0093a8; }
 
-        /* Estilos específicos por categoria */
-        .flash-success { 
-            background: var(--success); 
-            color: white; 
-            border: 1px solid #00a56e; 
-        }
-        .flash-error { 
-            background: var(--error); 
-            color: white; 
-            border: 1px solid #e62958; 
-        }
-        .flash-info { 
-            background: #00b8d4; 
-            color: white; 
-            border: 1px solid #0093a8; 
-        }
-
-
-        /* Formulário e Inputs */
+        /* Inputs */
         .form-group {
             margin-bottom: 3rem; 
             text-align: left;
@@ -205,14 +185,12 @@
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
         
-        .input-wrapper {
-            position: relative;
-        }
+        .input-wrapper { position: relative; }
 
         .form-control {
             width: 100%;
             padding: 1.3rem 1.8rem; 
-            padding-right: 5rem; /* Espaço para o botão de toggle */
+            padding-right: 5rem;
             border: 2px solid transparent;
             border-radius: 18px;
             font-size: 1.1rem;
@@ -226,12 +204,11 @@
         .form-control:focus {
             outline: none;
             border-color: var(--purple-vivid);
-            box-shadow: 0 0 0 5px rgba(138, 43, 226, 0.4),
-                        0 4px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 0 0 5px rgba(138, 43, 226, 0.4), 0 4px 15px rgba(0, 0, 0, 0.2);
             transform: translateY(-2px);
         }
         
-        /* Botão Toggle Senha */
+        /* Botão Toggle (Olho) */
         .password-toggle {
             position: absolute;
             right: 1.8rem;
@@ -246,7 +223,6 @@
             transition: var(--transition);
             z-index: 20;
             padding: 0.5rem;
-            line-height: 0;
         }
 
         .password-toggle:hover {
@@ -255,7 +231,7 @@
             transform: translateY(-50%) scale(1.15);
         }
 
-        /* Botão de Login - ANIMAÇÃO E ESTILO CHAVE */
+        /* Botão Principal */
         .btn {
             width: 100%;
             padding: 1.5rem;
@@ -280,7 +256,7 @@
             z-index: 10;
         }
         
-        /* Efeito de Brilho no Botão (Shine Effect) */
+        /* Efeito Shine no Botão */
         .btn::after {
             content: '';
             position: absolute;
@@ -299,16 +275,9 @@
             filter: brightness(1.2);
         }
         
-        .btn:hover::after {
-            left: 150%; /* Faz o brilho "passar" */
-        }
+        .btn:hover::after { left: 150%; }
+        .btn:active { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(138, 43, 226, 0.5); }
 
-        .btn:active {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(138, 43, 226, 0.5);
-        }
-
-        /* Footer */
         .login-footer {
             margin-top: 3.5rem;
             padding-top: 2.5rem;
@@ -321,38 +290,15 @@
         
         /* ==================== 5. RESPONSIVIDADE ==================== */
         @media (max-width: 500px) {
-            body {
-                padding: 1rem;
-            }
-            .login-box {
-                padding: 2.5rem 1.8rem;
-                border-radius: 25px;
-            }
-            .logo h1 {
-                font-size: 2.4rem;
-            }
-            .form-group {
-                margin-bottom: 2.5rem;
-            }
-            .form-control {
-                padding: 1.2rem;
-                padding-right: 4.5rem; 
-                border-radius: 15px;
-            }
-            .password-toggle {
-                right: 1.5rem;
-                font-size: 1.2rem;
-            }
-            .btn {
-                font-size: 1.1rem;
-                padding: 1.3rem;
-                border-radius: 15px;
-            }
-            .login-footer {
-                margin-top: 2.5rem;
-                padding-top: 1.5rem;
-            }
-            /* Reduzir o tamanho das partículas em telas pequenas */
+            body { padding: 1rem; }
+            .login-box { padding: 2.5rem 1.8rem; border-radius: 25px; }
+            .logo h1 { font-size: 2.4rem; }
+            .form-group { margin-bottom: 2.5rem; }
+            .form-control { padding: 1.2rem; padding-right: 4.5rem; border-radius: 15px; }
+            .password-toggle { right: 1.5rem; font-size: 1.2rem; }
+            .btn { font-size: 1.1rem; padding: 1.3rem; border-radius: 15px; }
+            .login-footer { margin-top: 2.5rem; padding-top: 1.5rem; }
+            /* Reduzir partículas */
             .particle-1 { width: 150px; height: 150px; top: 5%; left: -20%; filter: blur(80px); }
             .particle-2 { width: 200px; height: 200px; bottom: 0; right: -20%; filter: blur(80px); }
             .particle-3 { display: none; }
@@ -418,16 +364,15 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Lógica para mostrar/esconder senha
             const toggleButton = document.getElementById('togglePassword');
             const passwordInput = document.getElementById('senha');
 
             if (toggleButton && passwordInput) {
                 toggleButton.addEventListener('click', () => {
-                    // Alterna entre 'password' e 'text'
                     const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
                     passwordInput.setAttribute('type', type);
                     
-                    // Altera o ícone de olho aberto para olho fechado
                     const icon = toggleButton.querySelector('i');
                     if (type === 'text') {
                         icon.classList.remove('fa-eye');
@@ -439,13 +384,6 @@
                 });
             }
         });
-        
-        // Simples correção para evitar o scroll principal em certos navegadores (mantém o efeito imersivo)
-        document.addEventListener('wheel', function(e) {
-            if (!e.target.closest('.login-box')) {
-                e.preventDefault();
-            }
-        }, { passive: false });
     </script>
 </body>
 </html>

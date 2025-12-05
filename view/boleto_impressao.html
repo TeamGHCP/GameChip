@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boleto - Pedido #{{ boleto.id_pedido }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #000;
+            background: white;
+            font-size: 12px;
+        }
+        
+        .container {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            box-sizing: border-box;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #9b59b6;
+            padding-bottom: 10px;
+        }
+        
+        .header h1 {
+            color: #9b59b6;
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .header h2 {
+            color: #2c3e50;
+            margin: 5px 0 0 0;
+            font-size: 16px;
+        }
+        
+        .boleto-paper {
+            border: 2px solid #ddd;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .boleto-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #9b59b6;
+        }
+        
+        .boleto-logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: #9b59b6;
+        }
+        
+        .boleto-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .linha-digitavel {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #2c3e50;
+            margin: 15px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border: 1px dashed #9b59b6;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .codigo-barras-texto {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #34495e;
+            margin: 15px 0;
+            word-break: break-all;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .info-box {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border-left: 3px solid #9b59b6;
+        }
+        
+        .info-label {
+            font-size: 10px;
+            color: #7f8c8d;
+            margin-bottom: 3px;
+            font-weight: 600;
+        }
+        
+        .info-value {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 12px;
+        }
+        
+        .pagador-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-top: 1px dashed #ddd;
+        }
+        
+        .produtos-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .produtos-table th {
+            background: #f8f9fa;
+            padding: 8px;
+            text-align: left;
+            border-bottom: 2px solid #9b59b6;
+            font-size: 11px;
+        }
+        
+        .produtos-table td {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            font-size: 11px;
+        }
+        
+        .instrucoes {
+            margin-top: 30px;
+            padding: 15px;
+            background: #fff8e1;
+            border-radius: 4px;
+            border-left: 4px solid #f1c40f;
+            font-size: 11px;
+        }
+        
+        .instrucoes h4 {
+            color: #e67e22;
+            margin: 0 0 10px 0;
+        }
+        
+        .instrucoes ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+            font-size: 10px;
+            color: #7f8c8d;
+            text-align: center;
+        }
+        
+        .codigo-barras-imagem {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .codigo-barras-imagem img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            
+            .container {
+                padding: 0;
+                width: 100%;
+                box-shadow: none;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+            
+            .linha-digitavel {
+                page-break-inside: avoid;
+            }
+            
+            .codigo-barras-imagem {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📄 BOLETO BANCÁRIO</h1>
+            <h2>Pedido #{{ boleto.id_pedido }} - Vencimento: {{ boleto.vencimento_formatado }}</h2>
+        </div>
+        
+        <div class="boleto-paper">
+            <div class="boleto-header">
+                <div class="boleto-logo">BANCO GAME CHIP</div>
+                <div class="boleto-value">R$ {{ "%.2f"|format(boleto.valor|float) }}</div>
+            </div>
+            
+            <div class="linha-digitavel">
+                {{ boleto.linha_digitavel }}
+            </div>
+            
+            <div class="info-label">Código de Barras Numérico:</div>
+            <div class="codigo-barras-texto">
+                {{ boleto.codigo_barras }}
+            </div>
+            
+            {% if boleto.imagem_codigo_barras %}
+            <div class="codigo-barras-imagem">
+                <div class="info-label">Código de Barras para Escanear:</div>
+                <img src="{{ boleto.imagem_codigo_barras }}" 
+                     alt="Código de Barras"
+                     style="max-width: 100%; height: auto;">
+                <p style="color: #7f8c8d; font-size: 10px; margin-top: 5px;">
+                    Escaneie este código em caixas eletrônicos ou aplicativos bancários
+                </p>
+            </div>
+            {% endif %}
+            
+            <div class="info-grid">
+                <div class="info-box">
+                    <div class="info-label">Beneficiário</div>
+                    <div class="info-value">SUA LOJA INFORMÁTICA LTDA</div>
+                </div>
+                
+                <div class="info-box">
+                    <div class="info-label">CNPJ</div>
+                    <div class="info-value">12.345.678/0001-90</div>
+                </div>
+                
+                <div class="info-box">
+                    <div class="info-label">Agência/Código Beneficiário</div>
+                    <div class="info-value">1234-5 / 1234567-8</div>
+                </div>
+                
+                <div class="info-box">
+                    <div class="info-label">Data de Emissão</div>
+                    <div class="info-value">{{ boleto.data_emissao }}</div>
+                </div>
+                
+                <div class="info-box">
+                    <div class="info-label">Data de Vencimento</div>
+                    <div class="info-value">{{ boleto.vencimento_formatado }}</div>
+                </div>
+                
+                <div class="info-box">
+                    <div class="info-label">Valor do Documento</div>
+                    <div class="info-value">R$ {{ "%.2f"|format(boleto.valor|float) }}</div>
+                </div>
+            </div>
+            
+            <div class="pagador-box">
+                <div class="info-label">Pagador</div>
+                <div style="font-weight: bold; color: #2c3e50; margin-top: 5px;">
+                    {{ boleto.nome }}<br>
+                    CPF/CNPJ: ***.***.***-**
+                </div>
+            </div>
+        </div>
+        
+        <div class="instrucoes">
+            <h4>📋 Instruções para Pagamento:</h4>
+            <ul>
+                <li>Pagável em qualquer banco até o vencimento</li>
+                <li>Após o vencimento, pagar apenas na rede bancária</li>
+                <li>Multa de 2% após o vencimento</li>
+                <li>Juros de 1% ao mês</li>
+                <li>Não receber após 30 dias do vencimento</li>
+            </ul>
+        </div>
+        
+        {% if produtos and produtos|length > 0 %}
+        <div style="margin-top: 30px;">
+            <h4 style="color: #9b59b6; margin-bottom: 10px;">📦 Produtos do Pedido</h4>
+            <table class="produtos-table">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Quantidade</th>
+                        <th>Valor Unitário</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for produto in produtos %}
+                    <tr>
+                        <td>{{ produto.nome }}</td>
+                        <td style="text-align: center;">{{ produto.quantidade }}x</td>
+                        <td style="text-align: right;">R$ {{ "%.2f"|format(produto.preco_unitario|float) }}</td>
+                        <td style="text-align: right;">R$ {{ "%.2f"|format(produto.preco_unitario|float * produto.quantidade|int) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3" style="text-align: right; font-weight: bold; padding-top: 10px;">Total do Pedido:</td>
+                        <td style="text-align: right; font-weight: bold; padding-top: 10px; color: #9b59b6;">
+                            R$ {{ "%.2f"|format(boleto.valor|float) }}
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        {% endif %}
+        
+        <div class="footer">
+            <p>Boleto gerado automaticamente pelo Sistema Loja Informática</p>
+            <p>Data de geração: {{ boleto.data_geracao }}</p>
+            <p>Este documento é válido como boleto bancário para pagamento</p>
+        </div>
+    </div>
+    
+    <script>
+    // Auto-imprimir se necessário
+    document.addEventListener('DOMContentLoaded', function() {
+        // Se vier com parâmetro ?imprimir=true, imprime automaticamente
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('imprimir') === 'true') {
+            window.print();
+        }
+        
+        // Botão de impressão (oculto na impressão)
+        if (!window.location.search.includes('imprimir=true')) {
+            const printBtn = document.createElement('button');
+            printBtn.innerHTML = '🖨️ Imprimir Boleto';
+            printBtn.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: #9b59b6;
+                color: white;
+                padding: 12px 24px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-weight: bold;
+                z-index: 1000;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            `;
+            printBtn.onclick = () => window.print();
+            printBtn.className = 'no-print';
+            document.body.appendChild(printBtn);
+        }
+    });
+    </script>
+</body>
+</html>

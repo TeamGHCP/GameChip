@@ -45,13 +45,6 @@
             </div>
 
             <div class="loja-actions-hero">
-                {% if session.get('usuario_id') and session.get('empresa_id') != empresa.id_empresa %}
-                <form action="{{ url_for('seguir_loja', id_empresa=empresa.id_empresa) }}" method="POST" style="width: 100%;">
-                    <button type="submit" class="btn-hero-primary">
-                        🔔 Seguir Loja
-                    </button>
-                </form>
-                {% endif %}
                 <button class="btn-hero-secondary" onclick="compartilharEmpresa()">
                     📤 Compartilhar
                 </button>
@@ -82,42 +75,45 @@
                 {% for produto in produtos %}
                 <div class="card-produto-gamer" data-nome="{{ produto.nome|lower }}">
                     <div class="card-img-wrapper">
-                        {% if produto.imagens and produto.imagens|length > 0 %}
-                            <img src="{{ url_for('static', filename='uploads/produtos/' ~ produto.imagens[0]) }}" 
-                                 alt="{{ produto.nome }}">
+                         {% if produto.imagens and produto.imagens|length > 0 %}
+                            <img src="{{ url_for('static', filename='uploads/produtos/' ~ produto.imagens[0]) }}" alt="{{ produto.nome }}">
                         {% else %}
-                            <div class="img-placeholder">{{ produto.nome[0] }}</div>
+                             <div style="font-size: 3rem; color: #555;">🎮</div>
                         {% endif %}
                         
-                        {% if produto.estoque_empresa > 0 %}
-                            <div class="status-badge disponivel">EM ESTOQUE</div>
-                        {% else %}
-                            <div class="status-badge esgotado">ESGOTADO</div>
-                        {% endif %}
+                        <div class="status-badge {{ 'disponivel' if produto.estoque_empresa > 0 else 'esgotado' }}">
+                            {{ 'Disponível' if produto.estoque_empresa > 0 else 'Esgotado' }}
+                        </div>
                     </div>
 
                     <div class="card-info">
                         <span class="card-category">{{ produto.categoria }}</span>
-                        <h3 class="card-title">{{ produto.nome }}</h3>
+                        <h3>{{ produto.nome }}</h3>
                         <p class="card-brand">{{ produto.marca }}</p>
-                        
+
                         <div class="card-price-row">
                             <span class="price-value">R$ {{ "%.2f"|format(produto.preco_empresa) }}</span>
                             <span class="stock-mini">Restam: {{ produto.estoque_empresa }}</span>
                         </div>
 
-                        {% if produto.estoque_empresa > 0 %}
-                            <form action="{{ url_for('adicionar_carrinho', id_produto=produto.id_produto) }}" method="POST">
-                                <input type="hidden" name="id_produto" value="{{ produto.id_produto }}">
-                                <input type="hidden" name="id_empresa" value="{{ empresa.id_empresa }}">
-                                <input type="hidden" name="retorno" value="loja_parceira">
-                                <button type="submit" class="btn-buy-gamer">
-                                    🛒 Adicionar
-                                </button>
-                            </form>
+                        {% if pode_comprar %}
+                            {% if produto.estoque_empresa > 0 %}
+                                <form action="{{ url_for('adicionar_carrinho', id_produto=produto.id_produto) }}" method="POST">
+                                    <input type="hidden" name="id_produto" value="{{ produto.id_produto }}">
+                                    <input type="hidden" name="id_empresa" value="{{ empresa.id_empresa }}">
+                                    <input type="hidden" name="retorno" value="loja_parceira">
+                                    
+                                    <button class="btn-buy-gamer">🛒 Comprar</button>
+                                </form>
+                            {% else %}
+                                <button disabled class="btn-disabled-gamer">Esgotado</button>
+                            {% endif %}
                         {% else %}
-                            <button disabled class="btn-disabled-gamer">🚫 Indisponível</button>
+                            <button disabled class="btn-disabled-gamer" title="Faça login como cliente ou empresa compradora">
+                                🚫 Indisponível
+                            </button>
                         {% endif %}
+                        
                     </div>
                 </div>
                 {% endfor %}
@@ -133,6 +129,7 @@
 
         <div id="aba-avaliacoes" class="tab-content">
             <div class="reviews-container">
+                
                 <div class="reviews-summary">
                     <div class="big-score">{{ "%.1f"|format(media_avaliacoes.media_notas or 0) }}</div>
                     <div class="stars-static">
@@ -143,25 +140,77 @@
                     <p>Baseado em {{ media_avaliacoes.total_avaliacoes or 0 }} avaliações</p>
                 </div>
 
+                <div class="review-form-section">
+                    {% if pode_avaliar %}
+                        <form action="{{ url_for('avaliar_empresa', id_empresa=empresa.id_empresa) }}" method="POST" class="form-avaliacao">
+                            <h3>Deixe sua opinião</h3>
+                            <p class="form-hint">Como foi sua experiência de compra com {{ empresa.nome_fantasia }}?</p>
+                            
+                            <div class="rate">
+                                <input type="radio" id="star5" name="nota" value="5" required />
+                                <label for="star5" title="5 estrelas">5</label>
+                                <input type="radio" id="star4" name="nota" value="4" />
+                                <label for="star4" title="4 estrelas">4</label>
+                                <input type="radio" id="star3" name="nota" value="3" />
+                                <label for="star3" title="3 estrelas">3</label>
+                                <input type="radio" id="star2" name="nota" value="2" />
+                                <label for="star2" title="2 estrelas">2</label>
+                                <input type="radio" id="star1" name="nota" value="1" />
+                                <label for="star1" title="1 estrela">1</label>
+                            </div>
+
+                            <textarea name="comentario" placeholder="Escreva seu comentário aqui (mínimo 10 caracteres)..." required minlength="10"></textarea>
+                            <button type="submit" class="btn-enviar-review">Enviar Avaliação</button>
+                        </form>
+                    {% else %}
+                        <div class="review-blocked-msg">
+                            {% if motivo_bloqueio == 'voce_e_a_empresa' %}
+                                <div class="msg-box info">
+                                    🏢 <strong>Você é o proprietário desta loja.</strong><br>
+                                    Auto-avaliações não são permitidas para manter a transparência da plataforma.
+                                </div>
+                            {% elif motivo_bloqueio == 'ja_avaliou' %}
+                                <div class="msg-box success">
+                                    ✅ <strong>Avaliação enviada!</strong><br>
+                                    Obrigado! Você já avaliou esta loja anteriormente.
+                                </div>
+                            {% elif motivo_bloqueio == 'nao_comprou' %}
+                                <div class="msg-box warning">
+                                    🛒 <strong>Avaliação restrita.</strong><br>
+                                    Para garantir reviews reais, você precisa ter uma compra confirmada nesta loja para avaliar.
+                                </div>
+                            {% else %}
+                                <div class="msg-box info">
+                                    🔒 <a href="{{ url_for('login') }}">Faça login</a> para deixar sua avaliação.
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+
                 <div class="reviews-list">
                     {% if avaliacoes %}
                         {% for avaliacao in avaliacoes %}
                         <div class="review-card">
                             <div class="review-header">
-                                <div class="reviewer-avatar">{{ avaliacao.avaliador_nome[0] }}</div>
+                                <div class="reviewer-avatar">
+                                    {{ avaliacao.avaliador_nome[0] if avaliacao.avaliador_nome else 'U' }}
+                                </div>
                                 <div>
-                                    <strong>{{ avaliacao.avaliador_nome }}</strong>
+                                    <strong>{{ avaliacao.avaliador_nome or 'Usuário' }}</strong>
                                     <div class="review-stars">
                                         {% for i in range(avaliacao.nota) %}⭐{% endfor %}
                                     </div>
                                 </div>
-                                <span class="review-date">{{ avaliacao.data_avaliacao.strftime('%d/%m/%Y') }}</span>
+                                <span class="review-date">
+                                    {{ avaliacao.data_avaliacao.strftime('%d/%m/%Y') if avaliacao.data_avaliacao }}
+                                </span>
                             </div>
                             <p class="review-text">"{{ avaliacao.comentario }}"</p>
                         </div>
                         {% endfor %}
                     {% else %}
-                        <div class="empty-mini">Nenhuma avaliação ainda.</div>
+                        <div class="empty-mini">Nenhuma avaliação ainda. Seja o primeiro!</div>
                     {% endif %}
                 </div>
             </div>
@@ -195,18 +244,12 @@
 </div>
 
 <style>
-    /* =========================================
-       ESTILO GAMER / PREMIUM (RESPONSIVO)
-       ========================================= */
-    
+    /* RESET BÁSICO */
     .loja-publica-container {
         max-width: 1400px;
         margin: 0 auto;
         padding-bottom: 60px;
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+        color: #fff;
     }
 
     /* --- HERO SECTION --- */
@@ -221,13 +264,12 @@
         box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
-    /* Efeito Glow no fundo */
     .loja-hero::before {
         content: '';
         position: absolute;
         top: -50%; left: -20%;
         width: 600px; height: 600px;
-        background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+        background: radial-gradient(circle, var(--primary, #6c5ce7) 0%, transparent 70%);
         opacity: 0.15;
         filter: blur(80px);
         pointer-events: none;
@@ -247,7 +289,7 @@
     .loja-avatar {
         width: 140px;
         height: 140px;
-        background: linear-gradient(45deg, var(--primary), #8a2be2);
+        background: linear-gradient(45deg, var(--primary, #6c5ce7), #8a2be2);
         border-radius: 24px;
         display: flex;
         align-items: center;
@@ -321,23 +363,6 @@
         min-width: 180px;
     }
 
-    .btn-hero-primary {
-        background: var(--primary);
-        color: white;
-        border: none;
-        padding: 14px 20px;
-        border-radius: 12px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: 0.3s;
-        box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.4);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        width: 100%;
-    }
-
-    .btn-hero-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(var(--primary-rgb), 0.6); }
-
     .btn-hero-secondary {
         background: rgba(255,255,255,0.1);
         color: white;
@@ -356,42 +381,43 @@
     .loja-nav-container {
         display: flex;
         justify-content: center;
-        margin-top: -30px; /* Sobrepõe o Hero */
+        margin-top: -30px;
         position: relative;
         z-index: 5;
         padding: 0 10px;
     }
 
     .loja-nav {
-        background: var(--secondary);
+        background: #1a1a2e;
+        background: var(--secondary, #1a1a2e);
         padding: 8px;
         border-radius: 50px;
         display: flex;
         gap: 5px;
         box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        border: 1px solid var(--border);
-        overflow-x: auto; /* Permite scroll no mobile */
+        border: 1px solid rgba(255,255,255,0.1);
+        overflow-x: auto;
         max-width: 100%;
-        scrollbar-width: none; /* Firefox */
+        scrollbar-width: none;
     }
     
-    .loja-nav::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
+    .loja-nav::-webkit-scrollbar { display: none; }
 
     .nav-item {
         background: transparent;
         border: none;
-        color: var(--text-light);
+        color: #aaa;
         padding: 12px 30px;
         border-radius: 40px;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s ease;
         font-size: 1rem;
-        white-space: nowrap; /* Impede quebra de linha no botão */
+        white-space: nowrap;
     }
 
     .nav-item.active {
-        background: var(--primary);
+        background: var(--primary, #6c5ce7);
         color: white;
         box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
@@ -415,17 +441,17 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 30px;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
         padding-bottom: 20px;
         flex-wrap: wrap;
         gap: 15px;
     }
     
-    .section-header h2 { margin: 0; font-size: 1.8rem; color: var(--text); }
+    .section-header h2 { margin: 0; font-size: 1.8rem; color: white; }
 
     #buscaProduto {
-        background: var(--glass);
-        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
         padding: 12px 20px;
         border-radius: 12px;
         color: white;
@@ -441,8 +467,8 @@
     }
 
     .card-produto-gamer {
-        background: var(--glass);
-        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.1);
         border-radius: 20px;
         overflow: hidden;
         transition: all 0.3s ease;
@@ -453,7 +479,7 @@
 
     .card-produto-gamer:hover {
         transform: translateY(-8px);
-        border-color: var(--primary);
+        border-color: var(--primary, #6c5ce7);
         box-shadow: 0 15px 40px rgba(0,0,0,0.3);
     }
 
@@ -491,9 +517,9 @@
 
     .card-info { padding: 20px; flex: 1; display: flex; flex-direction: column; }
 
-    .card-category { font-size: 0.75rem; color: var(--primary); text-transform: uppercase; font-weight: 700; margin-bottom: 5px; }
-    .card-title { font-size: 1.1rem; color: white; margin-bottom: 5px; line-height: 1.4; }
+    .card-category { font-size: 0.75rem; color: var(--primary, #6c5ce7); text-transform: uppercase; font-weight: 700; margin-bottom: 5px; }
     .card-brand { font-size: 0.9rem; color: rgba(255,255,255,0.5); margin-bottom: 15px; }
+    .card-info h3 { font-size: 1.1rem; color: white; margin-bottom: 5px; line-height: 1.4; }
 
     .card-price-row {
         display: flex;
@@ -508,7 +534,7 @@
 
     .btn-buy-gamer {
         width: 100%;
-        background: linear-gradient(90deg, var(--primary) 0%, #8a2be2 100%);
+        background: linear-gradient(90deg, var(--primary, #6c5ce7) 0%, #8a2be2 100%);
         border: none;
         color: white;
         padding: 12px;
@@ -520,30 +546,105 @@
         letter-spacing: 0.5px;
     }
 
-    .btn-buy-gamer:hover { opacity: 0.9; box-shadow: 0 5px 15px rgba(var(--primary-rgb), 0.3); }
+    .btn-buy-gamer:hover { opacity: 0.9; box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3); }
     .btn-disabled-gamer { width: 100%; background: #333; color: #666; border: none; padding: 12px; border-radius: 12px; cursor: not-allowed; }
 
-    /* ESTILOS DE AVALIAÇÕES E SOBRE */
+    /* --- AVALIAÇÕES E FORMULÁRIO --- */
     .reviews-container { padding: 20px 0; }
-    .reviews-summary { text-align: center; margin-bottom: 40px; padding: 30px; background: var(--glass); border-radius: 20px; border: 1px solid var(--border); }
+    .reviews-summary { text-align: center; margin-bottom: 40px; padding: 30px; background: rgba(255,255,255,0.03); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); }
     .big-score { font-size: 4rem; font-weight: 800; color: white; line-height: 1; margin-bottom: 10px; }
     .stars-static { font-size: 1.5rem; color: #ffb400; margin-bottom: 10px; }
-    
-    .review-card { background: var(--glass); padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px; }
-    .review-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
-    .reviewer-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-weight: bold; }
-    .review-date { margin-left: auto; font-size: 0.8rem; color: var(--text-light); }
-    
-    .about-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
-    .about-card { background: var(--glass); padding: 30px; border-radius: 20px; border: 1px solid var(--border); }
-    .about-card h3 { margin-bottom: 20px; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-    .about-card ul { list-style: none; padding: 0; }
-    .about-card li { margin-bottom: 15px; color: var(--text-light); display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 5px; }
-    .about-card li strong { color: white; }
 
-    /* =========================================
-       RESPONSIVIDADE AVANÇADA (MOBILE)
-       ========================================= */
+    /* Form Box */
+    .review-form-section {
+        background: rgba(255,255,255,0.03);
+        padding: 25px;
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,0.1);
+        margin-bottom: 30px;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .form-avaliacao h3 { margin-top: 0; color: white; text-align: center; }
+    .form-hint { color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-bottom: 15px; text-align: center; }
+
+    /* Estrelas Input (Radio Trick) */
+    .rate { display: flex; flex-direction: row-reverse; justify-content: center; border: 0; margin-bottom: 15px; }
+    .rate > input { display: none; }
+    .rate > label {
+        color: #555;
+        font-size: 2rem;
+        padding: 0 5px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .rate > label:before { content: '★'; }
+    .rate > input:checked ~ label { color: #ffc700; }
+    .rate:not(:checked) > label:hover,
+    .rate:not(:checked) > label:hover ~ label { color: #deb217; }
+    .rate > input:checked + label:hover,
+    .rate > input:checked + label:hover ~ label,
+    .rate > input:checked ~ label:hover,
+    .rate > input:checked ~ label:hover ~ label { color: #c59b08; }
+
+    /* Textarea */
+    .form-avaliacao textarea {
+        width: 100%;
+        background: rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: white;
+        padding: 15px;
+        border-radius: 10px;
+        min-height: 100px;
+        margin-bottom: 15px;
+        font-family: inherit;
+        resize: vertical;
+    }
+    .form-avaliacao textarea:focus { border-color: var(--primary, #6c5ce7); outline: none; }
+
+    /* Submit Button */
+    .btn-enviar-review {
+        width: 100%;
+        background: var(--primary, #6c5ce7);
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .btn-enviar-review:hover { background: #5649c0; transform: translateY(-2px); }
+
+    /* Msg Box */
+    .msg-box { padding: 15px; border-radius: 10px; font-size: 0.95rem; text-align: center; border: 1px solid transparent; }
+    .msg-box.info { background: rgba(9, 132, 227, 0.2); border-color: rgba(9, 132, 227, 0.4); color: #74b9ff; }
+    .msg-box.warning { background: rgba(253, 203, 110, 0.2); border-color: rgba(253, 203, 110, 0.4); color: #ffeaa7; }
+    .msg-box.success { background: rgba(0, 184, 148, 0.2); border-color: rgba(0, 184, 148, 0.4); color: #55efc4; }
+    .msg-box a { color: white; text-decoration: underline; }
+
+    /* Reviews List */
+    .review-card { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
+    .review-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+    .reviewer-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary, #6c5ce7); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    .review-date { margin-left: auto; font-size: 0.8rem; color: #aaa; }
+    .review-stars { color: #ffb400; font-size: 0.9rem; }
+    
+    /* SOBRE */
+    .about-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+    .about-card { background: rgba(255,255,255,0.03); padding: 30px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); }
+    .about-card h3 { margin-bottom: 20px; color: var(--primary, #6c5ce7); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+    .about-card ul { list-style: none; padding: 0; }
+    .about-card li { margin-bottom: 15px; color: #aaa; display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 5px; }
+    .about-card li strong { color: white; }
+    
+    .empty-mini { text-align: center; color: #777; padding: 20px; }
+    .empty-state-gamer { text-align: center; padding: 60px; color: #aaa; }
+    .empty-icon { font-size: 3rem; margin-bottom: 20px; }
+
+    /* Responsividade */
     @media (max-width: 900px) {
         .loja-hero { padding: 40px 20px; text-align: center; }
         .hero-content { flex-direction: column; gap: 25px; }
@@ -553,42 +654,26 @@
         .loja-actions-hero { width: 100%; flex-direction: row; gap: 10px; }
         .loja-nav-container { margin-top: 20px; }
         .loja-nav { justify-content: flex-start; padding: 10px; }
-        
-        .section-header { flex-direction: column; align-items: flex-start; gap: 15px; }
-        #buscaProduto { width: 100%; }
-        
-        /* Grid de 2 colunas no tablet/celular grande */
         .produtos-grid { grid-template-columns: repeat(auto-fill, minmax(45%, 1fr)); gap: 15px; }
     }
 
     @media (max-width: 480px) {
-        .loja-nombre { font-size: 2rem; }
+        .loja-nome { font-size: 2rem; }
         .loja-avatar { width: 100px; height: 100px; font-size: 2.5rem; }
-        
-        .loja-stats { gap: 15px; }
-        .stat-num { font-size: 1.2rem; }
-        .stat-label { font-size: 0.7rem; }
-        
         .loja-actions-hero { flex-direction: column; }
-        
-        /* Cards mais compactos no celular */
-        .card-img-wrapper { height: 160px; }
-        .card-info { padding: 15px; }
-        .card-title { font-size: 1rem; }
-        .price-value { font-size: 1.2rem; }
-        .btn-buy-gamer { padding: 10px; font-size: 0.9rem; }
-        
-        .produtos-grid { grid-template-columns: 1fr; } /* 1 por linha em telas muito pequenas para melhor visualização */
+        .produtos-grid { grid-template-columns: 1fr; } 
     }
 </style>
 
 <script>
     function mudarAba(abaId) {
+        // Remove active de todos
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
         
+        // Adiciona active no selecionado
         document.getElementById(`aba-${abaId}`).classList.add('active');
-        // Encontra o botão que chamou a função (lógica simplificada)
+        // Adiciona active no botão clicado (target do evento)
         event.target.classList.add('active');
     }
 
@@ -598,7 +683,7 @@
         
         cards.forEach(card => {
             const nome = card.getAttribute('data-nome');
-            if (nome.includes(termo)) {
+            if (nome && nome.includes(termo)) {
                 card.style.display = 'flex';
             } else {
                 card.style.display = 'none';
@@ -607,8 +692,17 @@
     }
 
     function compartilharEmpresa() {
-        navigator.clipboard.writeText(window.location.href);
-        alert('🔗 Link copiado!');
+        if (navigator.share) {
+            navigator.share({
+                title: '{{ empresa.nome_fantasia }}',
+                text: 'Confira esta loja incrível!',
+                url: window.location.href,
+            })
+            .catch((error) => console.log('Erro ao compartilhar', error));
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            alert('🔗 Link copiado para a área de transferência!');
+        }
     }
 </script>
 {% endblock %}

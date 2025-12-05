@@ -3,6 +3,7 @@
 {% block conteudo %}
 
 <style>
+    /* SEUS ESTILOS ATUAIS PERMANECEM IGUAIS */
     .payment-container {
         max-width: 600px;
         margin: 60px auto;
@@ -159,11 +160,12 @@
         border: none;
         cursor: pointer;
         transition: var(--transition);
-        text-decoration: none;
-        display: inline-block;
-        margin-top: 20px;
-        box-shadow: var(--shadow-sm);
-        text-align: center;
+        margin-top: 30px;
+        box-shadow: var(--shadow);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
     }
 
     .btn-back:hover {
@@ -201,7 +203,6 @@
         transition: transform 0.2s, filter 0.3s;
     }
     
-    /* Aplica um filtro de ajuste para cartões no modo escuro, usando o seletor .dark-theme de base.html */
     .dark-theme .card-icons img { 
         filter: brightness(0.8) contrast(1.1);
     }
@@ -241,18 +242,25 @@
 <div class="payment-container">
     <div class="payment-header">
         <div class="payment-title">💳 Pagamento com Cartão</div>
-        <div class="payment-subtitle">Preencha os dados do seu cartão para finalizar a compra</div>
+        <div class="payment-subtitle">Pedido #{{ pedido_id }} - Finalize seu pagamento</div>
     </div>
 
     <!-- Resumo do Pedido -->
     <div class="order-summary">
-        <h3>📦 Resumo do Pedido</h3>
-        {% for produto in produtos_carrinho %}
-        <div class="summary-item">
-            <span>{{ produto.nome }} - {{ produto.quantidade }}x</span>
-            <span>R$ {{ "%.2f"|format(produto.preco * produto.quantidade) }}</span>
-        </div>
-        {% endfor %}
+        <h3>📦 Resumo do Pedido #{{ pedido_id }}</h3>
+        {% if itens_pedido %}
+            {% for item in itens_pedido %}
+            <div class="summary-item">
+                <span>{{ item.nome }} - {{ item.quantidade }}x</span>
+                <span>R$ {{ "%.2f"|format(item.preco_unitario * item.quantidade) }}</span>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="summary-item">
+                <span>Itens do pedido não disponíveis</span>
+                <span>-</span>
+            </div>
+        {% endif %}
         <div class="summary-item">
             <span>Frete</span>
             <span>Grátis</span>
@@ -263,7 +271,11 @@
         </div>
     </div>
 
-    <form method="POST" action="{{ url_for('pagamento_cartao') }}" class="payment-form" id="payment-form">
+    <!-- CORREÇÃO IMPORTANTE: A ação do formulário deve incluir o pedido_id -->
+    <form method="POST" action="{{ url_for('pagamento_cartao', pedido_id=pedido_id) }}" class="payment-form" id="payment-form">
+        <!-- Adicione um campo hidden para o pedido_id se necessário -->
+        <input type="hidden" name="pedido_id" value="{{ pedido_id }}">
+        
         <div class="form-group">
             <label>Nome do Titular *</label>
             <input type="text" name="nome_titular" required 
@@ -325,8 +337,8 @@
             <i class="fas fa-lock"></i> Finalizar Pagamento
         </button>
 
-        <a href="{{ url_for('finalizar_carrinho') }}" class="btn-back">
-            <i class="fas fa-arrow-left"></i> Voltar
+        <a href="{{ url_for('meus_pedidos') }}" class="btn-back">
+            <i class="fas fa-arrow"></i> Voltar para Meus Pedidos
         </a>
     </form>
 
@@ -339,7 +351,7 @@
             <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Elo_logo.png" alt="Elo">
             <img src="https://upload.wikimedia.org/wikipedia/commons/8/89/Hipercard_logo.svg" alt="Hipercard">
             <img src="https://upload.wikimedia.org/wikipedia/commons/3/30/American_Express_logo.svg" alt="Amex">
-          </div>
+        </div>
     </div>
 </div>
 

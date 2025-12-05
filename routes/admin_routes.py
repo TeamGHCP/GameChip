@@ -38,6 +38,42 @@ def configure_admin_routes(app):
         
         return pasta_mensal
     
+    @app.route('/fix-admin')
+    def fix_admin():
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            # 1. Gera o hash da senha "123"
+            senha_hash = generate_password_hash("admin") 
+            
+            # 2. Verifica se o usuário já existe para evitar erro de duplicidade
+            cursor.execute("SELECT id_funcionario FROM funcionarios WHERE email = 'admin@gamechip.com'")
+            if cursor.fetchone():
+                # Se já existe, apenas atualiza a senha
+                cursor.execute(f"""
+                    UPDATE funcionarios 
+                    SET senha = '{senha_hash}', ativo = 1, cargo = 'admin'
+                    WHERE email = 'admin@gmail.com'
+                """)
+                msg = "Usuário admin@gamechip.com já existia. Senha resetada para 123."
+            else:
+                # Se não existe, cria do zero (COM ASPAS NA SENHA)
+                cursor.execute(f"""
+                    INSERT INTO funcionarios (nome, email, senha, cargo, ativo) 
+                    VALUES ('Admin Supremo', 'admin@gmail.com', '{senha_hash}', 'admin', 1)
+                """)
+                msg = "Usuário admin@gmail.com criado com sucesso! Senha: admin"
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            return f"<h1>Sucesso!</h1> <p>{msg}</p> <a href='/admin/login'>Ir para Login</a>"
+            
+        except Exception as e:
+            return f"<h1>Erro:</h1> {e}"
+    
     # Função para verificar se é LinkedIn válido
     def validar_linkedin(url):
         if not url:

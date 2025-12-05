@@ -442,6 +442,7 @@
                     <div class="floating-btn" onclick="userInput('🛍️ Ver produtos')">🛍️ Produtos</div>
                     <div class="floating-btn" onclick="userInput('📝 Criar cadastro')">📝 Cadastro</div>
                     <div class="floating-btn" onclick="userInput('⏰ Horário de atendimento')">⏰ Horários</div>
+                    <div class="floating-btn" onclick="userInput('👤 Falar com humano')">⏰ Falar com humano</div>
                 </div>`;
             
             scrollToBottom();
@@ -455,7 +456,7 @@
         if (cleanText.match(/^(oi|ola|ei|eai|hello|bom dia|boa tarde|boa noite)/)) {
             return "Olá! Tudo bem? 😊 Escolha uma opção acima ou digite sua dúvida.";
         }
-        if (cleanText.includes('obrigad') || cleanText.includes('valeu')) {
+        if (cleanText.includes('obrigado') || cleanText.includes('valeu')) {
             return "Por nada! 💜 Se precisar de mais alguma coisa, é só chamar.";
         }
         if (cleanText.includes('senha') || cleanText.includes('recuperar') || cleanText.includes('logar')) {
@@ -475,6 +476,9 @@
         }
         if (cleanText.includes('horario') || cleanText.includes('atendimento')) {
             return `<strong>⏰ Horário:</strong><br>Seg a Sex: 09h às 18h<br>Sáb: 09h às 13h<br>Dom: Fechado`;
+        }
+        if (cleanText.includes('falar com humano') || cleanText.includes('atendente')) {
+            return `<strong>⏰ WhatsApp</strong>+55 (47) 98826-3210<br>Seg a Sex: 09h às 18h<br>Sáb: 09h às 13h<br>Dom: Fechado`;
         }
 
         return `Desculpe, não entendi. 😅<br>Tente usar os botões ou pergunte de outra forma.`;

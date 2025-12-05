@@ -35,10 +35,10 @@
                class="btn btn-secondary" target="_blank">
                 👁️ Ver Perfil Público
             </a>
-            <button class="btn btn-secondary" onclick="abrirModalAdicionar()">
+            <button class="btn btn-secondary" onclick="abrirModalAdicionar('{{ empresa.tipo_empresa }}')">
                 📂 Adicionar do Catálogo
             </button>
-            <button class="btn btn-primary" onclick="abrirModalCriar()">
+            <button class="btn btn-primary" onclick="abrirModalCriar('{{ empresa.tipo_empresa }}')">
                 ✨ Criar Novo Produto
             </button>
         </div>
@@ -131,10 +131,10 @@
                     <h3>Nenhum produto cadastrado</h3>
                     <p>Crie produtos exclusivos ou adicione do catálogo para começar a vender.</p>
                     <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
-                        <button class="btn btn-secondary" onclick="abrirModalAdicionar()">
+                        <button class="btn btn-secondary" onclick="abrirModalAdicionar('{{ empresa.tipo_empresa }}')">
                             📂 Adicionar do Catálogo
                         </button>
-                        <button class="btn btn-primary" onclick="abrirModalCriar()">
+                        <button class="btn btn-primary" onclick="abrirModalCriar('{{ empresa.tipo_empresa }}')">
                             ✨ Criar Novo Produto
                         </button>
                     </div>
@@ -318,6 +318,8 @@
         </div>
     </div>
 </div>
+
+<div id="toast-container"></div>
 
 <div id="modalAdicionarProduto" class="modal">
     <div class="modal-content">
@@ -583,7 +585,87 @@
 </div>
 
 <style>
-    /* Estilos do Painel */
+    /* * ESTILOS DAS NOTIFICAÇÕES (TOAST) 
+     * Integrados com o visual Glassmorphism
+     */
+    #toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .toast-notification {
+        min-width: 300px;
+        max-width: 400px;
+        background: var(--glass);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        color: var(--text);
+        padding: 16px 20px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        animation: slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        opacity: 1;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .toast-notification.hiding {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+
+    /* Tipos de Toast */
+    .toast-error {
+        border-left: 5px solid var(--danger);
+    }
+
+    .toast-success {
+        border-left: 5px solid var(--success);
+    }
+
+    .toast-info {
+        border-left: 5px solid var(--info);
+    }
+
+    .toast-icon {
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .toast-content h4 {
+        margin: 0 0 4px 0;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .toast-content p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--text-light);
+        line-height: 1.4;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    /* Estilos do Painel (Originais) */
     .painel-empresa-container {
         max-width: 1400px;
         margin: 0 auto;
@@ -1365,6 +1447,47 @@
 </style>
 
 <script>
+    // --- SISTEMA DE TOAST (NOTIFICAÇÕES FLUTUANTES) ---
+    function showToast(mensagem, tipo = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        
+        // Define o ícone e título baseados no tipo
+        let icon = 'ℹ️';
+        let titulo = 'Informação';
+        
+        if (tipo === 'error') {
+            icon = '🚫';
+            titulo = 'Acesso Negado';
+            toast.classList.add('toast-error');
+        } else if (tipo === 'success') {
+            icon = '✅';
+            titulo = 'Sucesso';
+            toast.classList.add('toast-success');
+        } else {
+            toast.classList.add('toast-info');
+        }
+
+        toast.className = `toast-notification toast-${tipo}`;
+        toast.innerHTML = `
+            <div class="toast-icon">${icon}</div>
+            <div class="toast-content">
+                <h4>${titulo}</h4>
+                <p>${mensagem}</p>
+            </div>
+        `;
+
+        container.appendChild(toast);
+
+        // Remove o toast após 4 segundos
+        setTimeout(() => {
+            toast.classList.add('hiding');
+            toast.addEventListener('transitionend', () => {
+                toast.remove();
+            });
+        }, 4000);
+    }
+
     // Sistema de abas do painel
     function mudarAbaPainel(aba) {
         document.querySelectorAll('.aba-painel').forEach(aba => {
@@ -1394,8 +1517,12 @@
         return names[aba] || aba;
     }
 
-    // Modal Adicionar Produto (Existente)
-    function abrirModalAdicionar() {
+    // Modal Adicionar Produto - COM TOAST DE ERRO
+    function abrirModalAdicionar(tipoEmpresa) {
+        if (tipoEmpresa === 'comprador') {
+            showToast('Sua conta é apenas de Comprador. Altere para Vendedor nas configurações.', 'error');
+            return;
+        }
         document.getElementById('modalAdicionarProduto').style.display = 'block';
         document.body.style.overflow = 'hidden';
     }
@@ -1405,8 +1532,12 @@
         document.body.style.overflow = 'auto';
     }
 
-    // Modal Criar Produto (Novo)
-    function abrirModalCriar() {
+    // Modal Criar Produto - COM TOAST DE ERRO
+    function abrirModalCriar(tipoEmpresa) {
+        if (tipoEmpresa === 'comprador') {
+            showToast('Apenas vendedores podem criar novos produtos. Altere seu perfil.', 'error');
+            return;
+        }
         document.getElementById('modalCriarProduto').style.display = 'block';
         document.body.style.overflow = 'hidden';
     }
@@ -1452,42 +1583,36 @@
             })
             .catch(error => {
                 console.error('Erro:', error);
-                alert('❌ Erro ao remover produto. Tente novamente.');
+                showToast('Erro ao remover produto. Tente novamente.', 'error');
             });
         }
     }
 
     // --- NOVA FUNÇÃO: Abrir Modal de Editar Produto ---
     function abrirModalEditar(id, nome, preco, estoque, ativo) {
-        // Preenche os campos do modal com os dados atuais
         document.getElementById('editIdProdutoEmpresa').value = id;
         document.getElementById('editNomeProduto').textContent = nome;
         document.getElementById('editPreco').value = parseFloat(preco).toFixed(2);
         document.getElementById('editEstoque').value = estoque;
-        
-        // Verifica se é 1 (verdadeiro) ou 0 (falso)
         document.getElementById('editAtivo').checked = (ativo == 1);
-
-        // Abre o modal
         document.getElementById('modalEditarProduto').style.display = 'block';
         document.body.style.overflow = 'hidden';
     }
 
     // --- NOVA FUNÇÃO: Salvar Edição do Produto ---
     function salvarEdicaoProduto(event) {
-        event.preventDefault(); // Impede o recarregamento padrão da página
+        event.preventDefault(); 
 
         const id = document.getElementById('editIdProdutoEmpresa').value;
         const preco = document.getElementById('editPreco').value;
         const estoque = document.getElementById('editEstoque').value;
-        const ativo = document.getElementById('editAtivo').checked; // Boolean
+        const ativo = document.getElementById('editAtivo').checked; 
 
         const btnSalvar = event.target.querySelector('button[type="submit"]');
         const textoOriginal = btnSalvar.textContent;
         btnSalvar.textContent = "Salvando...";
         btnSalvar.disabled = true;
 
-        // Envia para o backend (espera JSON)
         fetch(`/empresa/atualizar-produto/${id}`, {
             method: 'POST',
             headers: {
@@ -1504,20 +1629,19 @@
             if (data.success) {
                 location.reload();
             } else {
-                alert('❌ Erro ao atualizar: ' + (data.error || 'Erro desconhecido'));
+                showToast('Erro ao atualizar: ' + (data.error || 'Erro desconhecido'), 'error');
                 btnSalvar.textContent = textoOriginal;
                 btnSalvar.disabled = false;
             }
         })
         .catch(error => {
             console.error('Erro:', error);
-            alert('❌ Erro de conexão.');
+            showToast('Erro de conexão com o servidor.', 'error');
             btnSalvar.textContent = textoOriginal;
             btnSalvar.disabled = false;
         });
     }
 
-    // Sincronizar o switch de tema visualmente ao carregar e ao clicar
     document.addEventListener('DOMContentLoaded', () => {
         mudarAbaPainel('produtos');
         
@@ -1529,7 +1653,6 @@
             }
         });
 
-        // Alternância visual do tema (igual ao minha_conta.html)
         const temaSwitch = document.getElementById('temaSwitch');
         if(temaSwitch) {
             temaSwitch.addEventListener('change', function() {

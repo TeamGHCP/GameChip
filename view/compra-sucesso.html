@@ -116,6 +116,7 @@
         color: var(--success);
     }
     
+    /* ESTILOS DOS BOTÕES ATUALIZADOS */
     .btn-group {
         display: flex;
         gap: 15px;
@@ -144,9 +145,10 @@
         box-shadow: var(--shadow);
     }
     
-    .btn-secondary {
-        background: linear-gradient(135deg, var(--secondary) 0%, var(--border) 100%);
-        color: var(--text);
+    /* BOTÃO CONTINUAR COMPRANDO COM GRADIENTE AZUL */
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
         padding: 15px 30px;
         border-radius: 10px;
         font-weight: 600;
@@ -158,13 +160,16 @@
         display: inline-flex;
         align-items: center;
         gap: 10px;
+        box-shadow: 0 4px 6px rgba(0, 102, 255, 0.2);
     }
     
-    .btn-secondary:hover {
+    .btn-primary:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
         transform: translateY(-3px);
-        box-shadow: var(--shadow);
+        box-shadow: 0 6px 12px rgba(0, 102, 255, 0.3);
     }
     
+    /* BOTÃO WHATSAPP */
     .whatsapp-btn {
         background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
         color: white;
@@ -175,13 +180,23 @@
         display: inline-flex;
         align-items: center;
         gap: 10px;
-        margin-top: 20px;
         transition: var(--transition);
+        box-shadow: 0 4px 6px rgba(37, 211, 102, 0.2);
     }
     
     .whatsapp-btn:hover {
+        background: linear-gradient(135deg, #128C7E 0%, #25D366 100%);
         transform: translateY(-3px);
-        box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3);
+        box-shadow: 0 6px 12px rgba(37, 211, 102, 0.3);
+    }
+    
+    /* CONTAINER PARA OS DOIS BOTÕES LADO A LADO */
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 30px;
+        flex-wrap: wrap;
     }
     
     .footer-note {
@@ -203,8 +218,15 @@
         .btn-group {
             flex-direction: column;
         }
+        .action-buttons {
+            flex-direction: column;
+        }
         .order-info {
             grid-template-columns: 1fr;
+        }
+        .btn-primary, .whatsapp-btn {
+            width: 100%;
+            justify-content: center;
         }
     }
 </style>
@@ -220,44 +242,11 @@
     {% if pedido %}
     <div class="order-card">
         <h3><i class="fas fa-receipt"></i> Detalhes do Pedido</h3>
-        
-        <div class="order-info">
-            <div class="info-item">
-                <div class="info-label">Número do Pedido</div>
-                <div class="info-value">#{{ pedido.id }}</div>
-            </div>
+
             
             <div class="info-item">
                 <div class="info-label">Data</div>
-                <div class="info-value">{{ pedido.data }}</div>
-            </div>
-            
-            <div class="info-item">
-                <div class="info-label">Forma de Pagamento</div>
-                <div class="info-value">
-                    {% if pedido.metodo == 'cartao' %}
-                    <i class="fas fa-credit-card"></i> 
-                    {% if pedido.tipo_cartao == 'credito' %}
-                    Cartão de Crédito
-                    {% elif pedido.tipo_cartao == 'debito' %}
-                    Cartão de Débito
-                    {% else %}
-                    Cartão
-                    {% endif %}
-                    
-                    {# Corrigir a comparação convertendo para inteiro #}
-                    {% if pedido.parcelas and pedido.parcelas|int > 1 %}
-                    ({{ pedido.parcelas }}x)
-                    {% endif %}
-                    
-                    {% elif pedido.metodo == 'pix' %}
-                    <i class="fas fa-qrcode"></i> PIX
-                    {% elif pedido.metodo == 'boleto' %}
-                    <i class="fas fa-barcode"></i> Boleto
-                    {% else %}
-                    {{ pedido.metodo|title if pedido.metodo else 'Não informado' }}
-                    {% endif %}
-                </div>
+                <div class="info-value">{{ pedido.data_pedido }}</div> <!-- REMOVIDO O FILTRO formatar_data -->
             </div>
             
             <div class="info-item">
@@ -297,15 +286,19 @@
         <a href="{{ url_for('meus_pedidos') }}" class="btn-success">
             <i class="fas fa-shopping-bag"></i> Meus Pedidos
         </a>
-        <a href="{{ url_for('listar_produtos') }}" class="btn-secondary">
-            <i class="fas fa-store"></i> Continuar Comprando
-        </a>
     </div>
     
-    <a href="https://wa.me/5547988263210?text=Olá! Acabei de finalizar o pedido #{{ pedido.id }} no site e gostaria de mais informações." 
-       target="_blank" class="whatsapp-btn">
-        <i class="fab fa-whatsapp"></i> Falar no WhatsApp
-    </a>
+    <!-- BOTÕES CONTINUAR COMPRANDO E WHATSAPP LADO A LADO -->
+    <div class="action-buttons">
+        <a href="{{ url_for('listar_produtos') }}" class="btn-primary">
+            <i class="fas fa-store"></i> Continuar Comprando
+        </a>
+        
+        <a href="https://wa.me/5547988263210?text=Olá! Acabei de finalizar o pedido #{{ pedido.id }} no site e gostaria de mais informações." 
+           target="_blank" class="whatsapp-btn">
+            <i class="fab fa-whatsapp"></i> Falar no WhatsApp
+        </a>
+    </div>
     
     {% else %}
     <div class="order-card">
@@ -318,15 +311,24 @@
         <a href="{{ url_for('meus_pedidos') }}" class="btn-success">
             <i class="fas fa-shopping-bag"></i> Ver Meus Pedidos
         </a>
-        <a href="{{ url_for('listar_produtos') }}" class="btn-secondary">
-            <i class="fas fa-store"></i> Voltar às Compras
+    </div>
+    
+    <!-- BOTÕES CONTINUAR COMPRANDO E WHATSAPP LADO A LADO (CENÁRIO SEM PEDIDO) -->
+    <div class="action-buttons">
+        <a href="{{ url_for('listar_produtos') }}" class="btn-primary">
+            <i class="fas fa-store"></i> Continuar Comprando
+        </a>
+        
+        <a href="https://wa.me/5547988263210?text=Olá! Gostaria de mais informações sobre os produtos." 
+           target="_blank" class="whatsapp-btn">
+            <i class="fab fa-whatsapp"></i> Falar no WhatsApp
         </a>
     </div>
     {% endif %}
     
     <div class="footer-note">
         <p><i class="fas fa-envelope"></i> Enviamos um e-mail de confirmação para você.</p>
-        <p style="margin-top: 10px;">Em caso de dúvidas, entre em contato: suporte@seusite.com</p>
+        <p style="margin-top: 10px;">Em caso de dúvidas, entre em contato: contato@gamechip.com</p>
     </div>
 </div>
 

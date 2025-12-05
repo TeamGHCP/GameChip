@@ -151,6 +151,7 @@
         gap: 15px;
         margin-top: 30px;
         justify-content: center;
+        flex-wrap: wrap;
     }
     
     .btn-primary {
@@ -195,7 +196,8 @@
         box-shadow: var(--shadow);
     }
     
-    .btn-print {
+    /* MUDADO: De .btn-print para .btn-download */
+    .btn-download {
         background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
         color: white;
         padding: 15px 30px;
@@ -211,9 +213,37 @@
         gap: 10px;
     }
     
-    .btn-print:hover {
+    .btn-download:hover {
         transform: translateY(-3px);
         box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+    }
+    
+    .btn-success {
+        background: linear-gradient(135deg, var(--success) 0%, #00b36e 100%);
+        color: white;
+        padding: 15px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1em;
+        border: none;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .btn-success:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+    }
+    
+    .btn-success:disabled {
+        background: linear-gradient(135deg, #cccccc 0%, #999999 100%);
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
     }
     
     .qr-code-section {
@@ -259,6 +289,98 @@
             flex-direction: column;
         }
     }
+    
+    /* Estilos para confirmação de pagamento */
+    .payment-confirmation-section {
+        background: rgba(40, 167, 69, 0.05);
+        border-radius: 10px;
+        padding: 25px;
+        margin: 30px 0;
+        border: 1px solid var(--border);
+        text-align: center;
+    }
+    
+    .payment-status {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .status-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--warning);
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+    
+    .status-text {
+        color: var(--warning);
+        font-weight: 600;
+    }
+    
+    /* REMOVIDO: Timer styles */
+    /* .timer-container {
+        text-align: center;
+        margin: 20px 0;
+        padding: 15px;
+        background: rgba(220, 53, 69, 0.05);
+        border-radius: 12px;
+        border: 2px solid var(--danger);
+    }
+    
+    .timer-title {
+        font-size: 1.1em;
+        font-weight: 700;
+        color: var(--danger);
+        margin-bottom: 10px;
+    }
+    
+    .timer {
+        font-size: 2em;
+        font-weight: 800;
+        color: var(--danger);
+        font-family: monospace;
+    } */
+    
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 25px;
+        border-radius: 10px;
+        color: white;
+        font-weight: 600;
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+        box-shadow: var(--shadow);
+    }
+    
+    .notification.success {
+        background: var(--success);
+    }
+    
+    .notification.error {
+        background: var(--danger);
+    }
+    
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
 </style>
 
 <div class="boleto-view-container">
@@ -299,7 +421,7 @@
                 {{ boleto.codigo_barras or boleto.get('codigo_barras', '34191.79001 01043.510047 91020.150008 8 84410000015000') }}
             </div>
             
-            <!-- IMAGEM DO CÓDIGO DE BARRAS (NOVO) -->
+            <!-- IMAGEM DO CÓDIGO DE BARRAS -->
             {% if boleto.imagem_codigo_barras %}
             <div class="codigo-barras-imagem">
                 <div class="info-label" style="text-align: center; margin-top: 15px; margin-bottom: 10px;">
@@ -386,34 +508,10 @@
             <li><strong>Agência Bancária:</strong> Apresente este boleto ao caixa</li>
             <li><strong>Casas Lotéricas:</strong> Leve o código de barras para pagamento</li>
             <li><strong>Aplicativos de Banco:</strong> Use a câmera para escanear o código QR abaixo</li>
+            <li><strong>Após pagar:</strong> Clique em <strong>"Confirmar Pagamento"</strong> abaixo</li>
         </ul>
-        
-        <div style="text-align: center; margin-top: 20px;">
-            <div id="qrcode" style="display: inline-block; padding: 15px; background: white; border-radius: 8px;"></div>
-            <p style="color: #7f8c8d; font-size: 0.9em; margin-top: 10px;">Escaneie este QR code para pagamento rápido</p>
-        </div>
     </div>
 
-    <!-- Botões de Ação -->
-    <div class="btn-group">
-        <button onclick="window.print()" class="btn-print no-print">
-            <i class="fas fa-print"></i> Imprimir Boleto
-        </button>
-        
-        <a href="{{ url_for('meus_pedidos') }}" class="btn-primary no-print">
-            <i class="fas fa-shopping-bag"></i> Meus Pedidos
-        </a>
-        
-        {% set codigo_barras_valor = boleto.codigo_barras or boleto.get('codigo_barras', '') %}
-        {% set linha_digitavel_valor = boleto.linha_digitavel or boleto.get('linha_digitavel', '') %}
-        {% set pedido_id_valor = boleto.id_pedido or boleto.get('id_pedido', '') %}
-        
-        <a href="mailto:{{ boleto.email or boleto.cliente_email or '' }}?subject=Boleto Pedido #{{ pedido_id_valor }}&body=Código de barras: {{ codigo_barras_valor }}%0ALinha digitável: {{ linha_digitavel_valor }}%0AValor: R$ {{ "%.2f"|format(boleto.valor|float) }}%0AVencimento: {{ boleto.vencimento if boleto.vencimento is string else (boleto.vencimento.strftime('%d/%m/%Y') if boleto.vencimento else '') }}" 
-           class="btn-secondary no-print">
-            <i class="fas fa-envelope"></i> Enviar por Email
-        </a>
-    </div>
-    
     <!-- Produtos do pedido -->
     {% if produtos and produtos|length > 0 %}
     <div class="boleto-instructions" style="margin-top: 30px;">
@@ -442,90 +540,274 @@
         </div>
     </div>
     {% endif %}
-    
-    <div style="text-align: center; margin-top: 30px;" class="no-print">
-        <a href="{{ url_for('listar_produtos') }}" class="btn-secondary" style="background: transparent; color: var(--primary);">
+
+    <!-- Status de pagamento SEM TIMER -->
+    <div class="payment-confirmation-section no-print">
+        <div class="payment-status">
+            <div class="status-dot"></div>
+            <span class="status-text">Aguardando pagamento do boleto...</span>
+        </div>
+        
+        <p style="color: var(--text-light); margin: 15px 0;">
+            Após realizar o pagamento, clique no botão abaixo para confirmar.
+        </p>
+        
+        <button class="btn-success" onclick="confirmarPagamento()" id="confirm-button">
+            <i class="fas fa-check-circle"></i> Confirmar Pagamento do Boleto
+        </button>
+    </div>
+
+    <!-- Botões de Ação -->
+    <div class="btn-group">
+        <!-- MUDADO: De Imprimir para Baixar Boleto -->
+        <button onclick="baixarBoletoPDF()" class="btn-download no-print">
+            <i class="fas fa-download"></i> Baixar Boleto
+        </button>
+        
+        <a href="{{ url_for('meus_pedidos') }}" class="btn-primary no-print">
+            <i class="fas fa-shopping-bag"></i> Meus Pedidos
+        </a>
+        
+        <a href="{{ url_for('listar_produtos') }}" class="btn-secondary no-print">
             <i class="fas fa-store"></i> Continuar Comprando
         </a>
     </div>
+
 </div>
 
-<!-- Biblioteca para QR Code -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Dados para o QR Code
-    const boletoData = {
-        codigo: "{{ boleto.codigo_barras|default(boleto.get('codigo_barras', '')) }}",
-        linha: "{{ boleto.linha_digitavel|default(boleto.get('linha_digitavel', '')) }}",
-        valor: {{ boleto.valor|default(0)|float }},
-        vencimento: "{% if boleto.vencimento %}{% if boleto.vencimento is string %}{{ boleto.vencimento }}{% else %}{{ boleto.vencimento.strftime('%d/%m/%Y') }}{% endif %}{% else %}{{ boleto.get('vencimento', '') }}{% endif %}",
-        pedido: {{ boleto.id_pedido|default(boleto.get('id_pedido', 0))|int }}
-    };
+// Confirmar pagamento - MESMA FUNÇÃO DO PIX (mas para boleto)
+async function confirmarPagamento() {
+    const confirmButton = document.getElementById('confirm-button');
     
-    console.log('Dados do boleto para QR Code:', boletoData);
+    // Desabilitar botão para evitar múltiplos cliques
+    confirmButton.disabled = true;
+    confirmButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
     
-    // Gerar QR Code
     try {
-        const qrData = `boleto:${btoa(JSON.stringify(boletoData))}`;
-        console.log('Dados QR Code gerados:', qrData);
+        // MESMA ROTA que o PIX usa!
+        const response = await fetch(`/api/confirmar-pagamento/{{ boleto.id_pedido }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
         
-        // Verificar se o elemento qrcode existe
-        const qrcodeElement = document.getElementById('qrcode');
-        if (qrcodeElement) {
-            if (typeof QRCode !== 'undefined') {
-                QRCode.toCanvas(qrcodeElement, qrData, {
-                    width: 150,
-                    height: 150,
-                    margin: 1,
-                    color: {
-                        dark: '#000000',
-                        light: '#ffffff'
-                    }
-                }, function(error) {
-                    if (error) {
-                        console.error('Erro ao gerar QR Code:', error);
-                        // Fallback: mostrar texto se QR Code falhar
-                        qrcodeElement.innerHTML = 
-                            '<div style="padding: 20px; color: #666; text-align: center;">' +
-                            '<i class="fas fa-barcode" style="font-size: 50px; margin-bottom: 10px;"></i><br>' +
-                            'Use o código acima</div>';
-                    } else {
-                        console.log('QR Code gerado com sucesso');
-                    }
-                });
+        console.log('Resposta da API:', response.status);
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Dados retornados:', data);
+            
+            if (data.status === 'success') {
+                showNotification('✅ Pagamento do boleto confirmado com sucesso!');
+                
+                // Redirecionar para página de sucesso
+                setTimeout(() => {
+                    window.location.href = data.redirect || "{{ url_for('compra_sucesso', pedido_id=boleto.id_pedido) }}";
+                }, 1500);
             } else {
-                console.error('Biblioteca QRCode não carregada');
-                qrcodeElement.innerHTML = 
-                    '<div style="padding: 20px; color: #666; text-align: center;">' +
-                    '<i class="fas fa-barcode" style="font-size: 50px; margin-bottom: 10px;"></i><br>' +
-                    'QR Code não disponível</div>';
+                showNotification('❌ ' + (data.message || 'Erro ao confirmar pagamento'), 'error');
+                confirmButton.disabled = false;
+                confirmButton.innerHTML = '<i class="fas fa-check-circle"></i> Confirmar Pagamento do Boleto';
             }
         } else {
-            console.warn('Elemento #qrcode não encontrado');
+            // Se der erro, mostrar mensagem específica
+            if (response.status === 404) {
+                showNotification('❌ Rota de pagamento não encontrada. Contate o suporte.', 'error');
+            } else if (response.status === 500) {
+                showNotification('❌ Erro interno do servidor. Tente novamente.', 'error');
+            } else {
+                showNotification('❌ Erro ao confirmar pagamento (Status: ' + response.status + ')', 'error');
+            }
+            
+            confirmButton.disabled = false;
+            confirmButton.innerHTML = '<i class="fas fa-check-circle"></i> Confirmar Pagamento do Boleto';
+            
+            // Log para debug
+            console.error('Erro HTTP:', response.status);
         }
     } catch (error) {
-        console.error('Erro ao processar QR Code:', error);
+        console.error('Erro:', error);
+        showNotification('❌ Erro ao conectar com o servidor. Verifique sua conexão.', 'error');
+        confirmButton.disabled = false;
+        confirmButton.innerHTML = '<i class="fas fa-check-circle"></i> Confirmar Pagamento do Boleto';
     }
+}
+
+// Função para baixar boleto como HTML (que pode ser salvo como PDF)
+async function baixarBoletoPDF() {
+    const downloadBtn = document.querySelector('.btn-download');
+    const originalText = downloadBtn.innerHTML;
     
-    // Efeito de impressão
-    const printBtn = document.querySelector('.btn-print');
-    if (printBtn) {
-        printBtn.addEventListener('click', function() {
+    try {
+        downloadBtn.disabled = true;
+        downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparando boleto...';
+        
+        // Chama a rota que gera o HTML para impressão
+        const response = await fetch(`/api/baixar-boleto/{{ boleto.id_pedido }}`);
+        
+        if (response.ok) {
+            // Obter o conteúdo HTML
+            const html = await response.text();
+            
+            // Criar blob do HTML
+            const blob = new Blob([html], { type: 'text/html' });
+            
+            // Criar link para download
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `boleto_pedido_{{ boleto.id_pedido }}.html`;
+            document.body.appendChild(a);
+            a.click();
+            
+            // Limpar
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            showNotification('✅ Boleto baixado! Abra o arquivo e imprima como PDF.', 'success');
+            
+            // Opcional: abrir em nova janela para impressão imediata
             setTimeout(() => {
-                alert('Boleto enviado para impressão. Use papel A4 para melhor resultado.');
-            }, 100);
-        });
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(html);
+                printWindow.document.close();
+                
+                // Auto-imprimir após carregar
+                printWindow.onload = function() {
+                    printWindow.print();
+                };
+            }, 1000);
+            
+        } else {
+            const errorText = await response.text();
+            console.error('Erro ao baixar boleto:', errorText);
+            
+            // Fallback 1: tentar imprimir a página atual
+            showNotification('⚠️ Gerando versão para impressão...', 'warning');
+            
+            // Abre nova janela com conteúdo formatado
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Boleto - Pedido {{ boleto.id_pedido }}</title>
+                    <style>
+                        body { font-family: Arial; padding: 20px; }
+                        .boleto { border: 2px solid #000; padding: 20px; margin: 20px 0; }
+                        .linha { font-family: monospace; font-size: 16px; letter-spacing: 2px; }
+                        @media print { 
+                            body { margin: 0; padding: 0; }
+                            button { display: none !important; }
+                        }
+                        button { 
+                            background: #3498db; 
+                            color: white; 
+                            padding: 10px 20px; 
+                            border: none; 
+                            border-radius: 5px; 
+                            margin: 10px; 
+                            cursor: pointer; 
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>📄 BOLETO BANCÁRIO</h1>
+                    <div class="boleto">
+                        <p><strong>Pedido:</strong> #{{ boleto.id_pedido }}</p>
+                        <p><strong>Valor:</strong> R$ {{ "%.2f"|format(boleto.valor|float) }}</p>
+                        <p><strong>Vencimento:</strong> 
+                            {% if boleto.vencimento %}
+                                {% if boleto.vencimento is string %}
+                                    {{ boleto.vencimento }}
+                                {% else %}
+                                    {{ boleto.vencimento.strftime('%d/%m/%Y') }}
+                                {% endif %}
+                            {% else %}
+                                {{ boleto.get('vencimento', 'N/A') }}
+                            {% endif %}
+                        </p>
+                        <p><strong>Linha Digitável:</strong></p>
+                        <p class="linha">{{ boleto.linha_digitavel or boleto.get('linha_digitavel', '00000.00000 00000.000000 00000.000000 0 00000000000000') }}</p>
+                        <p><strong>Código de Barras:</strong></p>
+                        <p class="linha">{{ boleto.codigo_barras or boleto.get('codigo_barras', '34191.79001 01043.510047 91020.150008 8 84410000015000') }}</p>
+                    </div>
+                    <button onclick="window.print()">🖨️ Imprimir Boleto</button>
+                    <button onclick="window.close()">✖️ Fechar</button>
+                    <script>
+                        // Auto-imprimir após 1 segundo
+                        setTimeout(() => {
+                            window.print();
+                        }, 1000);
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        showNotification('❌ Erro ao baixar. Abrindo versão para impressão...', 'error');
+        
+        // Fallback 2: imprimir página atual
+        setTimeout(() => {
+            window.print();
+        }, 1000);
+    } finally {
+        downloadBtn.disabled = false;
+        downloadBtn.innerHTML = '<i class="fas fa-download"></i> Baixar Boleto';
+    }
+}
+
+// Função para mostrar notificações
+function showNotification(message, type = 'success') {
+    // Remove notificação anterior se existir
+    const oldNotification = document.querySelector('.notification');
+    if (oldNotification) {
+        oldNotification.remove();
     }
     
+    // Cria nova notificação
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Remove após 3 segundos
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Atalhos de teclado
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        window.location.href = "{{ url_for('meus_pedidos') }}";
+    }
+    
+    if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        confirmarPagamento();
+    }
+    
+    if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        baixarBoletoPDF();
+    }
+});
+
+// Código existente para copiar código de barras
+document.addEventListener('DOMContentLoaded', function() {
     // Copiar código de barras ao clicar (TEXTO)
     const codigoBarras = document.querySelector('.codigo-barras');
     if (codigoBarras) {
         codigoBarras.addEventListener('click', function() {
             const text = this.innerText;
             
-            // Função auxiliar para mostrar feedback
             const showFeedback = () => {
                 const originalText = this.innerText;
                 this.innerText = '✓ Código copiado!';
@@ -539,17 +821,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 2000);
             };
             
-            // Tentar usar clipboard API moderna
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(text).then(() => {
                     showFeedback();
                 }).catch(err => {
-                    console.error('Erro ao copiar usando clipboard API:', err);
-                    // Fallback para navegadores antigos
                     fallbackCopy(text, showFeedback);
                 });
             } else {
-                // Fallback para navegadores antigos
                 fallbackCopy(text, showFeedback);
             }
         });
@@ -557,7 +835,6 @@ document.addEventListener('DOMContentLoaded', function() {
         codigoBarras.title = 'Clique para copiar o código de barras';
     }
     
-    // Função fallback para copiar texto
     function fallbackCopy(text, callback) {
         const textArea = document.createElement('textarea');
         textArea.value = text;
@@ -570,11 +847,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const successful = document.execCommand('copy');
             if (successful) {
                 callback();
-            } else {
-                console.error('Falha ao copiar usando execCommand');
             }
         } catch (err) {
-            console.error('Erro no fallback copy:', err);
+            console.error('Erro ao copiar:', err);
         }
         
         document.body.removeChild(textArea);
