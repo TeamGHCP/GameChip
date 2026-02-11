@@ -88,4 +88,4 @@ Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalh
 
 ## 📞 Contato
 
-**Equipe GHCP** - [Link para o Repositório](https://github.com/TeamGHCP/GameChip)
+**Equipe GHCP** - [Converse conosco](contatoghcp@gmail.com)
